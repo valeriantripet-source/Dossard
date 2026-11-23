@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le Dossard</title>
+<meta name="description" content="Le Dossard, carnet d’entraînement au trail : un objectif, des étapes, un rythme, et une médaille à chaque arrivée.">
+<meta name="theme-color" content="#3B6CB0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Le Dossard">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icones/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icones/favicon-48.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<style>
+/* Polices Barlow servies par le site lui-même (dossier polices/), sans appel à un autre serveur. */
+@font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;src:url(polices/barlow-400.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:500;font-display:swap;src:url(polices/barlow-500.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;src:url(polices/barlow-600.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:600;font-display:swap;src:url(polices/barlow-condensed-600.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(polices/barlow-condensed-700.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:800;font-display:swap;src:url(polices/barlow-condensed-800.woff2) format('woff2')}
+</style>
+<style>
+:root{
+  /* Mise en page : une colonne de téléphone (480 px au plus), un bandeau bleu en tête de chaque écran,
+     le dossard comme pièce centrale de l'accueil, une barre de six onglets fixée en bas. Thème clair unique. */
+  --fond:#F4F4F1;
+  --carte:#FFFFFF;
+  --encre:#101418;
+  --gris:#4A5057;
+  --trait:#D9DAD5;
+  --bleu:#3B6CB0;
+  --orange:#F26B1D;
+  --alerte:#A3261B;
+  --platine:#EAEFF3;
+  --bronze:#C98852;
+  --argent:#C6CBD1;
+  --or:#F2C230;
+  --titre:'Barlow Condensed','Arial Narrow',sans-serif;
+  --texte:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:#E2E3DD;color:var(--encre);font-family:var(--texte);font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%}
+body.fige{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,p,ul,ol,fieldset{margin:0;padding:0}
+ul,ol{list-style:none}
+fieldset{border:0;min-width:0}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.bandeau :focus-visible,.bravo :focus-visible{outline-color:#FFFFFF}
+.cache{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+.app{max-width:480px;min-height:100%;margin:0 auto;background:var(--fond);display:flex;flex-direction:column}
+main{flex:1;padding-bottom:96px;outline:none}
+
+/* Étiquettes et titres */
+.sur{font:600 14px/18px var(--titre);letter-spacing:.1em;text-transform:uppercase}
+.sur.gris{font-size:13px;line-height:16px;color:var(--gris)}
+.geant{font:800 56px/.95 var(--titre);letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.petit{font-size:13px;line-height:18px;font-weight:500}
+.aide{font-size:13px;line-height:18px;color:var(--gris)}
+.erreur{font-size:14px;line-height:19px;font-weight:600;color:var(--alerte)}
+
+/* Bandeau */
+.bandeau{background:var(--bleu);color:#FFFFFF;padding:22px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.bandeau p{font-size:14px;line-height:19px;font-weight:500}
+.rang{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rond{flex:none;width:44px;height:44px;margin:-10px -10px -10px 0;border:0;border-radius:50%;background:transparent;color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* Dossard */
+.dossard{align-self:center;width:min(318px,100%);margin:6px 0 10px;background:#FFFFFF;color:var(--encre);border-radius:10px;box-shadow:6px 8px 0 rgba(16,20,24,.3);transform:rotate(-2deg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.dossard-haut{min-height:34px;padding:6px 26px;background:var(--orange);display:flex;align-items:center;justify-content:center;text-align:center;font:700 15px/1.2 var(--titre);letter-spacing:.1em;text-transform:uppercase}
+.dossard-num{display:flex;align-items:baseline;justify-content:center;gap:8px;padding:10px 12px 6px;font-family:var(--titre);font-weight:800}
+.dossard-num .num{font-size:128px;line-height:.86}
+.dossard-num .num.m{font-size:108px}
+.dossard-num .num.l{font-size:92px}
+.dossard-num .unite{font-size:40px;line-height:1}
+.dossard-num .unite.d{font-size:30px}
+.dossard-bas{min-height:46px;border-top:2px solid var(--encre);padding:6px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:var(--titre)}
+.dossard-bas .nom{font-weight:800;font-size:28px;line-height:1;letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
+.jmoins{flex:none;background:var(--encre);color:#FFFFFF;padding:3px 10px;font:700 20px/24px var(--titre);letter-spacing:.04em;white-space:nowrap}
+.trou{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--bleu)}
+.trou.a{left:10px;top:12px}.trou.b{right:10px;top:12px}.trou.c{left:10px;bottom:18px}.trou.e{right:10px;bottom:18px}
+
+.prepa{display:flex;flex-direction:column;gap:6px}
+.segments{display:grid;gap:4px}
+.segments i{height:6px;border-radius:3px;background:rgba(255,255,255,.3)}
+.segments i.fait{background:#FFFFFF}
+.segments i.ici{background:var(--orange)}
+
+/* Corps */
+.bloc{padding:20px 20px 0;display:flex;flex-direction:column;gap:14px}
+.bloc.serre{gap:0}
+.carte{display:flex;flex-direction:column;gap:8px}
+.titre-seance{font:800 34px/36px var(--titre);letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.resume{font-size:14px;line-height:19px;color:#2B3036;text-wrap:pretty}
+.faits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:4px}
+.fait{border-top:3px solid var(--encre);padding-top:5px;display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
+.fait b{font:800 30px/32px var(--titre)}
+.fait span{font:700 14px/16px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.actions>*{flex:1 1 200px}
+
+/* Boutons */
+.btn{min-height:52px;padding:0 18px;border:0;border-radius:8px;background:var(--encre);color:#FFFFFF;font:700 20px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-align:center}
+.btn.sec{background:transparent;color:var(--encre);border:2px solid var(--encre)}
+.btn.petit{min-height:44px;font-size:16px}
+.btn.clair{background:#FFFFFF;color:var(--encre)}
+.lien{min-height:44px;padding:0 2px;border:0;background:none;color:var(--bleu);font:700 14px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;text-align:left}
+.lien.danger{color:var(--alerte)}
+
+/* Porte-médailles */
+.ratelier{display:flex;flex-direction:column;gap:8px;color:inherit;text-decoration:none;margin-top:8px}
+.barre{height:4px;border-radius:2px;background:var(--encre)}
+.medailles{display:flex;justify-content:space-between;padding:0 8px;margin-top:-8px}
+.med{display:flex;flex-direction:column;align-items:center;flex:none}
+.ruban{width:14px;height:24px;background:#DADBD6}
+.disque{margin-top:-3px;width:40px;height:40px;border-radius:50%;border:2px dashed #9A9D98;background:var(--fond);color:#5B5F5A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:800 17px/1 var(--titre)}
+.med.d .disque{font-size:14px}
+.med.gagnee .ruban{background:linear-gradient(90deg,var(--bleu) 0%,var(--bleu) 34%,#FFFFFF 34%,#FFFFFF 66%,var(--bleu) 66%,var(--bleu) 100%)}
+.med.gagnee .disque{border:2px solid var(--encre);background:var(--orange);color:var(--encre)}
+.med.cours .ruban{background:#FFFFFF;border:1.5px solid var(--bleu);border-top:0}
+.med.cours .disque{border:2px solid var(--bleu);background:#FFFFFF;color:var(--bleu)}
+/* Médailles bonus : une icône dans le disque. Évolutives : ruban sombre, disque bronze, argent ou or.
+   Uniques : ruban orange, disque sombre. Le palier se lit aussi dans le texte et sur la piste, jamais par la couleur seule. */
+.med.bonus .disque svg{display:block}
+.med.bonus.bronze .ruban,.med.bonus.argent .ruban,.med.bonus.or .ruban{background:var(--encre)}
+.med.bonus.bronze .disque,.med.bonus.argent .disque,.med.bonus.or .disque{border:2px solid var(--encre);color:var(--encre)}
+.med.bonus.bronze .disque{background:var(--bronze)}
+.med.bonus.argent .disque{background:var(--argent)}
+.med.bonus.or .disque{background:var(--or)}
+/* Le platine : ruban rayé et double cerclage, pour ne pas le confondre avec l'argent */
+.med.bonus.platine .ruban,.bravo .med.bonus.platine .ruban{background:linear-gradient(90deg,var(--encre) 0%,var(--encre) 34%,#FFFFFF 34%,#FFFFFF 66%,var(--encre) 66%,var(--encre) 100%)}
+.med.bonus.platine .disque{border:2px solid var(--encre);background:var(--platine);color:var(--encre);box-shadow:inset 0 0 0 3px #FFFFFF,inset 0 0 0 4.5px var(--encre)}
+
+/* Plan */
+details.sem{border-top:2px solid var(--encre)}
+details.sem>summary{list-style:none;cursor:pointer;min-height:58px;padding:8px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+details.sem>summary::-webkit-details-marker{display:none}
+.sem-g{display:flex;flex-direction:column;gap:1px;min-width:0}
+.sem-titre{font:800 22px/24px var(--titre);letter-spacing:.02em;text-transform:uppercase}
+.sem-dates{font-size:13px;line-height:17px;color:var(--gris)}
+.sem-d{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.puce{font:700 12px/18px var(--titre);letter-spacing:.08em;text-transform:uppercase;padding:0 7px;border:1.5px solid var(--encre);border-radius:3px;white-space:nowrap}
+.puce.ici{background:var(--orange);border-color:var(--orange)}
+.compte{font:800 18px/20px var(--titre);font-variant-numeric:tabular-nums;min-width:28px;text-align:right}
+.ligne{width:100%;min-height:56px;padding:6px 0;border:0;border-top:1px solid var(--trait);background:none;text-align:left;cursor:pointer;display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:0 8px}
+.pastille{width:26px;height:26px;border-radius:50%;border:2px solid var(--encre);display:flex;align-items:center;justify-content:center;font:800 14px/1 var(--titre)}
+.pastille.ok{background:var(--encre);color:#FFFFFF}
+.l-g{display:flex;flex-direction:column;gap:1px;min-width:0}
+.l-titre{font-size:16px;line-height:20px;font-weight:600}
+.l-info{font-size:13px;line-height:17px;color:var(--gris)}
+.chevron{font:700 22px/1 var(--titre);color:var(--gris)}
+.actions-sem{display:flex;flex-wrap:wrap;gap:0 18px;border-top:1px solid var(--trait)}
+details.sem>.aide{padding:0 0 12px}
+
+.liste>li{border-top:1px solid var(--trait);padding:10px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.liste>li:last-child{border-bottom:1px solid var(--trait)}
+.l-date{font:700 13px/16px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris)}
+.conf{display:flex;align-items:center;gap:12px;flex:none}
+.liste.serree>li{padding:0}
+.ligne.sortie{border-top:0;grid-template-columns:minmax(0,1fr) auto;min-height:60px;padding:9px 0}
+
+/* Carnet : calendrier du mois. Le ressenti suit une seule teinte, du clair (facile) au foncé (dur). */
+.mois{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mois .rond{margin:0;border:2px solid var(--encre)}
+.mois .rond:disabled{border-color:var(--trait);color:#9A9D98;cursor:default}
+.mois-nom{font:800 26px/28px var(--titre);letter-spacing:.02em;text-transform:uppercase}
+.cal{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed;margin:-3px}
+.cal th{padding:0 0 3px;font:700 13px/16px var(--titre);letter-spacing:.08em;color:var(--gris);text-align:center}
+.cal th abbr{text-decoration:none}
+.cal td{padding:0}
+.cal button,.cal .case{width:100%;height:52px;padding:4px 5px 5px;border:0;border-radius:6px;background:#E8E9E4;color:var(--encre);display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left}
+.cal button{cursor:pointer}
+.cal .case{background:transparent;color:#6B6F6A}
+.cal .j{font-size:12px;line-height:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.cal .haut{width:100%;display:flex;align-items:baseline;justify-content:space-between;gap:2px}
+.cal .dp{font-size:10.5px;line-height:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cal .v{align-self:flex-end;font:800 17px/17px var(--titre);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cal .v small{font-size:11px;font-weight:700;margin-left:2px}
+.cal .facile{background:#B5C9E7}
+.cal .correct{background:var(--bleu);color:#FFFFFF}
+.cal .dur{background:#10264A;color:#FFFFFF}
+.cal .auj{box-shadow:inset 0 0 0 2px var(--encre)}
+.cal .correct.auj,.cal .dur.auj{box-shadow:inset 0 0 0 2px var(--encre),inset 0 0 0 4px #FFFFFF}
+.cal .jj{box-shadow:inset 0 0 0 2px var(--orange)}
+.cal .case.jj{color:var(--encre)}
+.legende.cal-leg i{width:12px;height:12px;border:0;border-radius:3px}
+.legende.cal-leg i.facile{background:#B5C9E7}
+.legende.cal-leg i.correct{background:var(--bleu)}
+.legende.cal-leg i.dur{background:#10264A}
+
+/* Formulaires */
+.champ{display:flex;flex-direction:column;gap:6px}
+.champ>label:not(.choix),.champ>legend{font:600 13px/16px var(--titre);letter-spacing:.1em;text-transform:uppercase;color:var(--gris)}
+.champ>legend{margin-bottom:6px}
+input[type=text],input[type=date],textarea{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre);border-radius:8px;background:#FFFFFF;font-size:16px}
+::placeholder{color:#8A8D88;font-weight:500;opacity:1}
+textarea{min-height:96px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:16px}
+input.grand{min-height:52px;font:800 26px var(--titre)}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choix{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:9px 0;cursor:pointer;font-size:15px;line-height:20px}
+.choix input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--bleu)}
+.choix small{display:block;font-size:13px;line-height:17px;color:var(--gris)}
+.en-ligne{display:flex;align-items:stretch;gap:8px}
+.en-ligne>input{flex:1;min-width:0}
+.en-ligne>.btn{flex:none}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.seg label{position:relative;display:flex;cursor:pointer}
+.seg input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.seg span{flex:1;min-height:48px;border:2px solid var(--encre);border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 17px var(--titre);letter-spacing:.08em;text-transform:uppercase}
+.seg input:checked+span{background:var(--encre);color:#FFFFFF}
+.seg input:focus-visible+span{outline:3px solid var(--orange);outline-offset:2px}
+
+/* Routine */
+.exo{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:0 8px;min-height:56px;border-top:1px solid var(--trait);cursor:pointer}
+.exo input{width:22px;height:22px;margin:0;accent-color:var(--bleu)}
+.exo-nom{font-size:16px;line-height:20px;font-weight:600;overflow-wrap:anywhere}
+.exo-dose{font:800 22px/24px var(--titre);letter-spacing:.02em;white-space:nowrap}
+.exos{border-bottom:1px solid var(--trait)}
+.exo-edit{border-top:1px solid var(--trait);padding:12px 0 2px;display:flex;flex-direction:column;gap:2px}
+.pointille{min-height:48px;border:1.5px dashed #9A9D98;border-radius:8px;background:transparent;font-size:15px;font-weight:600;cursor:pointer}
+
+/* Poids */
+.gros-poids{display:flex;align-items:baseline;gap:8px;font-family:var(--titre);font-weight:800}
+.gros-poids .num{font-size:96px;line-height:.9}
+.gros-poids .unite{font-size:34px;line-height:1}
+.courbe{display:block;width:100%;height:auto;touch-action:pan-y;cursor:crosshair;border-radius:4px}
+.courbe .grille{stroke:#E0E1DC;stroke-width:1}
+.courbe .axe{font-size:11px;fill:var(--gris);font-variant-numeric:tabular-nums}
+.courbe .brut{fill:none;stroke:#878A85;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.courbe .moy{fill:none;stroke:var(--bleu);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.courbe .anneau{fill:var(--fond)}
+.courbe .point{fill:var(--bleu)}
+.courbe .valeur{font-size:12px;font-weight:600;fill:var(--encre)}
+.courbe .repere{stroke:var(--encre);stroke-width:1}
+.lecture{font-size:13px;line-height:18px;font-weight:600;min-height:18px}
+.legende{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;line-height:16px;color:var(--gris)}
+.legende span{display:inline-flex;align-items:center;gap:6px}
+.legende i{width:16px;height:0;border-top:1.5px solid #878A85}
+.legende i.m{border-top:2px solid var(--bleu)}
+.plages{display:flex;gap:8px}
+.plages button{flex:1;min-height:44px;border:2px solid var(--encre);border-radius:8px;background:transparent;font:700 14px var(--titre);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.plages button[aria-pressed="true"]{background:var(--encre);color:#FFFFFF}
+.cellules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cellule{border-top:3px solid var(--encre);padding-top:5px;display:flex;flex-direction:column;gap:2px}
+.cellule b{font:800 28px/30px var(--titre)}
+.cellule b small{font:700 14px/16px var(--titre);letter-spacing:.08em;color:var(--gris);margin-left:5px}
+.cellule span{font-size:12px;line-height:15px;color:var(--gris)}
+
+/* Médailles */
+/* Création du programme : l'objectif en tuiles, les étapes calculées, les trois rythmes */
+select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre);border-radius:8px;background:#FFFFFF;color:inherit;font:inherit;font-size:16px}
+.tuiles{display:grid;gap:8px}
+.tuiles.deux{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tuiles.quatre{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tuile,.rythme{position:relative;display:block;cursor:pointer}
+.tuile input,.rythme input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.t-in{min-height:64px;padding:10px;border:1.5px solid #9A9D98;border-radius:8px;background:var(--fond);display:flex;align-items:center;gap:10px}
+.tuiles.quatre .t-in{flex-direction:column;justify-content:center;gap:6px;min-height:88px;padding:10px 2px 8px;text-align:center}
+.tuile b{display:block;font:700 18px/20px var(--titre);letter-spacing:.03em;text-transform:uppercase;color:var(--gris)}
+.tuiles.quatre .tuile b{font-size:16px;line-height:18px}
+.tuile small{display:block;font-size:12px;line-height:15px;color:var(--gris)}
+.tuile input:checked+.t-in,.rythme input:checked+.r-in{border:2px solid var(--encre);background:var(--carte)}
+.tuile input:checked+.t-in b{color:var(--encre)}
+.tuile input:checked+.t-in .pm{border:2px solid var(--bleu);background:#FFFFFF;color:var(--bleu)}
+.tuile input:focus-visible+.t-in,.rythme input:focus-visible+.r-in{outline:3px solid var(--orange);outline-offset:2px}
+.pm{flex:none;width:40px;height:40px;border-radius:50%;border:2px dashed #9A9D98;background:var(--fond);color:#5B5F5A;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:800 17px/1 var(--titre)}
+.pm.d{font-size:14px}
+.pm.etape{border:2px solid var(--encre);background:#FFFFFF;color:var(--encre)}
+.pm.but{border:2px solid var(--encre);background:var(--encre);color:#FFFFFF}
+.parcours-e{border:2px solid var(--encre);border-radius:8px;background:var(--carte);padding:12px 6px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 2px}
+.pas-e{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.pas-e b{font:700 13px/15px var(--titre);letter-spacing:.03em;text-transform:uppercase}
+.pas-e small{font-size:11px;line-height:13px;color:var(--gris)}
+#ob-rythmes{display:flex;flex-direction:column;gap:8px}
+.r-in{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:0 12px;align-items:start;padding:12px;border:1.5px solid #9A9D98;border-radius:8px;background:var(--fond)}
+.rd{position:relative;width:22px;height:22px;border-radius:50%;border:1.5px solid #6B6F6A;background:#FFFFFF}
+.rythme input:checked+.r-in .rd{border-color:var(--bleu)}
+.rythme input:checked+.r-in .rd::after{content:'';position:absolute;inset:3.5px;border-radius:50%;background:var(--bleu)}
+.rythme input:disabled,.rythme input:disabled+.r-in{cursor:default}
+.rythme input:disabled+.r-in{border-style:dashed}
+.rythme input:disabled+.r-in .r-nom{color:var(--gris)}
+.r-nom{display:block;font-size:16px;line-height:22px;font-weight:600}
+.rythme small{display:block;margin-top:2px;font-size:13px;line-height:17px;color:var(--gris)}
+.r-date{display:block;margin-top:6px;font-size:13px;line-height:17px;font-weight:600}
+.r-sem{display:flex;flex-direction:column;align-items:flex-end}
+.r-sem b{font:800 30px/28px var(--titre);font-variant-numeric:tabular-nums}
+.r-sem span{font-size:12px;line-height:15px;color:var(--gris)}
+.medailles.peu{justify-content:flex-start;gap:18px}
+/* Onglet Médailles, la vitrine : le parcours en une ligne, la suite dans une carte, les bonus en grille par thème */
+.vitrine-parcours{padding-top:12px}
+.vitrine-parcours .medailles{padding:0}
+.vm{display:block;padding:0;border:0;border-radius:8px;background:none;color:inherit;font:inherit;cursor:pointer}
+.prochaine{margin-top:14px;border:2px solid var(--encre);border-radius:8px;background:var(--carte);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.pr-ligne{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.pr-ligne+.pr-ligne{border-top:1px solid var(--trait);padding-top:8px}
+.pr-ligne+.sur{margin-top:4px}
+.pr-ligne h3{font:800 24px/26px var(--titre);letter-spacing:.02em;text-transform:uppercase}
+.pr-ligne p{font-size:13px;line-height:17px;color:var(--gris)}
+.entete-bonus{margin-top:26px}
+.theme{margin-top:16px;display:flex;align-items:center;gap:10px}
+.theme::after{content:'';flex:1;height:1px;background:var(--trait)}
+.trois{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.case{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 2px 8px;border:0;border-radius:8px;background:none;color:inherit;font:inherit;text-align:center;cursor:pointer}
+.case b{font:700 15px/16px var(--titre);letter-spacing:.03em;text-transform:uppercase}
+.case.non b{color:var(--gris)}
+.case .med.bonus .ruban{width:18px;height:22px}
+.case .med.bonus .disque{margin-top:-4px;width:58px;height:58px}
+.case .med.bonus svg{width:34px;height:34px}
+.pts{display:flex;gap:4px;height:10px}
+.pts i{width:10px;height:10px;border-radius:50%;border:1.5px dashed #9A9D98}
+.pts i.bronze,.pts i.argent,.pts i.or{border:1.5px solid var(--encre)}
+.pts i.bronze{background:var(--bronze)}
+.pts i.argent{background:var(--argent)}
+.pts i.or{background:var(--or)}
+.pts i.platine{border:1.5px solid var(--encre);background:radial-gradient(circle,var(--encre) 0,var(--encre) 1.6px,var(--platine) 2.2px)}
+.trois+.aide{margin-top:14px}
+/* La fiche d'une médaille */
+.fiche{align-items:center;text-align:center;gap:8px}
+.fiche>.med{transform:scale(2);margin:38px 0 40px}
+.f-val{font:800 52px/.95 var(--titre);font-variant-numeric:tabular-nums}
+.f-crit{font-size:14px;line-height:19px;color:var(--gris)}
+.f-etat{font-size:15px;line-height:20px;font-weight:600}
+.f-mot{font-size:15px;line-height:21px}
+.fiche .piste{align-self:stretch;margin-top:10px}
+.fiche .btn{align-self:stretch;margin-top:10px}
+.secret{align-self:stretch;margin-top:6px;padding:10px 12px 12px;border:2px solid var(--encre);border-radius:8px;background:var(--carte);display:flex;flex-direction:column;gap:8px;text-align:left}
+.jauge{display:block;height:6px;border-radius:3px;background:#DADBD6}
+.jauge b{display:block;height:100%;border-radius:3px;background:var(--encre)}
+.bravo .indice{font-size:14px;line-height:19px;font-weight:600}
+.paliers{align-self:stretch;margin-top:10px;border-top:2px solid var(--encre);text-align:left}
+.paliers li{display:grid;grid-template-columns:22px 68px minmax(0,1fr);gap:0 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--trait);font-size:14px;line-height:19px;color:var(--gris)}
+.paliers b{font:800 18px/20px var(--titre);letter-spacing:.03em;text-transform:uppercase;color:var(--encre)}
+.paliers li.ok{color:var(--encre);font-weight:600}
+/* La piste des trois paliers. Le palier se lit aussi dans le texte, jamais par la couleur seule. */
+.piste{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-top:2px}
+.rail{position:absolute;left:0;right:16.667%;top:11px;height:4px;border-radius:2px;background:#DADBD6}
+.rail b{display:block;height:100%;border-radius:2px;background:var(--encre)}
+.pas{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pt{width:22px;height:22px;border-radius:50%;border:2px dashed #9A9D98;background:var(--fond)}
+.pt.bronze,.pt.argent,.pt.or{border:2px solid var(--encre)}
+.pt.bronze{background:var(--bronze)}
+.pt.argent{background:var(--argent)}
+.pt.or{background:var(--or)}
+.pt.platine{border:2px solid var(--encre);background:var(--platine);box-shadow:inset 0 0 0 2px #FFFFFF,inset 0 0 0 3.5px var(--encre)}
+.pl{font-size:12px;line-height:15px;color:var(--gris);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pas.ok .pl{color:var(--encre);font-weight:600}
+
+/* Feuille (écran par-dessus) */
+.feuille{position:fixed;inset:0;z-index:30;background:rgba(16,20,24,.5);display:flex;justify-content:center}
+.panneau{width:100%;max-width:480px;height:100%;overflow:auto;background:var(--fond);display:flex;flex-direction:column}
+.tete{position:sticky;top:0;z-index:1;min-height:60px;padding:8px 8px 8px 20px;background:var(--fond);border-bottom:2px solid var(--encre);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tete h1{font:800 24px/26px var(--titre);letter-spacing:.02em;text-transform:uppercase}
+.panneau>.bloc{padding-bottom:28px}
+.etapes>li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;padding:7px 0;border-top:1px solid var(--trait);font-size:14px;line-height:19px}
+.etapes>li b{font:700 16px/19px var(--titre);font-variant-numeric:tabular-nums}
+.etapes>li.fort{font-weight:600}
+.encadre{padding:12px 14px;border:2px solid var(--encre);border-radius:8px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:19px}
+
+/* Bravo */
+.bravo{flex:1;padding:36px 20px 28px;background:var(--bleu);color:#FFFFFF;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.bravo .geant{font-size:52px}
+.bravo .mot{font-size:17px;line-height:23px;font-weight:500}
+.bravo .med{transform:scale(2.2);margin:44px 0 52px}
+.bravo .med.gagnee .ruban{background:linear-gradient(90deg,var(--encre) 0%,var(--encre) 34%,#FFFFFF 34%,#FFFFFF 66%,var(--encre) 66%,var(--encre) 100%)}
+.bravo .med.bonus.bronze .ruban,.bravo .med.bonus.argent .ruban,.bravo .med.bonus.or .ruban{background:var(--encre)}
+.bravo .palier{margin-top:-6px;font:800 30px/32px var(--titre);letter-spacing:.02em;text-transform:uppercase}
+.bravo .actions{align-self:stretch;margin-top:auto}
+@media (prefers-reduced-motion:no-preference){
+  .bravo .med{animation:tombe .7s cubic-bezier(.2,.9,.3,1.2) both}
+  @keyframes tombe{from{transform:translateY(-120px) scale(2.2) rotate(-18deg)}to{transform:translateY(0) scale(2.2) rotate(0)}}
+}
+
+/* Messages */
+.alerte{margin:12px 20px 0;padding:10px 12px;border:2px solid var(--alerte);border-radius:8px;font-size:14px;line-height:19px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.annonce{position:fixed;left:50%;bottom:84px;z-index:40;transform:translateX(-50%);max-width:min(440px,calc(100% - 32px));padding:10px 16px;border-radius:8px;background:var(--encre);color:#FFFFFF;font-size:14px;line-height:19px;font-weight:600;text-align:center}
+.annonce:empty{display:none}
+
+/* Onglets */
+.onglets{position:fixed;left:50%;bottom:0;z-index:20;transform:translateX(-50%);width:100%;max-width:480px;height:64px;padding:0 6px;background:var(--fond);border-top:2px solid var(--encre);display:flex}
+.onglets a{flex:1 1 auto;min-width:44px;padding:0 2px;display:flex;align-items:center;justify-content:center;color:var(--gris);font:700 13px var(--titre);letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
+.onglets a[aria-current="page"]{color:var(--bleu);box-shadow:inset 0 3px 0 var(--encre)}
+
+@media (max-width:360px){
+  .geant{font-size:46px}
+  .dossard-num .num{font-size:108px}
+  .dossard-num .num.m{font-size:92px}
+  .dossard-num .num.l{font-size:78px}
+  .onglets{padding:0 2px}
+  .onglets a{font-size:12px;letter-spacing:.02em;padding:0 1px}
+  .mois-nom{font-size:22px}
+}
+</style>
+<style>
+/* Appli installée sur l'écran d'accueil : la barre d'onglets laisse la place du trait d'accueil de l'iPhone. */
+.onglets{height:calc(64px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px)}
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.annonce{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.panneau>.bloc{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+.bravo{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<main id="vue" tabindex="-1"></main>
+<nav class="onglets" id="onglets" aria-label="Navigation" hidden>
+<a href="#objectif">Objectif</a>
+<a href="#plan">Plan</a>
+<a href="#carnet">Carnet</a>
+<a href="#routine">Routine</a>
+<a href="#poids">Poids</a>
+<a href="#medailles">Médailles</a>
+</nav>
+</div>
+<div class="feuille" id="feuille" hidden></div>
+<div class="annonce" id="annonce" role="status" aria-live="polite"></div>
+<script>
+// Version autonome : l'appli enregistre les données dans le navigateur de l'appareil.
+window.DOSSARD_AUTONOME = true;
+</script>
+<script>
+/* Le Dossard : logique pure (dates, programme, médailles, carnet, routine, poids). Aucun accès à la page. */
+(function (root) {
+  'use strict';
+
+  // ---------- Dates (chaînes AAAA-MM-JJ, heure locale) ----------
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function dateDe(s) { var p = String(s).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function dateValide(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return false;
+    return iso(dateDe(s)) === s;
+  }
+  function plusJours(s, n) { var d = dateDe(s); d.setDate(d.getDate() + n); return iso(d); }
+  function ecartJours(a, b) {
+    var da = dateDe(a), db = dateDe(b);
+    return Math.round((Date.UTC(db.getFullYear(), db.getMonth(), db.getDate()) -
+      Date.UTC(da.getFullYear(), da.getMonth(), da.getDate())) / 86400000);
+  }
+  function prochainLundi(s) { var d = dateDe(s); return plusJours(s, (8 - d.getDay()) % 7); }
+
+  // ---------- Formats ----------
+  function fx(v, dec) {
+    var s = dec != null ? Number(v).toFixed(dec) : String(Math.round(Number(v) * 10) / 10);
+    return s.replace('.', ',');
+  }
+  function mil(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); }
+  function minTxt(sec) {
+    var m = Math.floor(sec / 60), s = sec % 60;
+    if (m && s) return m + ' min ' + pad(s);
+    if (m) return m + ' min';
+    return s + ' s';
+  }
+  function nombre(txt) {
+    var t = String(txt == null ? '' : txt).trim().replace(/\s/g, '').replace(',', '.');
+    if (!/^\d+(\.\d+)?$/.test(t)) return null;
+    return Number(t);
+  }
+
+  // ---------- Séances ----------
+  function E(t, s, l) { return { t: t, s: s, l: l }; }
+  function total(etapes) { var t = 0; etapes.forEach(function (e) { t += e.s; }); return t; }
+  function seance(type, titre, resume, etapes, extra) {
+    var o = {
+      type: type, titre: titre, resume: resume, etapes: etapes || [],
+      min: etapes && etapes.length ? Math.round(total(etapes) / 60) : null,
+      km: null, dp: null, conseil: '', test: null
+    };
+    if (extra) Object.keys(extra).forEach(function (k) { o[k] = extra[k]; });
+    return o;
+  }
+  var PARLER = 'Cours à une allure où tu peux parler sans t’essouffler.';
+
+  function alt(n, c, m) {
+    var et = [E('marche', 300, 'Marche rapide')];
+    for (var i = 0; i < n; i++) {
+      et.push(E('course', c, 'Course lente ' + (i + 1) + '/' + n));
+      if (i < n - 1) et.push(E('marche', m, 'Marche'));
+    }
+    et.push(E('marche', 300, 'Marche pour finir'));
+    return seance('alt', 'Marche et course',
+      '5 min de marche rapide, puis ' + n + ' × ' + minTxt(c) + ' de course lente avec ' + minTxt(m) +
+      ' de marche entre chaque, et 5 min de marche pour finir.', et, { conseil: PARLER });
+  }
+  function suite(parts) {
+    var et = [E('marche', 300, 'Marche rapide')], txt = [];
+    parts.forEach(function (mn, i) {
+      var c = i % 2 === 0;
+      et.push(E(c ? 'course' : 'marche', mn * 60, c ? 'Course lente' : 'Marche'));
+      txt.push(mn + ' min de ' + (c ? 'course' : 'marche'));
+    });
+    et.push(E('marche', 300, 'Marche pour finir'));
+    return seance('alt', 'Marche et course',
+      '5 min de marche rapide, puis ' + txt.join(', ') + ', et 5 min de marche pour finir.', et, { conseil: PARLER });
+  }
+  function continu(mn) {
+    return seance('continu', 'Course continue',
+      '5 min de marche rapide, ' + mn + ' min de course sans s’arrêter, 5 min de marche pour finir.',
+      [E('marche', 300, 'Marche rapide'), E('course', mn * 60, 'Course continue'), E('marche', 300, 'Marche pour finir')],
+      { conseil: 'Pars lentement : le but est de tenir la durée, pas d’aller vite.' });
+  }
+  function footing(mn, vallonne) {
+    return seance('footing', vallonne ? 'Footing vallonné' : 'Footing',
+      mn + ' min en endurance' + (vallonne ? ' sur un parcours vallonné' : '') +
+      ', à une allure où tu peux tenir une conversation.',
+      [E('course', mn * 60, 'Footing')], { conseil: 'Si tu es essoufflé, ralentis ou marche une minute.' });
+  }
+  function lignes(mn, n) {
+    var et = [E('course', mn * 60, 'Footing')];
+    for (var i = 0; i < n; i++) {
+      et.push(E('fort', 20, 'Accélération ' + (i + 1) + '/' + n));
+      et.push(E('marche', 60, 'Récupération en marchant'));
+    }
+    return seance('footing', 'Footing et accélérations',
+      mn + ' min de footing, puis ' + n + ' accélérations progressives de 20 s, avec 1 min de marche entre chaque.',
+      et, { conseil: 'Les accélérations restent souples : tu ne sprintes pas.' });
+  }
+  function cotes(n, sec) {
+    // Montées courtes : retour en marchant. Montées de plus de 2 min : retour en trottinant, d'une durée égale.
+    var longue = sec >= 240, trot = sec > 120;
+    var rec = trot ? sec : Math.round(sec * 1.5 / 30) * 30;
+    var et = [E('course', 600, 'Footing d\u2019échauffement')];
+    for (var i = 0; i < n; i++) {
+      et.push(E('fort', sec, 'Montée ' + (i + 1) + '/' + n));
+      et.push(E(trot ? 'course' : 'marche', rec, trot ? 'Retour en trottinant' : 'Retour en marchant'));
+    }
+    et.push(E('course', 600, 'Retour au calme'));
+    return seance('cotes', longue ? 'Côtes longues' : (sec <= 75 ? 'Côtes douces' : 'Côtes'),
+      '10 min de footing, ' + n + ' × ' + minTxt(sec) + ' en côte' +
+      (longue ? ', en marche active ou en petites foulées' : '') +
+      (trot ? ' (retour en trottinant)' : ' (retour en marchant)') + ', 10 min de retour au calme.', et,
+      { conseil: longue ? 'Quand la pente se redresse, marche mains sur les cuisses : c\u2019est la technique du trail.'
+                        : 'Monte en petites foulées, buste droit, sans te mettre dans le rouge.' });
+  }
+  function soutenu(n, mn, rec) {
+    var et = [E('course', 600, 'Footing d’échauffement')];
+    for (var i = 0; i < n; i++) {
+      et.push(E('fort', mn * 60, 'Allure soutenue ' + (i + 1) + '/' + n));
+      if (i < n - 1) et.push(E('course', rec * 60, 'Récupération en trottinant'));
+    }
+    et.push(E('course', 600, 'Retour au calme'));
+    return seance('soutenu', 'Allure soutenue',
+      '10 min de footing, ' + n + ' × ' + mn + ' min à allure soutenue (' + rec +
+      ' min de récupération en trottinant), 10 min de retour au calme.', et,
+      { conseil: 'Allure soutenue : tu peux encore dire quelques mots, plus tenir une conversation.' });
+  }
+  function allureM(mn) {
+    return seance('soutenu', 'Allure marathon',
+      '10 min de footing, ' + mn + ' min à ton allure marathon, 10 min de retour au calme.',
+      [E('course', 600, 'Footing d’échauffement'), E('fort', mn * 60, 'Allure marathon'), E('course', 600, 'Retour au calme')],
+      { conseil: 'L’allure marathon est celle que tu te vois tenir des heures : confortable mais appliquée.' });
+  }
+  function descentes(n) {
+    var et = [E('course', 600, 'Footing d’échauffement')];
+    for (var i = 0; i < n; i++) {
+      et.push(E('marche', 120, 'Montée en marchant ' + (i + 1) + '/' + n));
+      et.push(E('fort', 60, 'Descente souple'));
+    }
+    et.push(E('course', 600, 'Retour au calme'));
+    return seance('cotes', 'Descentes souples',
+      '10 min de footing, ' + n + ' × 1 min de descente en souplesse (tu remontes en marchant 2 min), 10 min de retour au calme.',
+      et, { conseil: 'Petits pas rapides, regard loin devant, bras écartés pour l’équilibre.' });
+  }
+  function longue(km) {
+    return seance('longue', 'Sortie longue',
+      fx(km) + ' km à allure tranquille. Tu peux marcher une minute de temps en temps si besoin.',
+      [], { km: km, conseil: 'La sortie longue se court lentement : finis avec l’impression d’en avoir encore sous le pied.' });
+  }
+  function trail(km, dp) {
+    return seance('trail', 'Sortie trail',
+      fx(km) + ' km en terrain vallonné, avec environ ' + mil(dp) +
+      ' m de dénivelé positif. Marche active dans les montées, trottine sur le plat et en descente.',
+      [], { km: km, dp: dp, conseil: 'Emporte de l’eau et de quoi manger dès que la sortie dépasse 1 h 30.' });
+  }
+  var TESTS = {
+    '5k': ['Test : 5 km sans marcher', '5 min de marche pour t’échauffer, puis 5 km d’une traite, à ton allure. En notant la séance, coche « sans marcher » pour décrocher la médaille.', { km: 5 }],
+    '10k': ['Test : 10 km sans marcher', '10 min de footing très lent, puis 10 km d’une traite. En notant la séance, coche « sans marcher » pour décrocher la médaille.', { km: 10 }],
+    'd500': ['Test : 500 m de dénivelé', 'Une sortie de 10 à 12 km avec 500 m de dénivelé positif. Marche dans les montées, cours le reste.', { km: 11, dp: 500 }],
+    'semi': ['Test : semi-marathon', '21,1 km en une sortie, sur une course officielle ou en solo. Pars plus lentement que tu ne le penses.', { km: 21.1 }],
+    'd1000': ['Test : 1 000 m de dénivelé', 'Une sortie de 16 à 20 km avec 1 000 m de dénivelé positif, en course officielle ou en solo.', { km: 18, dp: 1000 }],
+    'marathon': ['Test : marathon', '42,2 km en une sortie. Bois et mange dès la première heure, et garde de la marge jusqu’au 30e kilomètre.', { km: 42.2 }],
+    'd2000': ['Test : 2 000 m de dénivelé', 'Une sortie de 25 à 30 km avec 2 000 m de dénivelé positif : ta course de montagne.', { km: 28, dp: 2000 }]
+  };
+  function test(id) {
+    var t = TESTS[id], extra = { test: id, conseil: 'Choisis un jour où tu te sens bien. Si ce n’est pas le jour, reporte : la médaille t’attendra.' };
+    Object.keys(t[2]).forEach(function (k) { extra[k] = t[2][k]; });
+    return seance('test', t[0], t[1], [], extra);
+  }
+  function S3(a, b, c, drapeau) { var o = { s: [a, b, c] }; if (drapeau) o[drapeau] = true; return o; }
+  function x3(f) { return S3(f(), f(), f()); }
+
+  // ---------- Les sept blocs de préparation (3 séances par semaine) ----------
+  var BLOCS = {
+    '5k': [
+      x3(function () { return alt(6, 60, 120); }),
+      x3(function () { return alt(8, 60, 120); }),
+      x3(function () { return alt(7, 90, 120); }),
+      x3(function () { return alt(6, 120, 120); }),
+      S3(alt(5, 120, 120), alt(5, 120, 120), alt(5, 120, 120), 'allegee'),
+      x3(function () { return alt(5, 180, 120); }),
+      x3(function () { return alt(4, 300, 150); }),
+      x3(function () { return alt(3, 480, 180); }),
+      S3(alt(2, 720, 180), alt(2, 720, 180), suite([15, 3, 10])),
+      S3(continu(20), alt(2, 720, 120), continu(22)),
+      S3(continu(25), continu(20), continu(28)),
+      S3(continu(30), continu(20), test('5k'), 'test')
+    ],
+    '10k': [
+      S3(footing(30), footing(30), longue(6)),
+      S3(footing(35), cotes(6, 60), longue(6.5)),
+      S3(footing(35), cotes(8, 60), longue(7.5)),
+      S3(footing(30), footing(30), longue(6), 'allegee'),
+      S3(footing(40), soutenu(5, 2, 2), longue(8.5)),
+      S3(footing(40), cotes(8, 75), longue(9)),
+      S3(footing(40), soutenu(4, 3, 2), longue(9.5)),
+      S3(footing(30), lignes(25, 4), test('10k'), 'test')
+    ],
+    'd500': [
+      S3(footing(40), cotes(6, 120), trail(8, 200)),
+      S3(footing(40), cotes(8, 120), trail(9, 300)),
+      S3(footing(45), descentes(6), trail(10, 350)),
+      S3(footing(35), footing(35, true), trail(8, 200), 'allegee'),
+      S3(footing(45), cotes(4, 240), trail(10, 420)),
+      S3(footing(35), footing(30), test('d500'), 'test')
+    ],
+    'semi': [
+      S3(footing(40), soutenu(5, 3, 2), longue(11)),
+      S3(footing(45), cotes(8, 90), longue(12)),
+      S3(footing(45), soutenu(3, 6, 3), longue(13.5)),
+      S3(footing(40), footing(35), longue(11), 'allegee'),
+      S3(footing(50), soutenu(4, 6, 3), longue(15)),
+      S3(footing(50), cotes(10, 90), longue(16)),
+      S3(footing(50), soutenu(2, 12, 4), longue(18)),
+      S3(footing(40), footing(40), longue(13), 'allegee'),
+      S3(footing(45), soutenu(3, 8, 3), longue(16)),
+      S3(footing(35), lignes(30, 4), test('semi'), 'test')
+    ],
+    'd1000': [
+      S3(footing(45), cotes(6, 180), trail(12, 400)),
+      S3(footing(45), cotes(8, 180), trail(14, 550)),
+      S3(footing(50), descentes(8), trail(15, 650)),
+      S3(footing(40), footing(40, true), trail(10, 300), 'allegee'),
+      S3(footing(50), cotes(4, 300), trail(16, 750)),
+      S3(footing(50), cotes(5, 300), trail(18, 850)),
+      S3(footing(40), footing(35), trail(12, 400), 'allegee'),
+      S3(footing(35), footing(30), test('d1000'), 'test')
+    ],
+    'marathon': [
+      S3(footing(45), soutenu(4, 6, 3), longue(16)),
+      S3(footing(50), allureM(20), longue(18)),
+      S3(footing(50), soutenu(3, 8, 3), longue(20)),
+      S3(footing(40), footing(40), longue(15), 'allegee'),
+      S3(footing(55), allureM(25), longue(22)),
+      S3(footing(55), soutenu(4, 8, 3), longue(24)),
+      S3(footing(60), allureM(30), longue(26)),
+      S3(footing(45), footing(40), longue(18), 'allegee'),
+      S3(footing(60), soutenu(3, 10, 3), longue(26)),
+      S3(footing(60), allureM(35), longue(28)),
+      S3(footing(60), soutenu(2, 15, 4), longue(30)),
+      S3(footing(45), footing(40), longue(20), 'allegee'),
+      S3(footing(55), allureM(30), longue(28)),
+      S3(footing(50), soutenu(3, 8, 3), longue(22)),
+      S3(footing(40), allureM(15), longue(14), 'allegee'),
+      S3(footing(30), lignes(25, 4), test('marathon'), 'test')
+    ],
+    'd2000': [
+      S3(footing(50), cotes(5, 300), trail(15, 700)),
+      S3(footing(50), cotes(6, 300), trail(17, 900)),
+      S3(footing(55), descentes(8), trail(18, 1100)),
+      S3(footing(40), footing(40, true), trail(12, 500), 'allegee'),
+      S3(footing(55), cotes(3, 480), trail(20, 1300)),
+      S3(footing(55), cotes(4, 480), trail(22, 1500)),
+      S3(footing(60), descentes(10), trail(24, 1600)),
+      S3(footing(45), footing(40), trail(14, 700), 'allegee'),
+      S3(footing(60), cotes(4, 480), trail(24, 1700)),
+      S3(footing(55), cotes(3, 480), trail(26, 1800)),
+      S3(footing(45), footing(35), trail(14, 600), 'allegee'),
+      S3(footing(35), footing(30), test('d2000'), 'test')
+    ]
+  };
+
+  // ---------- Objectifs et médailles ----------
+  var OBJECTIFS = [
+    { id: '5k', nom: '5 km', gros: '5', unite: 'KM', court: '5K', deniv: false, titre: '5 km sans marcher',
+      critere: 'Courir 5 km sans marcher.', prereq: [], ok: function (s) { return s.km >= 5 && !!s.cont; } },
+    { id: '10k', nom: '10 km', gros: '10', unite: 'KM', court: '10K', deniv: false, titre: '10 km sans marcher',
+      critere: 'Courir 10 km sans marcher.', prereq: ['5k'], ok: function (s) { return s.km >= 10 && !!s.cont; } },
+    { id: 'd500', nom: '500 m D+', gros: '500', unite: 'M D+', court: '500', deniv: true, titre: '500 m de dénivelé',
+      critere: 'Une sortie avec 500 m de dénivelé positif.', prereq: ['10k'], ok: function (s) { return s.dp >= 500; } },
+    { id: 'semi', nom: 'Semi-marathon', gros: '21,1', unite: 'KM', court: '21K', deniv: false, titre: 'le semi-marathon',
+      critere: 'Boucler 21,1 km en une sortie.', prereq: ['10k'], ok: function (s) { return s.km >= 21.09; } },
+    { id: 'd1000', nom: '1\u00a0000 m D+', gros: '1000', unite: 'M D+', court: '1000', deniv: true, titre: '1\u00a0000 m de dénivelé',
+      critere: 'Une sortie avec 1\u00a0000 m de dénivelé positif.', prereq: ['d500', 'semi'], ok: function (s) { return s.dp >= 1000; } },
+    { id: 'marathon', nom: 'Marathon', gros: '42,2', unite: 'KM', court: '42K', deniv: false, titre: 'le marathon',
+      critere: 'Boucler 42,2 km en une sortie.', prereq: ['semi'], ok: function (s) { return s.km >= 42.19; } },
+    { id: 'd2000', nom: '2\u00a0000 m D+', gros: '2000', unite: 'M D+', court: '2000', deniv: true, titre: '2\u00a0000 m de dénivelé',
+      critere: 'Une sortie avec 2\u00a0000 m de dénivelé positif.', prereq: ['d1000'], ok: function (s) { return s.dp >= 2000; } }
+  ];
+  function objectif(id) { for (var i = 0; i < OBJECTIFS.length; i++) if (OBJECTIFS[i].id === id) return OBJECTIFS[i]; return null; }
+  function nouvellesMedailles(sortie, deja, ids) {
+    // ids : les médailles du parcours ; sans cette liste, les sept comptent.
+    var r = []; deja = deja || {};
+    OBJECTIFS.forEach(function (o) { if ((!ids || ids.indexOf(o.id) >= 0) && !deja[o.id] && o.ok(sortie)) r.push(o.id); });
+    return r;
+  }
+  function disponible(o, med) { return !med[o.id] && o.prereq.every(function (p) { return !!med[p]; }); }
+  function manquants(o, med) { return o.prereq.filter(function (p) { return !med[p]; }); }
+
+  // ---------- Bloc en cours ----------
+  var DEPARTS = [
+    { id: 'zero', depart: 0, nom: 'Je reprends en douceur', detail: 'Départ à la semaine 1 : marche et petites foulées d’1 minute.' },
+    { id: 'cinq', depart: 6, nom: 'Je trottine déjà 5 minutes sans m’arrêter', detail: 'Départ à la semaine 7.' },
+    { id: 'vingt', depart: 9, nom: 'Je cours déjà 20 minutes sans m’arrêter', detail: 'Départ à la semaine 10.' },
+    { id: 'trente', depart: 11, nom: 'Je cours déjà 30 minutes', detail: 'Départ à la dernière semaine : celle du test des 5 km.' }
+  ];
+  // ---------- Objectif, étapes et rythme ----------
+  // On choisit une distance et, si on veut, un dénivelé. Le parcours, ce sont ces médailles et tout ce qu'elles demandent d'abord.
+  var BUTS = { dist: ['5k', '10k', 'semi', 'marathon'], deniv: ['d500', 'd1000', 'd2000'] };
+  var NOMS_BUTS = { '5k': '5 km', '10k': '10 km', semi: 'semi-marathon', marathon: 'marathon', d500: '500 m de dénivelé', d1000: '1\u00a0000 m de dénivelé', d2000: '2\u00a0000 m de dénivelé' };
+  function lireBut(p) {
+    // Un programme créé avant le choix de l'objectif garde ses sept médailles : marathon et 2 000 m de dénivelé.
+    var b = p && p.but;
+    if (!b || BUTS.dist.indexOf(b.dist) < 0) return { dist: 'marathon', deniv: 'd2000' };
+    return { dist: b.dist, deniv: BUTS.deniv.indexOf(b.deniv) >= 0 ? b.deniv : null };
+  }
+  function nomBut(but) { return NOMS_BUTS[but.dist] + (but.deniv ? ' et ' + NOMS_BUTS[but.deniv] : ''); }
+  function etapes(but) {
+    var vus = {};
+    function ajoute(id) { if (!id || vus[id]) return; objectif(id).prereq.forEach(ajoute); vus[id] = 1; }
+    ajoute(but.dist); ajoute(but.deniv);
+    return OBJECTIFS.filter(function (o) { return vus[o.id]; });
+  }
+  function estBut(but, id) { return id === but.dist || id === but.deniv; }
+  var RYTHMES = [
+    { id: 'tranquille', nom: 'Tranquille', detail: 'Une semaine pour consolider toutes les deux semaines.' },
+    { id: 'regulier', nom: 'Régulier', detail: 'Le plan tel qu’il est écrit.' },
+    { id: 'rapide', nom: 'Rapide', detail: 'Des préparations plus courtes, pour qui court déjà.' }
+  ];
+  function lireRythme(p) { var r = p && p.rythme; return r === 'tranquille' || r === 'rapide' ? r : 'regulier'; }
+  // Rythme rapide : les semaines gardées dans chaque préparation, les autres sautent. Le test reste toujours ;
+  // les semaines allégées restent aussi, sauf dans la préparation 5 km, où la version rapide ne sert qu'à qui court déjà.
+  var RAPIDE = { '5k': [0, 2, 3, 5, 6, 7, 9, 10, 11], '10k': [0, 2, 3, 4, 6, 7], d500: [0, 1, 3, 4, 5], semi: [0, 2, 3, 4, 5, 6, 7, 9],
+    d1000: [1, 2, 3, 4, 5, 7], marathon: [1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15], d2000: [1, 2, 3, 4, 5, 7, 8, 10, 11] };
+  function sequence(obj, rythme, depart) {
+    // Les semaines d'une préparation selon le rythme, dans l'ordre : { tpl } ou, pour une semaine de consolidation, { tpl, conso }.
+    var tpl = BLOCS[obj], l = [], n = 0;
+    for (var i = (depart || 0); i < tpl.length; i++) {
+      if (rythme === 'rapide' && RAPIDE[obj].indexOf(i) < 0) continue;
+      l.push({ tpl: i });
+      if (rythme === 'tranquille' && !tpl[i].allegee && !tpl[i].test) { n++; if (n % 2 === 0) l.push({ tpl: i, conso: true }); }
+    }
+    return l;
+  }
+  function dureeParcours(ids, rythme, depart) {
+    var n = 0; ids.forEach(function (id) { n += sequence(id, rythme, id === '5k' ? depart : 0).length; }); return n;
+  }
+  function rapidePermis(p) {
+    // Le rythme rapide demande une base : il s'ouvre à qui court déjà 20 minutes, ou une fois les 5 km décrochés.
+    return !!(p && (p.niveau === 'vingt' || p.niveau === 'trente' || (p.medailles && p.medailles['5k'])));
+  }
+  function rattraper(sorties, ids, med) {
+    // Quand le parcours s'allonge : les médailles que des sorties déjà notées valent. Renvoie { id : date de la première sortie qui suffit }.
+    var o = {};
+    ids.forEach(function (id) {
+      if (med && med[id]) return;
+      var ob = objectif(id), d = null;
+      (sorties || []).forEach(function (x) { if (ob.ok({ km: x.km || 0, dp: x.dp || 0, cont: x.cont }) && (!d || x.d < d)) d = x.d; });
+      if (d) o[id] = d;
+    });
+    return o;
+  }
+  function semaineDe(cle, e) { return e.conso ? { id: cle + '-c' + e.tpl, tpl: e.tpl, ajout: true, conso: true } : { id: cle + '-s' + e.tpl, tpl: e.tpl }; }
+  function nouveauBloc(obj, debut, depart, cle, rythme) {
+    // cle : préfixe propre à ce bloc, pour que les séances notées d'un bloc ne comptent jamais dans un autre.
+    cle = cle || 'b1';
+    return { obj: obj, debut: debut, semaines: sequence(obj, rythme || 'regulier', depart).map(function (e) { return semaineDe(cle, e); }), n: BLOCS[obj].length, cle: cle };
+  }
+  function changerRythme(bloc, k, rythme) {
+    // Les semaines jusqu'à la semaine k (comprise) restent telles quelles ; la suite est recalculée au nouveau rythme.
+    var garde = bloc.semaines.slice(0, Math.max(0, k + 1)), t = -1, pris = {}, cle = bloc.cle || 'b1';
+    garde.forEach(function (s) { pris[s.id] = 1; if (!s.pause && s.tpl > t) t = s.tpl; });
+    if (!garde.length) { var p = bloc.semaines.filter(function (s) { return !s.pause; })[0]; t = (p ? p.tpl : 0) - 1; }
+    var reste = sequence(bloc.obj, rythme, t + 1); // le compte des consolidations repart de la prochaine semaine
+    bloc.semaines = garde.concat(reste.map(function (e) { var s = semaineDe(cle, e); if (pris[s.id]) s.id = idSemaine(bloc); return s; }));
+    return bloc;
+  }
+  function idSemaine(bloc) { bloc.n = (bloc.n || 0) + 1; return (bloc.cle || 'b1') + '-x' + bloc.n; }
+  function position(bloc, auj) {
+    var n = bloc.semaines.length, j = ecartJours(bloc.debut, auj);
+    var o = { n: n, jourJ: plusJours(bloc.debut, n * 7 - 1) };
+    o.reste = ecartJours(auj, o.jourJ);
+    if (j < 0) { o.etat = 'avant'; o.k = -1; o.dans = -j; }
+    else if (j >= n * 7) { o.etat = 'apres'; o.k = n; }
+    else { o.etat = 'encours'; o.k = Math.floor(j / 7); }
+    return o;
+  }
+  function semaine(bloc, k) {
+    var s = bloc.semaines[k]; if (!s) return null;
+    var debut = plusJours(bloc.debut, k * 7);
+    if (s.pause) return { id: s.id, pause: true, s: [], debut: debut, fin: plusJours(debut, 6), ajout: true };
+    var t = BLOCS[bloc.obj][s.tpl];
+    return { id: s.id, tpl: s.tpl, s: t.s, allegee: !!t.allegee, test: !!t.test, ajout: !!s.ajout, conso: !!s.conso, debut: debut, fin: plusJours(debut, 6) };
+  }
+  function faites(journal, semId) {
+    var o = {};
+    ((journal && journal.sorties) || []).forEach(function (x) { if (x.ref && x.ref.w === semId) o[x.ref.i] = x; });
+    return o;
+  }
+  function nbFaites(journal, semId) { return Object.keys(faites(journal, semId)).length; }
+  function refaire(bloc, k) { bloc.semaines.splice(k + 1, 0, { id: idSemaine(bloc), tpl: bloc.semaines[k].tpl, ajout: true }); }
+  function refairePrecedente(bloc, k) { bloc.semaines.splice(k, 0, { id: idSemaine(bloc), tpl: bloc.semaines[k - 1].tpl, ajout: true }); }
+  function decaler(bloc, k) { bloc.semaines.splice(k, 0, { id: idSemaine(bloc), pause: true }); }
+  function retirer(bloc, k) { bloc.semaines.splice(k, 1); }
+  function jMoins(reste) { return reste > 0 ? 'J-' + reste : (reste === 0 ? 'Jour J' : 'J+' + (-reste)); }
+  function court(s) {
+    var p = [];
+    if (s.min != null) p.push(s.min + ' min');
+    if (s.km != null) p.push(fx(s.km) + ' km');
+    if (s.dp != null) p.push(mil(s.dp) + ' m D+');
+    return p.join(' · ');
+  }
+
+  // ---------- Routine du matin ----------
+  function routineDefaut() {
+    return {
+      exos: [
+        { id: 'e1', nom: 'Pompes', dose: '2 × 10' },
+        { id: 'e2', nom: 'Gainage', dose: '2 × 30 s' },
+        { id: 'e3', nom: 'Crunchs', dose: '2 × 15' },
+        { id: 'e4', nom: 'Squats', dose: '2 × 15' },
+        { id: 'e5', nom: 'Mobilité des hanches', dose: '2 min' }
+      ], jours: {}, n: 5
+    };
+  }
+  function cochesDuJour(routine, d) {
+    var j = routine.jours && routine.jours[d];
+    if (j === true) return routine.exos.map(function (e) { return e.id; });
+    return Array.isArray(j) ? j.slice() : [];
+  }
+  function jourComplet(routine, d) { return !!(routine.jours && routine.jours[d] === true); }
+  function basculer(routine, d, id, coche) {
+    var ids = cochesDuJour(routine, d), i = ids.indexOf(id);
+    if (coche && i < 0) ids.push(id);
+    if (!coche && i >= 0) ids.splice(i, 1);
+    var tous = routine.exos.length > 0 && routine.exos.every(function (e) { return ids.indexOf(e.id) >= 0; });
+    routine.jours = routine.jours || {};
+    if (tous) routine.jours[d] = true;
+    else if (ids.length) routine.jours[d] = ids;
+    else delete routine.jours[d];
+    return tous;
+  }
+  function serie(routine, auj) {
+    var n = 0, d = auj;
+    if (!jourComplet(routine, d)) d = plusJours(d, -1);
+    while (jourComplet(routine, d) && n < 5000) { n++; d = plusJours(d, -1); }
+    return n;
+  }
+
+  // ---------- Poids ----------
+  function mesures(poids) {
+    var m = (poids && poids.mesures) || {};
+    return Object.keys(m).sort().map(function (d) { return { d: d, kg: m[d] }; });
+  }
+  function moyenne7(liste, d) {
+    var debut = plusJours(d, -6), s = 0, n = 0;
+    for (var i = 0; i < liste.length; i++) { var x = liste[i]; if (x.d >= debut && x.d <= d) { s += x.kg; n++; } }
+    return n ? s / n : null;
+  }
+  function statsPoids(liste) {
+    if (!liste.length) return null;
+    var der = liste[liste.length - 1], m7 = moyenne7(liste, der.d), avant = moyenne7(liste, plusJours(der.d, -28));
+    return { dernier: der, moy7: m7, avant: avant, ecart: (avant != null && m7 != null) ? m7 - avant : null };
+  }
+  function courbe(liste, L, H) {
+    // Géométrie de la courbe : pesées (gris) et moyenne sur 7 jours (bleu), une seule échelle.
+    if (!liste || liste.length < 2) return null;
+    var g = { x0: 34, x1: L - 44, yh: 12, yb: H - 28 };
+    var d0 = liste[0].d, d1 = liste[liste.length - 1].d, span = Math.max(1, ecartJours(d0, d1));
+    var kgs = liste.map(function (x) { return x.kg; });
+    var mn = Math.min.apply(null, kgs), mx = Math.max.apply(null, kgs);
+    var bas = Math.floor(mn - 0.3), haut = Math.ceil(mx + 0.3);
+    if (haut - bas < 2) { if ((mn - bas) < (haut - mx)) bas -= 1; else haut += 1; }
+    var pas = 1; while ((haut - bas) / pas > 4) pas *= 2;
+    bas = Math.floor(bas / pas) * pas; haut = Math.ceil(haut / pas) * pas;
+    function X(d) { return g.x0 + (g.x1 - g.x0) * ecartJours(d0, d) / span; }
+    function Y(v) { return g.yb - (v - bas) / (haut - bas) * (g.yb - g.yh); }
+    var pts = liste.map(function (x) { return { d: x.d, kg: x.kg, moy: moyenne7(liste, x.d), x: X(x.d), y: Y(x.kg) }; });
+    pts.forEach(function (p) { p.ym = Y(p.moy); });
+    var ticks = []; for (var v = bas; v <= haut + 1e-9; v += pas) ticks.push({ v: v, y: Y(v) });
+    return { g: g, pts: pts, ticks: ticks, bas: bas, haut: haut, d0: d0, d1: d1, milieu: plusJours(d0, Math.round(span / 2)), span: span };
+  }
+
+  // ---------- Carnet : calendrier des sorties ----------
+  function lundiDe(s) { return plusJours(s, -((dateDe(s).getDay() + 6) % 7)); }
+  function plusMois(m, n) { var p = String(m).split('-'), d = new Date(+p[0], +p[1] - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  function grilleMois(m) {
+    // Semaines entières, du lundi au dimanche, qui couvrent le mois m (AAAA-MM).
+    var fin = plusJours(plusMois(m, 1) + '-01', -1), d = lundiDe(m + '-01'), lignes = [];
+    while (d <= fin) {
+      var l = [];
+      for (var i = 0; i < 7; i++) { l.push({ d: d, dans: d.slice(0, 7) === m }); d = plusJours(d, 1); }
+      lignes.push(l);
+    }
+    return lignes;
+  }
+  function parJour(sorties) { var o = {}; (sorties || []).forEach(function (x) { (o[x.d] = o[x.d] || []).push(x); }); return o; }
+  function duMois(sorties, m) { return (sorties || []).filter(function (x) { return String(x.d).slice(0, 7) === m; }); }
+  function somme(sorties, cle) { var s = 0; (sorties || []).forEach(function (x) { s += x[cle] || 0; }); return s; }
+  function totaux(sorties) { return { n: (sorties || []).length, km: Math.round(somme(sorties, 'km') * 100) / 100, dp: Math.round(somme(sorties, 'dp')) }; }
+  var RANG_RES = { facile: 1, correct: 2, dur: 3 };
+  function resumeJour(liste) {
+    // Ce que la case du calendrier montre pour un jour : distance et durée cumulées, ressenti le plus dur.
+    var t = totaux(liste), res = null;
+    liste.forEach(function (x) { if (RANG_RES[x.res] && (!res || RANG_RES[x.res] > RANG_RES[res])) res = x.res; });
+    return { n: t.n, km: t.km, dp: t.dp, min: somme(liste, 'min'), res: res || 'correct' };
+  }
+  function seanceAFaire(bloc, journal, d) {
+    // Première séance encore à faire dans la semaine du plan qui contient la date d ; null s'il n'y en a pas.
+    if (!bloc) return null;
+    var j = ecartJours(bloc.debut, d); if (j < 0) return null;
+    var k = Math.floor(j / 7), sem = semaine(bloc, k); if (!sem || sem.pause) return null;
+    var f = faites(journal, sem.id);
+    for (var i = 0; i < sem.s.length; i++) if (!f[i]) return { w: sem.id, i: i, k: k, s: sem.s[i] };
+    return null;
+  }
+
+  // ---------- Médailles bonus ----------
+  function parSemaine(sorties) { var o = {}; (sorties || []).forEach(function (x) { var l = lundiDe(x.d); o[l] = (o[l] || 0) + 1; }); return o; }
+  function semainesPleines(sorties, auj) {
+    // max : plus longue suite de semaines (lundi-dimanche) à trois sorties ou plus ; cours : suite qui tient encore aujourd'hui.
+    var o = parSemaine(sorties), max = 0, n = 0, prec = null;
+    Object.keys(o).sort().forEach(function (l) {
+      if (o[l] < 3) return;
+      n = (prec && ecartJours(prec, l) === 7) ? n + 1 : 1; prec = l; if (n > max) max = n;
+    });
+    var cours = 0, l = lundiDe(auj);
+    if (!(o[l] >= 3)) l = plusJours(l, -7);
+    while (o[l] >= 3) { cours++; l = plusJours(l, -7); }
+    return { max: max, cours: cours };
+  }
+  function serieMax(routine) {
+    var j = (routine && routine.jours) || {}, max = 0, n = 0, prec = null;
+    Object.keys(j).filter(function (d) { return j[d] === true; }).sort().forEach(function (d) {
+      n = (prec && ecartJours(prec, d) === 1) ? n + 1 : 1; prec = d; if (n > max) max = n;
+    });
+    return max;
+  }
+  function enHiver(d) { var m = +String(d).slice(5, 7); return m === 12 || m <= 2; }
+  function nbHiver(sorties) { return (sorties || []).filter(function (x) { return enHiver(x.d); }).length; }
+  function reposLong(sorties, auj) {
+    // Sept jours entiers sans sortie, après une première sortie.
+    var l = (sorties || []).map(function (x) { return x.d; }).sort();
+    if (!l.length) return false;
+    for (var i = 1; i < l.length; i++) if (ecartJours(l[i - 1], l[i]) >= 8) return true;
+    return ecartJours(l[l.length - 1], auj) >= 8;
+  }
+  function un(sorties, test) { return (sorties || []).some(test); }
+  function combien(sorties, test) { return (sorties || []).filter(test).length; }
+  // Cinq médailles évolutives (bronze, argent, or) et quatre uniques.
+  // mesure : la valeur du moment ; record : le meilleur déjà atteint, quand une série peut retomber.
+  var NIVEAUX = ['bronze', 'argent', 'or'], NOMS_NIVEAUX = ['Bronze', 'Argent', 'Or'], VERS = ['le bronze', 'l’argent', 'l’or'];
+  // Un quatrième rang, secret : le platine n'apparaît qu'une fois l'or décroché.
+  var RANGS = NIVEAUX.concat(['platine']);
+  function pl(n, un, plusieurs) { return n + ' ' + (n > 1 ? plusieurs : un); }
+  function semainesTxt(n) { return pl(n, 'semaine', 'semaines'); }
+  function matinsTxt(n) { return pl(n, 'matin', 'matins'); }
+  function sortiesTxt(n) { return pl(n, 'sortie', 'sorties'); }
+  var BONUS = [
+    { id: 'bornes', nom: 'Les bornes', icone: 'bornes', critere: 'Kilomètres cumulés.',
+      mesure: function (c) { return somme(c.sorties, 'km'); },
+      fmt: function (v) { return (v >= 1000 ? mil(Math.floor(v)) : fx(Math.floor(v * 10) / 10)) + ' km'; }, reste: function (r) { return fx(Math.ceil(r * 10) / 10) + ' km'; },
+      paliers: [{ s: 100, t: '100 km', l: '100 km cumulés', mot: 'Cent kilomètres au compteur.' },
+                { s: 250, t: '250 km', l: '250 km cumulés', mot: 'Deux cent cinquante kilomètres : le compteur tourne.' },
+                { s: 500, t: '500 km', l: '500 km cumulés', mot: 'Cinq cents kilomètres. Ça commence à faire du chemin.' }],
+      platine: { s: 1000, t: '1\u00a0000 km', l: '1\u00a0000 km cumulés', mot: 'Mille kilomètres au compteur. Chapeau.' } },
+    { id: 'sommets', nom: 'Les sommets', icone: 'dole', critere: 'Dénivelé cumulé : un sommet par palier.',
+      mesure: function (c) { return somme(c.sorties, 'dp'); },
+      fmt: function (v) { return mil(v) + ' m'; }, reste: function (r) { return mil(Math.ceil(r)) + ' m'; },
+      vers: function (p, r) { return p.t + ' est à ' + mil(Math.ceil(r)) + ' m.'; },
+      paliers: [{ s: 1677, t: 'La Dôle', l: '1\u00a0677 m de dénivelé cumulés', icone: 'dole', fait: 'La Dôle est gravie.', mot: 'En cumulé, tu as grimpé la hauteur de la Dôle.' },
+                { s: 4478, t: 'Le Cervin', l: '4\u00a0478 m de dénivelé cumulés', icone: 'cervin', fait: 'Le Cervin est gravi.', mot: 'En cumulé, tu as grimpé la hauteur du Cervin.' },
+                { s: 8849, t: 'L’Everest', l: '8\u00a0849 m de dénivelé cumulés', icone: 'everest', fait: 'L’Everest est gravi.', mot: 'Du niveau de la mer au toit du monde, en cumulé.' }],
+      platine: { s: 21900, t: 'Olympus Mons', l: '21\u00a0900 m de dénivelé cumulés', icone: 'olympus', fait: 'Olympus Mons est gravi.', mot: 'En cumulé, tu as grimpé le plus haut volcan de Mars.' } },
+    { id: 'metronome', nom: 'Métronome', icone: 'metronome', critere: 'Semaines pleines d’affilée : trois sorties ou plus dans la semaine.',
+      mesure: function (c) { return semainesPleines(c.sorties, c.auj).cours; }, record: function (c) { return semainesPleines(c.sorties, c.auj).max; },
+      fmt: semainesTxt, reste: semainesTxt,
+      paliers: [{ s: 1, t: '1', l: '1 semaine pleine', mot: 'Trois sorties en une semaine : le rythme est là.' },
+                { s: 4, t: '4', l: '4 semaines pleines d’affilée', mot: 'Quatre semaines pleines de suite. Réglé comme une horloge.' },
+                { s: 12, t: '12', l: '12 semaines pleines d’affilée', mot: 'Douze semaines pleines d’affilée : un bloc entier sans fausse note.' }],
+      platine: { s: 26, t: '26', l: '26 semaines pleines d’affilée', mot: 'Vingt-six semaines pleines d’affilée : six mois sans fausse note.' } },
+    { id: 'routine', nom: 'Routine de fer', icone: 'routine', critere: 'Matins de routine d’affilée.',
+      mesure: function (c) { return c.routine ? serie(c.routine, c.auj) : 0; }, record: function (c) { return serieMax(c.routine); },
+      fmt: matinsTxt, reste: matinsTxt,
+      paliers: [{ s: 7, t: '7', l: '7 matins d’affilée', mot: 'Sept matins de suite : la routine s’installe.' },
+                { s: 30, t: '30', l: '30 matins d’affilée', mot: 'Trente matins de suite. Les pompes n’ont qu’à bien se tenir.' },
+                { s: 100, t: '100', l: '100 matins d’affilée', mot: 'Cent matins d’affilée. C’est devenu une seconde nature.' }],
+      platine: { s: 365, t: '365', l: '365 matins d’affilée', mot: 'Une année entière de matins, sans en manquer un.' } },
+    { id: 'givre', nom: 'Givré', icone: 'givre', critere: 'Sorties entre décembre et février.',
+      mesure: function (c) { return nbHiver(c.sorties); },
+      fmt: sortiesTxt, reste: sortiesTxt,
+      paliers: [{ s: 10, t: '10', l: '10 sorties d’hiver', mot: 'Dix sorties en plein hiver. Même pas froid.' },
+                { s: 25, t: '25', l: '25 sorties d’hiver', mot: 'Vingt-cinq sorties d’hiver : le froid ne t’arrête plus.' },
+                { s: 50, t: '50', l: '50 sorties d’hiver', mot: 'Cinquante sorties d’hiver. Givré pour de bon.' }],
+      platine: { s: 75, t: '75', l: '75 sorties d’hiver', mot: 'Soixante-quinze sorties d’hiver. L’hiver, c’est ta saison.' } },
+    { id: 'grimpeur', nom: 'Grimpeur', icone: 'grimpeur', critere: 'Sorties à 300 m de dénivelé ou plus.',
+      mesure: function (c) { return combien(c.sorties, function (x) { return (x.dp || 0) >= 300; }); },
+      fmt: sortiesTxt, reste: sortiesTxt,
+      paliers: [{ s: 5, t: '5', l: '5 sorties à 300 m de dénivelé ou plus', mot: 'Cinq sorties qui montent vraiment. Les mollets s’y font.' },
+                { s: 20, t: '20', l: '20 sorties à 300 m de dénivelé ou plus', mot: 'Vingt sorties qui grimpent. La pente devient ton terrain.' },
+                { s: 50, t: '50', l: '50 sorties à 300 m de dénivelé ou plus', mot: 'Cinquante sorties à 300 m ou plus. Grimpeur, pour de bon.' }],
+      platine: { s: 100, t: '100', l: '100 sorties à 300 m de dénivelé ou plus', mot: 'Cent sorties qui grimpent. La montagne te connaît.' } },
+    { id: 'fidele', nom: 'Fidèle au poste', icone: 'fidele', critere: 'Semaines avec au moins une sortie, d’affilée ou non.',
+      mesure: function (c) { return Object.keys(parSemaine(c.sorties)).length; },
+      fmt: semainesTxt, reste: semainesTxt,
+      paliers: [{ s: 10, t: '10', l: '10 semaines avec au moins une sortie', mot: 'Dix semaines où tu as répondu présent.' },
+                { s: 26, t: '26', l: '26 semaines avec au moins une sortie', mot: 'Vingt-six semaines courues : l’équivalent de six mois.' },
+                { s: 52, t: '52', l: '52 semaines avec au moins une sortie', mot: 'Cinquante-deux semaines courues : l’équivalent d’une année entière.' }],
+      platine: { s: 104, t: '104', l: '104 semaines avec au moins une sortie', mot: 'Cent quatre semaines courues : l’équivalent de deux années.' } },
+    { id: 'long', nom: 'Au long cours', icone: 'long', critere: 'Sorties de 10 km ou plus.',
+      mesure: function (c) { return combien(c.sorties, function (x) { return (x.km || 0) >= 10; }); },
+      fmt: sortiesTxt, reste: sortiesTxt,
+      paliers: [{ s: 5, t: '5', l: '5 sorties de 10 km ou plus', mot: 'Cinq sorties de 10 km ou plus. La distance s’apprivoise.' },
+                { s: 20, t: '20', l: '20 sorties de 10 km ou plus', mot: 'Vingt sorties longues. L’endurance s’installe.' },
+                { s: 50, t: '50', l: '50 sorties de 10 km ou plus', mot: 'Cinquante sorties de 10 km ou plus. Le long cours, c’est chez toi.' }],
+      platine: { s: 100, t: '100', l: '100 sorties de 10 km ou plus', mot: 'Cent sorties longues. La distance n’a plus de secret.' } },
+    { id: 'premier', nom: 'Premier pas', icone: 'premier', critere: 'Ta première sortie notée.',
+      mot: 'La première est notée : le carnet est ouvert.',
+      ok: function (c) { return c.sorties.length >= 1; } },
+    { id: 'joursans', nom: 'Jour sans', icone: 'joursans', critere: 'Une sortie notée « dur ».',
+      mot: 'Les jours sans font partie du jeu. Celui-là est noté.',
+      ok: function (c) { return un(c.sorties, function (x) { return x.res === 'dur'; }); } },
+    { id: 'chamois', nom: 'Chamois', icone: 'chamois', critere: 'Plus de 100 m de dénivelé par kilomètre, sur une sortie d’au moins 3 km.',
+      mot: 'Plus de 100 m de dénivelé par kilomètre : ça grimpe.',
+      ok: function (c) { return un(c.sorties, function (x) { return x.km >= 3 && (x.dp || 0) / x.km >= 100; }); } },
+    { id: 'marmotte', nom: 'Marmotte', icone: 'marmotte', critere: 'Sept jours de suite sans courir.',
+      mot: 'Une semaine entière sans courir. Le repos compte aussi.',
+      ok: function (c) { return reposLong(c.sorties, c.auj); } }
+  ];
+  function bonus(id) { for (var i = 0; i < BONUS.length; i++) if (BONUS[i].id === id) return BONUS[i]; return null; }
+  function contexte(c) { return { sorties: (c && c.sorties) || [], routine: (c && c.routine) || null, auj: c.auj }; }
+  // Une médaille décrochée se note par une clé : « marmotte » pour une unique, « bornes-2 » pour l'argent des bornes.
+  function clesBonus(avecSecrets) {
+    var l = [];
+    BONUS.forEach(function (b) { if (b.paliers) b.paliers.forEach(function (p, i) { l.push(b.id + '-' + (i + 1)); }); else l.push(b.id); });
+    if (avecSecrets) BONUS.forEach(function (b) { if (b.paliers) l.push(b.id + '-4'); });
+    return l;
+  }
+  function totalBonus(gagnees) {
+    // Ce qu'il y a à décrocher, vu d'ici : les 28 médailles, plus un platine pour chaque or déjà décroché.
+    var n = clesBonus().length;
+    BONUS.forEach(function (b) { if (b.paliers && gagnees && gagnees[b.id + '-3']) n++; });
+    return n;
+  }
+  function lireCle(cle) {
+    var m = /^(.+)-([1234])$/.exec(String(cle)), b = bonus(m ? m[1] : cle);
+    if (!b || !!m !== !!b.paliers) return null;
+    return { b: b, n: m ? +m[2] : 0, p: m ? (+m[2] === 4 ? b.platine : b.paliers[m[2] - 1]) : null };
+  }
+  function bonusGagnes(c) {
+    c = contexte(c); var l = [];
+    BONUS.forEach(function (b) {
+      if (!b.paliers) { if (b.ok(c)) l.push(b.id); return; }
+      var v = Math.max(b.mesure(c), b.record ? b.record(c) : 0);
+      b.paliers.forEach(function (p, i) { if (v >= p.s) l.push(b.id + '-' + (i + 1)); });
+      if (v >= b.platine.s) l.push(b.id + '-4');
+    });
+    return l;
+  }
+  function niveauBonus(id, gagnees) { var n = 0; for (var i = 1; i <= 4; i++) if (gagnees && gagnees[id + '-' + i]) n = i; return n; }
+  function suiviBonus(id, c, niveau) {
+    // Ce qu'affiche la ligne d'une médaille évolutive : la valeur du moment, la part du rail remplie
+    // (le premier palier est à 20 % du rail, le deuxième à 60 %, le troisième au bout) et la phrase de suivi.
+    var b = bonus(id); c = contexte(c); niveau = niveau || 0;
+    var v = b.mesure(c), s = b.paliers.map(function (p) { return p.s; }), part;
+    if (v >= s[2]) part = 1;
+    else if (v >= s[1]) part = 0.6 + 0.4 * (v - s[1]) / (s[2] - s[1]);
+    else if (v >= s[0]) part = 0.2 + 0.4 * (v - s[0]) / (s[1] - s[0]);
+    else part = 0.2 * v / s[0];
+    part = Math.max(part, [0, 0.2, 0.6, 1, 1][niveau]);
+    var q = niveau === 4 ? b.platine : (niveau ? b.paliers[niveau - 1] : null);
+    var fait = q ? (q.fait || (niveau === 4 ? 'Platine' : NOMS_NIVEAUX[niveau - 1]) + ' décroché.') : '', suite = '';
+    if (niveau < 4) {
+      var p = niveau === 3 ? b.platine : b.paliers[niveau], r = Math.max(0, p.s - v);
+      suite = b.vers ? b.vers(p, r) : 'Encore ' + b.reste(r) + ' avant ' + (niveau === 3 ? 'le platine' : VERS[niveau]) + '.';
+    }
+    var o = { valeur: b.fmt(v), part: Math.round(part * 1000) / 1000, phrase: (fait + ' ' + suite).trim() };
+    // Une fois l'or décroché : la part du chemin faite entre l'or et le platine.
+    if (niveau >= 3) o.partPlatine = niveau === 4 ? 1 : Math.round(Math.max(0, Math.min(1, (v - s[2]) / (b.platine.s - s[2]))) * 1000) / 1000;
+    return o;
+  }
+  var ANCIENNES = { cent: 'bornes-1', cervin: 'sommets-2', everest: 'sommets-3', semaine: 'metronome-1', metronome: 'metronome-2', routine30: 'routine-2', givre: 'givre-1' };
+  // Les thèmes de la vitrine : chaque médaille bonus est rangée dans un thème, trois par thème.
+  var THEMES = [
+    { id: 'km', nom: 'Kilomètres', ids: ['premier', 'bornes', 'long'] },
+    { id: 'deniv', nom: 'Dénivelé', ids: ['sommets', 'grimpeur', 'chamois'] },
+    { id: 'regul', nom: 'Régularité', ids: ['metronome', 'fidele', 'routine'] },
+    { id: 'temps', nom: 'Par tous les temps', ids: ['givre', 'joursans', 'marmotte'] }
+  ];
+  function paliersBonus(id, c, gagnees) {
+    // Pour la fiche d'une médaille évolutive : chaque palier, son seuil, sa date s'il est décroché, sinon ce qui manque.
+    var b = bonus(id); c = contexte(c); var v = b.mesure(c);
+    var liste = b.paliers.slice(), noms = NOMS_NIVEAUX.concat(['Platine']);
+    if (gagnees && gagnees[id + '-3']) liste.push(b.platine); // le palier secret ne se montre qu'une fois l'or décroché
+    return liste.map(function (p, i) {
+      var date = (gagnees && gagnees[id + '-' + (i + 1)]) || null;
+      return { niveau: RANGS[i], nom: noms[i], seuil: p.icone ? p.t + ' · ' + mil(p.s) + ' m' : (/[a-z]/i.test(p.t) ? p.t : b.fmt(p.s)), date: date, reste: date ? null : b.reste(Math.max(0, p.s - v)) };
+    });
+  }
+  function migrerBonus(anciens) {
+    // Les médailles notées avant les paliers gardent leur date ; celles qui n'existent plus sont laissées de côté.
+    var valides = {}, o = {};
+    clesBonus(true).forEach(function (k) { valides[k] = 1; });
+    Object.keys(anciens || {}).forEach(function (k) { var n = valides[k] ? k : ANCIENNES[k]; if (n && valides[n] && !o[n]) o[n] = anciens[k]; });
+    return o;
+  }
+
+  root.DT = {
+    lundiDe: lundiDe, plusMois: plusMois, grilleMois: grilleMois, parJour: parJour, duMois: duMois, totaux: totaux,
+    resumeJour: resumeJour, seanceAFaire: seanceAFaire,
+    BONUS: BONUS, NIVEAUX: NIVEAUX, bonus: bonus, clesBonus: clesBonus, lireCle: lireCle, bonusGagnes: bonusGagnes, niveauBonus: niveauBonus,
+    suiviBonus: suiviBonus, migrerBonus: migrerBonus, THEMES: THEMES, paliersBonus: paliersBonus, RANGS: RANGS, totalBonus: totalBonus,
+    BUTS: BUTS, lireBut: lireBut, nomBut: nomBut, etapes: etapes, estBut: estBut, RYTHMES: RYTHMES, lireRythme: lireRythme, RAPIDE: RAPIDE, sequence: sequence,
+    dureeParcours: dureeParcours, rapidePermis: rapidePermis, rattraper: rattraper, changerRythme: changerRythme, semainesPleines: semainesPleines, serieMax: serieMax,
+    iso: iso, dateDe: dateDe, dateValide: dateValide, plusJours: plusJours, ecartJours: ecartJours, prochainLundi: prochainLundi,
+    fx: fx, mil: mil, minTxt: minTxt, nombre: nombre,
+    BLOCS: BLOCS, OBJECTIFS: OBJECTIFS, DEPARTS: DEPARTS, objectif: objectif,
+    nouvellesMedailles: nouvellesMedailles, disponible: disponible, manquants: manquants,
+    nouveauBloc: nouveauBloc, position: position, semaine: semaine, faites: faites, nbFaites: nbFaites,
+    refaire: refaire, refairePrecedente: refairePrecedente, decaler: decaler, retirer: retirer, jMoins: jMoins, court: court,
+    routineDefaut: routineDefaut, cochesDuJour: cochesDuJour, jourComplet: jourComplet, basculer: basculer, serie: serie,
+    mesures: mesures, moyenne7: moyenne7, statsPoids: statsPoids, courbe: courbe
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>
+/* Le Dossard : icônes des médailles bonus. Dessins au trait sur une grille de 24, couleur héritée du disque. */
+(function (root) {
+  'use strict';
+  var P = ' fill="currentColor" stroke="none"';
+  root.DT_ICONES = {
+    // Une chaussure de course
+    premier: '<path d="M3 17.5v-6l3.4 1.3c.9.3 1.9-.1 2.3-.9l1-2.1 4.3 3.6c.9.8 2 1.3 3.2 1.5l2 .4c1.1.2 1.8 1.1 1.8 2.2"></path>' +
+      '<path d="M3 17.5h18v1.2a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 18.7z"></path><path d="M11.3 12.3l1.3-1.5M13.7 14.1l1.2-1.4"></path>',
+    // Un métronome
+    metronome: '<path d="M9.2 3.5h5.6l3.7 17h-13z"></path><path d="M6.4 16.3h11.2M12 16.3l4.3-9.7"></path><circle cx="14.7" cy="10.2" r="1.7"' + P + '></circle>',
+    // Le soleil qui se lève
+    routine: '<path d="M2.5 17.5h19M7.5 21h9"></path><path d="M6.8 17.5a5.2 5.2 0 0 1 10.4 0"></path><path d="M12 6.3v2.7M5 10l1.9 1.9M19 10l-1.9 1.9"></path>',
+    // Une route qui file vers l'horizon
+    bornes: '<path d="M8.6 3.5L3.8 20.5M15.4 3.5l4.8 17"></path><path d="M12 4v2.6M12 10.2v3.2M12 17v3.5"></path>',
+    // La Dôle : la crête du Jura et la boule blanche du sommet
+    dole: '<path d="M2.5 20l4.4-3.7 3.5-1.1 4.3-4.8h3.3l1.2 3.9 2.8 5.7z"' + P.replace(' stroke="none"', '') + '></path><circle cx="16.3" cy="7.3" r="2.6"></circle>',
+    // Le Cervin : sa pointe penchée et son épaule
+    cervin: '<path d="M2.5 20l3.9-4.5 2.4-5.5 1.8-6.4 2.1 1.7 1 4 2.2 1.2 1.7 3.7 3.9 5.8z"></path>' +
+      '<path d="M10.6 3.6l2.1 1.7 1 4 2.2 1.2 1.7 3.7 3.9 5.8h-8.3l-1.7-6.600.9-3.8z"' + P + '></path>',
+    // L'Everest : un massif et son drapeau au sommet
+    everest: '<path d="M2.5 20l6.8-10.3 3.2 4.6 2.3-3.1 6.7 8.8z"></path><path d="M9.3 9.7V3.4"></path><path d="M9.3 3.4l4.2 1.6-4.2 1.7z"' + P + '></path>' +
+      '<path d="M6.5 14l1.7 1.3 1.1-1.6 1.5 1.5 1.4-1.7"></path>',
+    // Olympus Mons : un volcan-bouclier très large, son cratère, et une lune de Mars au-dessus
+    olympus: '<path d="M2.5 19.5c3.2-.8 5.6-5.4 7.3-8.5h4.4c1.7 3.1 4.1 7.7 7.3 8.5z"></path><path d="M9.8 11c.9 1.1 3.5 1.1 4.4 0"></path><circle cx="18.6" cy="5.4" r="1.9"></circle>',
+    // Un nuage et sa pluie
+    joursans: '<path d="M7.2 15.5a4.2 4.2 0 0 1-.3-8.4 5.6 5.6 0 0 1 10.8 1.2 3.6 3.6 0 0 1-.5 7.2z"></path><path d="M8.6 18.3l-.9 2.6M12.5 18.3l-.9 2.6M16.4 18.3l-.9 2.6"></path>',
+    // Une montagne et la flèche qui monte
+    grimpeur: '<path d="M2.8 20.5L10.5 9l4 5.5 2.3-3 4.4 9z"></path><path d="M17.5 3.5v4.8M15.3 5.6l2.2-2.2 2.2 2.2"></path>',
+    // Un calendrier coché
+    fidele: '<rect x="4" y="5.5" width="16" height="14.5" rx="2"></rect><path d="M4 10h16M8.2 3.6v3.6M15.8 3.6v3.6"></path><path d="M8.9 15.1l2.2 2.1 4-4.3"></path>',
+    // Un itinéraire qui serpente jusqu'au drapeau
+    long: '<circle cx="5.5" cy="18.5" r="2"></circle><path d="M7.5 18.5H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h5"></path><path d="M17.5 3.3v6.4"></path><path d="M17.5 3.3l3.8 1.5-3.8 1.6z"' + P + '></path>',
+    // Un flocon
+    givre: [0, 60, 120, 180, 240, 300].map(function (a) { return '<path transform="rotate(' + a + ' 12 12)" d="M12 12V2.6M9.7 5.1L12 7.4l2.3-2.3"></path>'; }).join(''),
+    // Une tête de chamois, cornes en crochet
+    chamois: '<path d="M10.3 9.6V5.3a2 2 0 0 0-3.5-1.3M13.7 9.6V5.3a2 2 0 0 1 3.5-1.3"></path>' +
+      '<path d="M7.9 11.3c0-1 .8-1.7 1.8-1.7h4.6c1 0 1.800.7 1.8 1.7 0 2.9-.9 5.4-1.9 7.2-.5 1-1.3 1.5-2.2 1.5s-1.7-.5-2.2-1.5c-1-1.8-1.9-4.3-1.9-7.2z"></path>' +
+      '<path d="M7.9 11.7L4.3 10.4c-.1 1.7 1 3.1 2.9 3.5M16.1 11.7l3.6-1.3c.1 1.7-1 3.1-2.9 3.5"></path>' +
+      '<circle cx="10.3" cy="13.3" r=".9"' + P + '></circle><circle cx="13.7" cy="13.3" r=".9"' + P + '></circle><path d="M11 17.8h2l-1 1.2z"' + P + '></path>',
+    // Une marmotte debout, qui s'assoupit
+    marmotte: '<path d="M15.2 10.8c1.500.1 2.9-.5 3-1.800.1-1.2-1-2-2.3-2.3-.7-1.3-1.9-2.1-3.3-2.1-2.6 0-4.5 1.9-5 4.6-1.4 1.7-2.2 3.9-2.2 6.3 0 1.900.6 3.7 1.5 5h10.4c.9-1.2 1.4-2.7 1.3-4.3-.1-1.5-.7-2.8-1.6-3.8-.7-.5-1.3-1-1.8-1.6z"></path>' +
+      '<circle cx="9.7" cy="5.2" r="1.4"' + P + '></circle><circle cx="13.9" cy="7.5" r=".85"' + P + '></circle><circle cx="17.7" cy="8.3" r=".8"' + P + '></circle>' +
+      '<path d="M14.3 13.2l2.2 2M6.7 19.1l-3 1.3M18.8 2.4h2.7l-2.7 3h2.7"></path>'
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>
+/* Le Dossard : interface (affichage, saisies, enregistrement des données). */
+(function () {
+  'use strict';
+  var D = window.DT;
+  var vue = document.getElementById('vue'), feuille = document.getElementById('feuille'),
+      annonce = document.getElementById('annonce'), onglets = document.getElementById('onglets');
+  var ROUTES = ['objectif', 'plan', 'carnet', 'routine', 'poids', 'medailles'];
+  var NOMS = ['profil', 'journal', 'routine', 'poids'];
+  var S = { pret: false, lent: false, mode: 'attente', sync: 'ok',
+            docs: { profil: null, journal: null, routine: null, poids: null },
+            f: null, ui: { plage: 28, ouv: {}, suppr: null, edit: false, sel: null, mois: null }, aRendre: false };
+
+  function auj() { return window.DT_AUJ || D.iso(new Date()); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function r1(v) { return Math.round(v * 10) / 10; }
+  var fCourt = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'short' });
+  var fJour = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: 'numeric', month: 'short' });
+  var fLong = new Intl.DateTimeFormat('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' });
+  var fAn = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric' });
+  function dCourt(s) { return fCourt.format(D.dateDe(s)); }
+  function dJour(s) { return fJour.format(D.dateDe(s)); }
+  function dLong(s) { return fLong.format(D.dateDe(s)); }
+  function dAn(s) { return fAn.format(D.dateDe(s)); }
+  var fMois = new Intl.DateTimeFormat('fr-CH', { month: 'long', year: 'numeric' });
+  var fMoisNom = new Intl.DateTimeFormat('fr-CH', { month: 'long' });
+  function dMois(m) { return fMois.format(D.dateDe(m + '-01')); }
+
+  function P() { return S.docs.profil; }
+  function Jn() { return S.docs.journal || (S.docs.journal = { sorties: [] }); }
+  function Rt() { return S.docs.routine || (S.docs.routine = D.routineDefaut()); }
+  function Pd() { return S.docs.poids || (S.docs.poids = { mesures: {} }); }
+  function medailles() { var p = P(); return (p && p.medailles) || {}; }
+  function cleBloc(p) { p.nbBlocs = (p.nbBlocs || 0) + 1; return 'b' + p.nbBlocs; }
+  function bonus() { var p = P(); return (p && p.bonus) || {}; }
+  function ctxBonus() { return { sorties: Jn().sorties, routine: Rt(), auj: auj() }; }
+  // Le parcours : les médailles de l'objectif choisi, dans l'ordre. Un programme d'avant ce choix garde les sept.
+  function butCourant() { return D.lireBut(P()); }
+  function parcours() { return D.etapes(butCourant()); }
+  function idsParcours() { return parcours().map(function (o) { return o.id; }); }
+  function nbGagnees() { var med = medailles(); return parcours().filter(function (o) { return med[o.id]; }).length; }
+  function dureeBloc(o) { return D.sequence(o.id, D.lireRythme(P()), 0).length; }
+  function pastille(o, cls) { return '<span class="pm' + (o.deniv ? ' d' : '') + (cls ? ' ' + cls : '') + '">' + (o.deniv ? triangle() : '') + '<span>' + o.court + '</span></span>'; }
+  // Note les médailles bonus nouvellement méritées et renvoie leurs identifiants.
+  function majBonus() {
+    var p = P(); if (!p) return [];
+    var avant = p.bonus || {}, deja = D.migrerBonus(avant), repris = JSON.stringify(deja) !== JSON.stringify(avant);
+    var neuves = D.bonusGagnes(ctxBonus()).filter(function (k) { return !deja[k]; });
+    neuves.forEach(function (k) { deja[k] = auj(); });
+    if (neuves.length || repris) { p.bonus = deja; garder('profil'); }
+    return neuves;
+  }
+  // « Les bornes (argent) », « La Dôle (bronze) », « Marmotte »
+  function nomCle(k) { var x = D.lireCle(k); return x.n ? (x.p.icone ? x.p.t : x.b.nom) + ' (' + D.RANGS[x.n - 1] + ')' : x.b.nom; }
+  function direBonus(cles) {
+    if (cles.length) dire((cles.length > 1 ? 'Médailles bonus : ' : 'Médaille bonus : ') + cles.map(nomCle).join(', ') + '.');
+  }
+  var bonusVu = false;
+  // Au premier affichage des données : médailles bonus méritées entre deux visites (une semaine de repos, par exemple).
+  function apresPret() { if (bonusVu || !S.pret || !P()) return; bonusVu = true; direBonus(majBonus()); }
+
+  // ---------- Enregistrement des données ----------
+  var Depot = (function () {
+    var refs = {}, files = {}, recu = {}, confirme = {}, minuterie = null;
+    function cle(n) { return 'dossard:' + n; }
+    function clone(v) { return v == null ? null : JSON.parse(JSON.stringify(v)); }
+    function lireLocal(n) { try { var t = localStorage.getItem(cle(n)); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+    function ecrireLocal(n, v) {
+      try { if (v == null) localStorage.removeItem(cle(n)); else localStorage.setItem(cle(n), JSON.stringify(v)); return true; }
+      catch (e) { return false; }
+    }
+    function tous(o) { return NOMS.every(function (n) { return o[n]; }); }
+    function local() {
+      S.mode = 'local';
+      NOMS.forEach(function (n) { S.docs[n] = lireLocal(n); });
+      S.pret = true; rendre(); apresPret();
+    }
+    function ecouter(db, uid) {
+      S.mode = 'nuage';
+      NOMS.forEach(function (n) {
+        refs[n] = db.doc('data/users/' + uid + '/' + n);
+        files[n] = { sale: false, enCours: false, minuterie: null };
+        refs[n].onSnapshot(function (snap) {
+          var meta = snap.metadata || {}, f = files[n];
+          if (meta.hasPendingWrites || f.enCours || f.sale) return; // nos propres écritures priment
+          var v = snap.exists ? clone(snap.data()) : null;
+          var change = JSON.stringify(v) !== JSON.stringify(S.docs[n]);
+          if (change) S.docs[n] = v;
+          recu[n] = true; if (!meta.fromCache) confirme[n] = true;
+          var avant = S.pret;
+          // Sans profil, on attend la réponse confirmée du serveur avant de proposer d'en créer un.
+          S.pret = tous(recu) && (S.docs.profil != null || tous(confirme));
+          if (S.pret && minuterie) { clearTimeout(minuterie); minuterie = null; S.lent = false; }
+          if (change || S.pret !== avant) rendreFond();
+          apresPret();
+        }, function () { S.sync = 'coupe'; rendreFond(); });
+      });
+      minuterie = setTimeout(function () { minuterie = null; if (!S.pret) { S.lent = true; rendre(); } }, 10000);
+    }
+    async function ouvrir() {
+      var c = window.claude, db = null, user = null, uid = null;
+      // La page peut démarrer un peu avant que l'hôte n'expose window.claude : on patiente jusqu'à 1,5 s.
+      // La version autonome (site GitHub Pages) n'a pas d'hôte : elle passe tout de suite à l'enregistrement local.
+      for (var i = 0; !window.DOSSARD_AUTONOME && i < 30 && !(c && typeof c.use === 'function'); i++) { await attendre(50); c = window.claude; }
+      if (!c || typeof c.use !== 'function') { local(); return; }
+      try { var r = await Promise.all([c.use('db'), c.use('user')]); db = r[0]; user = r[1]; } catch (e) { db = null; }
+      try { uid = user ? await user.id() : null; } catch (e) { uid = null; }
+      if (!db || !uid) { local(); return; }
+      try { ecouter(db, uid); } catch (e) { local(); }
+    }
+    function attendre(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+    async function vider(n) {
+      var f = files[n]; if (!f || f.enCours || !f.sale) return;
+      f.enCours = true; f.sale = false;
+      var corps = clone(S.docs[n]), ok = false, err = null;
+      for (var essai = 0; essai < 2 && !ok; essai++) {
+        try { if (corps == null) await refs[n].delete(); else await refs[n].set(corps); ok = true; }
+        catch (e) { err = e; if (!e || e.code !== 'unavailable') break; await attendre(500 + Math.random() * 1000); }
+      }
+      f.enCours = false;
+      if (ok) { if (S.sync !== 'ok') { S.sync = 'ok'; rendreFond(); } if (f.sale) vider(n); }
+      else { f.sale = true; S.sync = (err && err.code === 'quota_exceeded') ? 'plein' : 'echec'; rendreFond(); }
+    }
+    function enregistrer(n) {
+      if (S.mode !== 'nuage') { if (!ecrireLocal(n, S.docs[n])) S.sync = 'echec'; return; }
+      var f = files[n]; f.sale = true;
+      clearTimeout(f.minuterie);
+      f.minuterie = setTimeout(function () { vider(n); }, 350);
+    }
+    function reessayer() {
+      S.sync = 'ok';
+      if (S.mode === 'nuage') NOMS.forEach(function (n) { if (files[n] && files[n].sale) vider(n); });
+      else NOMS.forEach(function (n) { if (!ecrireLocal(n, S.docs[n])) S.sync = 'echec'; });
+      rendre();
+    }
+    function aLocal() { return S.mode === 'nuage' && lireLocal('profil') != null; }
+    function reprendreLocal() {
+      NOMS.forEach(function (n) { var v = lireLocal(n); if (v != null) { S.docs[n] = v; enregistrer(n); } });
+    }
+    return { ouvrir: ouvrir, enregistrer: enregistrer, reessayer: reessayer, aLocal: aLocal, reprendreLocal: reprendreLocal };
+  })();
+  function garder() { for (var i = 0; i < arguments.length; i++) Depot.enregistrer(arguments[i]); }
+
+  // ---------- Petits morceaux d'affichage ----------
+  function dire(msg) {
+    annonce.textContent = msg;
+    clearTimeout(dire.t); dire.t = setTimeout(function () { annonce.textContent = ''; }, 3200);
+  }
+  function icone(nom) {
+    var p = {
+      reglages: '<circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8"></path>',
+      fermer: '<path d="M6 6l12 12M18 6L6 18"></path>',
+      coche: '<path d="M5 12.5l4.5 4.5L19 7.5"></path>',
+      gauche: '<path d="M15 5l-7 7 7 7"></path>',
+      droite: '<path d="M9 5l7 7-7 7"></path>'
+    }[nom];
+    return '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  }
+  function triangle() { return '<svg aria-hidden="true" width="9" height="7" viewBox="0 0 9 7"><path d="M4.5 0L9 7H0z" fill="currentColor"></path></svg>'; }
+  function boutonReglages() { return '<button class="rond" type="button" data-a="reglages" aria-label="Réglages">' + icone('reglages') + '</button>'; }
+  function medaille(o, classe) {
+    return '<span class="med' + (classe ? ' ' + classe : '') + (o.deniv ? ' d' : '') + '"><span class="ruban"></span><span class="disque">' +
+      (o.deniv ? triangle() : '') + '<span>' + o.court + '</span></span></span>';
+  }
+  var ICONES = window.DT_ICONES || {};
+  // niveau : bronze, argent, or ou platine ; vide tant que rien n'est décroché. Une médaille unique décrochée est d'emblée en or.
+  function medailleBonus(icone, niveau) {
+    return '<span class="med bonus' + (niveau ? ' ' + niveau : '') + '"><span class="ruban"></span><span class="disque">' +
+      '<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+      (ICONES[icone] || '') + '</svg></span></span>';
+  }
+  function medailleCle(k) { var x = D.lireCle(k); return medailleBonus(x.n ? (x.p.icone || x.b.icone) : x.b.icone, x.n ? D.RANGS[x.n - 1] : 'or'); }
+  function iconeBonus(b, niv) {
+    if (!b.paliers) return b.icone;
+    var p = niv === 4 ? b.platine : b.paliers[Math.max(0, niv - 1)];
+    return p.icone || b.paliers[Math.min(2, Math.max(0, niv - 1))].icone || b.icone;
+  }
+  function pointsBonus(b, niv, gagnee) {
+    // Trois points pour une médaille évolutive (bronze, argent, or), un seul pour une unique : son or.
+    var h = '<span class="pts" aria-hidden="true">';
+    if (!b.paliers) return h + '<i' + (gagnee ? ' class="or"' : '') + '></i></span>';
+    D.NIVEAUX.forEach(function (n, k) { h += '<i' + (k < niv ? ' class="' + n + '"' : '') + '></i>'; });
+    if (niv >= 3) h += '<i' + (niv === 4 ? ' class="platine"' : '') + '></i>'; // le palier secret, visible une fois l'or décroché
+    return h + '</span>';
+  }
+  function caseBonus(b, bo, ctx) {
+    var niv = b.paliers ? D.niveauBonus(b.id, bo) : 0, gagnee = b.paliers ? niv > 0 : !!bo[b.id];
+    var ico = iconeBonus(b, niv);
+    var dit = b.nom + ', ' + (b.paliers ? (niv ? D.RANGS[niv - 1] + ' décroché, ' : 'aucun palier pour l’instant, ') + D.suiviBonus(b.id, ctx, niv).valeur : (gagnee ? 'décrochée' : 'pas encore décrochée'));
+    return '<li><button class="case' + (gagnee ? '' : ' non') + '" type="button" data-a="fiche" data-bonus="' + b.id + '" aria-label="' + esc(dit) + '">' +
+      medailleBonus(ico, b.paliers ? (niv ? D.RANGS[niv - 1] : '') : (gagnee ? 'or' : '')) + '<b>' + esc(b.nom) + '</b>' + pointsBonus(b, niv, gagnee) + '</button></li>';
+  }
+  function pisteBonus(b, niv, su) {
+    var lab = b.paliers.map(function (q, k) { return D.NIVEAUX[k] + ' : ' + q.t + (k < niv ? ', décroché' : ''); }).join(' ; ');
+    var h = '<div class="piste" role="img" aria-label="' + esc('Paliers. ' + lab) + '"><i class="rail"><b style="width:' + (su.part * 100).toFixed(1) + '%"></b></i>';
+    b.paliers.forEach(function (q, k) {
+      h += '<span class="pas' + (k < niv ? ' ok' : '') + '"><i class="pt' + (k < niv ? ' ' + D.NIVEAUX[k] : '') + '"></i><span class="pl">' + esc(q.t) + '</span></span>';
+    });
+    return h + '</div>';
+  }
+  function classeMed(o) {
+    var med = medailles(), bloc = P() && P().bloc;
+    return med[o.id] ? 'gagnee' : (bloc && bloc.obj === o.id ? 'cours' : '');
+  }
+  function ratelier() {
+    var n = nbGagnees(), liste = parcours(), tot = liste.length;
+    var h = '<a class="ratelier" href="#medailles" aria-label="Porte-médailles : ' + n + ' sur ' + tot + '"><span class="rang"><span class="sur gris">Porte-médailles</span><span class="sur gris">' + n + ' sur ' + tot + '</span></span><span class="barre"></span><span class="medailles' + (tot < 4 ? ' peu' : '') + '">';
+    liste.forEach(function (o) { h += medaille(o, classeMed(o)); });
+    return h + '</span></a>';
+  }
+  function dossard(o, prenom, droite) {
+    var t = o.gros.length >= 4 ? ' l' : (o.gros.length === 3 ? ' m' : '');
+    return '<div class="dossard"><div class="dossard-haut">Objectif · ' + esc(o.titre) + '</div>' +
+      '<div class="dossard-num"><span class="num' + t + '">' + o.gros + '</span><span class="unite' + (o.deniv ? ' d' : '') + '">' + o.unite + '</span></div>' +
+      '<div class="dossard-bas"><span class="nom">' + esc(prenom) + '</span><span class="jmoins">' + esc(droite) + '</span></div>' +
+      '<i class="trou a" aria-hidden="true"></i><i class="trou b" aria-hidden="true"></i><i class="trou c" aria-hidden="true"></i><i class="trou e" aria-hidden="true"></i></div>';
+  }
+  function segments(pos) {
+    var h = '<div class="segments" aria-hidden="true" style="grid-template-columns:repeat(' + pos.n + ',minmax(0,1fr))">';
+    for (var k = 0; k < pos.n; k++) h += '<i class="' + (pos.etat === 'apres' || k < pos.k ? 'fait' : (k === pos.k ? 'ici' : '')) + '"></i>';
+    return h + '</div>';
+  }
+  function faits(s) {
+    var c = [];
+    if (s.min != null) c.push('<div class="fait"><b>' + s.min + '</b><span>min</span></div>');
+    if (s.km != null) c.push('<div class="fait"><b>' + D.fx(s.km) + '</b><span>km</span></div>');
+    if (s.dp != null) c.push('<div class="fait"><b>' + D.mil(s.dp) + '</b><span>m D+</span></div>');
+    return c.length ? '<div class="faits">' + c.join('') + '</div>' : '';
+  }
+  function banniere() {
+    if (S.sync === 'ok') return '';
+    var t = S.sync === 'plein' ? 'L’espace de données de cette page est plein : tes dernières saisies ne sont pas enregistrées.'
+      : S.sync === 'coupe' ? 'La liaison avec tes données est coupée. Ce que tu vois peut dater, et tes saisies ne sont plus enregistrées.'
+      : 'Tes dernières saisies n’ont pas pu être enregistrées. Elles restent affichées tant que la page est ouverte.';
+    return '<div class="alerte" role="alert"><span>' + t + '</span>' + (S.sync === 'echec' ? '<button class="lien" type="button" data-a="reessayer">Réessayer</button>' : '') + '</div>';
+  }
+
+  // ---------- Écrans ----------
+  function vueChargement() {
+    var h = '<section class="bandeau"><p class="sur">Le Dossard</p><h1 class="geant">Un instant</h1><p>Tes données arrivent.</p></section>';
+    if (S.lent || S.sync === 'coupe') h += '<div class="bloc"><p>Tes données ne répondent pas encore. La page continue d’attendre : inutile de la recharger.</p></div>';
+    return h;
+  }
+  var NOMS_TUILES = { '5k': ['5 km', 'sans marcher'], '10k': ['10 km', 'sans marcher'], semi: ['Semi', '21,1 km'], marathon: ['Marathon', '42,2 km'] };
+  function etapesCreation(but) {
+    var n = 0;
+    return D.etapes(but).map(function (o) {
+      var fin = D.estBut(but, o.id); if (!fin) n++;
+      return '<span class="pas-e">' + pastille(o, fin ? 'but' : 'etape') + '<b>' + esc(o.nom) + '</b><small>' + (fin ? 'Objectif' : 'Étape ' + n) + '</small></span>';
+    }).join('');
+  }
+  function rythmesCreation(but, niveau, choisi, debut) {
+    // Les trois rythmes, avec la durée du parcours et le mois d'arrivée estimé. Le rapide reste fermé à qui reprend.
+    var ids = D.etapes(but).map(function (o) { return o.id; }), dep = 0, h = '', ouvert = D.rapidePermis({ niveau: niveau });
+    D.DEPARTS.forEach(function (d) { if (d.id === niveau) dep = d.depart; });
+    D.RYTHMES.forEach(function (r) {
+      var ferme = r.id === 'rapide' && !ouvert, n = D.dureeParcours(ids, r.id, dep);
+      h += '<label class="rythme"><input id="ob-ry-' + r.id + '" type="radio" name="rythme" value="' + r.id + '" data-c="creation"' + (r.id === choisi ? ' checked' : '') + (ferme ? ' disabled' : '') + '>' +
+        '<span class="r-in"><span class="rd"></span><span><span class="r-nom">' + r.nom + '</span><small>' + esc(r.detail) + (ferme ? ' S’ouvre à partir de « Je cours déjà 20 minutes ».' : '') + '</small>' +
+        (!ferme && D.dateValide(debut) ? '<span class="r-date">Arrivée vers ' + fMois.format(D.dateDe(D.plusJours(debut, n * 7 - 1))) + '</span>' : '') + '</span>' +
+        (ferme ? '' : '<span class="r-sem"><b>' + n + '</b><span>' + (n > 1 ? 'semaines' : 'semaine') + '</span></span>') + '</span></label>';
+    });
+    return h;
+  }
+  function majCreation(el) {
+    // Chaque choix met à jour les étapes, les durées et les dates, sans toucher au reste du formulaire.
+    var f = document.querySelector('form[data-f="demarrer"]'); if (!f) return;
+    var but = { dist: f.dist.value, deniv: f.deniv.value || null }, niv = f.niveau.value, ry = f.rythme.value || 'regulier', l = D.etapes(but);
+    if (ry === 'rapide' && !D.rapidePermis({ niveau: niv })) ry = 'regulier';
+    document.getElementById('ob-nb').textContent = l.length + (l.length > 1 ? ' médailles' : ' médaille');
+    document.getElementById('ob-etapes').innerHTML = etapesCreation(but);
+    document.getElementById('ob-rythmes').innerHTML = rythmesCreation(but, niv, ry, f.debut.value);
+    if (el && el.name === 'rythme') { var r = document.getElementById(el.id); if (r) { try { r.focus({ preventScroll: true }); } catch (e) {} } }
+  }
+  function vueDepart() {
+    var but = D.lireBut(null), debut = D.prochainLundi(auj()), nbE = D.etapes(but).length;
+    var h = '<section class="bandeau"><p class="sur">Le Dossard</p><h1 class="geant">Ton premier dossard</h1>' +
+      '<p>Dis où tu veux arriver. L’appli pose les étapes et le calendrier.</p></section>';
+    if (Depot.aLocal()) h += '<div class="bloc"><div class="encadre"><strong>Des données du Dossard existent déjà dans ce navigateur.</strong>' +
+      '<span>Elles datent d’une visite où l’enregistrement dans ton compte n’était pas disponible.</span>' +
+      '<div class="actions-sem" style="border:0"><button class="lien" type="button" data-a="reprendre-local">Les reprendre</button></div></div></div>';
+    h += '<form class="bloc" data-f="demarrer" novalidate>' +
+      '<div class="champ"><label for="ob-prenom">Ton prénom, pour le dossard</label><input id="ob-prenom" name="prenom" type="text" maxlength="20" autocomplete="given-name" value="' + (window.DOSSARD_AUTONOME ? '' : 'Val') + '"></div>' +
+      '<fieldset class="champ"><legend>Ton objectif</legend><div class="tuiles deux">';
+    D.BUTS.dist.forEach(function (id) {
+      h += '<label class="tuile"><input id="ob-dist-' + id + '" type="radio" name="dist" value="' + id + '" data-c="creation"' + (id === but.dist ? ' checked' : '') + '><span class="t-in">' + pastille(D.objectif(id)) +
+        '<span><b>' + NOMS_TUILES[id][0] + '</b><small>' + NOMS_TUILES[id][1] + '</small></span></span></label>';
+    });
+    h += '</div></fieldset><fieldset class="champ"><legend>Avec du dénivelé, en une sortie ?</legend><div class="tuiles quatre">';
+    [''].concat(D.BUTS.deniv).forEach(function (id) {
+      var o = id ? D.objectif(id) : null;
+      h += '<label class="tuile"><input id="ob-deniv-' + (id || 'sans') + '" type="radio" name="deniv" value="' + id + '" data-c="creation"' + (id === (but.deniv || '') ? ' checked' : '') + '><span class="t-in">' +
+        (o ? pastille(o) : '<span class="pm"><span>–</span></span>') + '<b>' + (o ? D.mil(+o.court) + ' m' : 'Sans') + '</b></span></label>';
+    });
+    h += '</div></fieldset><div class="champ"><div class="rang"><span class="sur gris">Tes étapes</span><span class="sur gris" id="ob-nb">' + nbE + ' médailles</span></div>' +
+      '<div class="parcours-e" id="ob-etapes" aria-live="polite">' + etapesCreation(but) + '</div><p class="aide">Chaque étape a sa médaille, son dossard et sa préparation.</p></div>' +
+      '<fieldset class="champ"><legend>Où en es-tu aujourd’hui ?</legend>';
+    D.DEPARTS.forEach(function (d, i) {
+      h += '<label class="choix"><input id="ob-niv-' + d.id + '" type="radio" name="niveau" value="' + d.id + '" data-c="creation"' + (i === 0 ? ' checked' : '') + '><span>' + esc(d.nom) + '<small>' + esc(d.detail) + '</small></span></label>';
+    });
+    h += '</fieldset><fieldset class="champ"><legend>Ton rythme</legend><div id="ob-rythmes">' + rythmesCreation(but, 'zero', 'regulier', debut) + '</div>' +
+      '<p class="aide">Dates estimées si tout s’enchaîne. Tu peux toujours refaire une semaine, faire une pause ou changer de rythme.</p></fieldset>' +
+      '<div class="champ"><label for="ob-debut">Date de la première semaine</label><input id="ob-debut" name="debut" type="date" data-c="creation" value="' + debut + '">' +
+      '<p class="aide">Tu peux choisir une date lointaine. La routine du matin et la pesée sont ouvertes tout de suite.</p></div>' +
+      '<p class="aide">Ce programme est un cadre général de reprise. Fais-le valider et adapter par ton équipe médicale avant la première séance.</p>' +
+      '<p class="erreur" id="ob-erreur" role="alert" hidden></p>' +
+      '<button class="btn" type="submit">Créer mon programme</button></form>';
+    return h;
+  }
+  function carteChoix(o) {
+    return '<section class="carte"><div class="rang"><h2 class="titre-seance">' + esc(o.nom) + '</h2>' + medaille(o, '') + '</div>' +
+      '<p class="resume">' + esc(o.critere) + ' Préparation : ' + dureeBloc(o) + ' semaines.</p>' +
+      '<button class="btn" type="button" data-a="choisir" data-obj="' + o.id + '">Choisir cet objectif</button></section>';
+  }
+  function carteSeance(s, semId, i, etiquette) {
+    return '<section class="carte"><p class="sur gris">' + etiquette + '</p><h2 class="titre-seance">' + esc(s.titre) + '</h2>' +
+      '<p class="resume">' + esc(s.resume) + '</p>' + faits(s) +
+      '<div class="actions"><button class="btn" type="button" data-a="ouvrir-seance" data-mode="saisie" data-sem="' + semId + '" data-i="' + i + '">Noter la séance</button></div>' +
+      '<button class="lien" type="button" data-a="ouvrir-seance" data-sem="' + semId + '" data-i="' + i + '">Voir le détail de la séance</button></section>';
+  }
+  function carteFeuVert(pos) {
+    // La question se pose avant la première séance : à partir de deux semaines avant le départ, et tant qu'elle reste sans réponse.
+    if (P().feuVert || (pos.etat === 'avant' && pos.dans > 14)) return '';
+    return '<section class="encadre"><strong>As-tu le feu vert de ton médecin ?</strong>' +
+      '<span>Ce programme est un cadre général. Avant la première séance, fais-le valider par ton équipe médicale : elle seule peut l’adapter à ta reprise.</span>' +
+      '<div class="actions-sem" style="border:0"><button class="lien" type="button" data-a="feu-oui">Oui, je l’ai</button></div></section>';
+  }
+  function carteDuJour(bloc, pos, a) {
+    var jn = Jn(), h = '';
+    if (pos.etat === 'avant') {
+      var prem = D.semaine(bloc, 0).s[0];
+      return '<section class="carte"><p class="sur gris">Avant le départ · dans ' + pos.dans + (pos.dans > 1 ? ' jours' : ' jour') + '</p>' +
+        '<h2 class="titre-seance">Départ ' + dLong(bloc.debut) + '</h2>' +
+        '<p class="resume">Première séance : ' + esc(prem.titre.toLowerCase()) + (prem.min ? ', ' + prem.min + ' min' : '') +
+        '. D’ici là, la routine du matin et la pesée sont ouvertes.</p></section>' + carteFeuVert(pos);
+    }
+    if (pos.etat === 'apres') {
+      var der = D.semaine(bloc, pos.n - 1), it = -1;
+      der.s.forEach(function (s, i) { if (s.type === 'test') it = i; });
+      return '<section class="carte"><p class="sur gris">Bloc terminé</p><h2 class="titre-seance">Le jour J est passé</h2>' +
+        '<p class="resume">Pas de pression : passe ton test quand tu te sens prêt, ou ajoute une semaine de préparation.</p><div class="actions">' +
+        (it >= 0 ? '<button class="btn" type="button" data-a="ouvrir-seance" data-sem="' + der.id + '" data-i="' + it + '">Passer le test</button>' : '') +
+        '<button class="btn sec" type="button" data-a="refaire" data-k="' + (pos.n - 1) + '">Ajouter une semaine</button></div></section>';
+    }
+    var sem = D.semaine(bloc, pos.k), f = D.faites(jn, sem.id), nf = Object.keys(f).length;
+    h += carteFeuVert(pos);
+    if (pos.k >= 1 && !sem.pause && nf === 0) {
+      var prec = D.semaine(bloc, pos.k - 1);
+      if (!prec.pause && D.nbFaites(jn, prec.id) < 2 && !(bloc.vu && bloc.vu[prec.id])) {
+        h += '<section class="encadre"><strong>La semaine dernière est restée incomplète.</strong><span>Tu peux la refaire maintenant : le jour J recule d’une semaine.</span>' +
+          '<div class="actions-sem" style="border:0"><button class="lien" type="button" data-a="refaire-prec" data-k="' + pos.k + '">La refaire</button>' +
+          '<button class="lien" type="button" data-a="ignorer-prec" data-sem="' + prec.id + '">Continuer comme prévu</button></div></section>';
+      }
+    }
+    if (sem.pause) {
+      return h + '<section class="carte"><p class="sur gris">Cette semaine</p><h2 class="titre-seance">Semaine de pause</h2>' +
+        '<p class="resume">Pas de séance prévue. Le programme reprend ' + dLong(D.plusJours(sem.fin, 1)) + '.</p>' +
+        '<div class="actions"><button class="btn sec" type="button" data-a="retirer-sem" data-k="' + pos.k + '">Retirer la pause</button></div></section>';
+    }
+    var i = -1;
+    for (var k = 0; k < sem.s.length; k++) if (!f[k]) { i = k; break; }
+    if (i < 0) {
+      return h + '<section class="carte"><p class="sur gris">Cette semaine · 3 séances sur 3</p><h2 class="titre-seance">Semaine bouclée</h2>' +
+        '<p class="resume">Les trois séances sont faites. ' + (pos.k < pos.n - 1 ? 'La suite démarre ' + dLong(D.plusJours(sem.fin, 1)) + '.' : 'C’était la dernière semaine du bloc.') + '</p></section>';
+    }
+    return h + carteSeance(sem.s[i], sem.id, i, 'Prochaine séance · ' + (i + 1) + ' sur 3 cette semaine');
+  }
+  function vueObjectif() {
+    var p = P(), bloc = p.bloc, med = medailles(), nb = nbGagnees(), tot = parcours().length, a = auj(), h = '';
+    if (!bloc) {
+      h += '<section class="bandeau"><div class="rang"><span class="sur">' + (nb >= tot ? 'Objectif atteint' : 'Objectif ' + (nb + 1) + ' sur ' + tot) + '</span>' + boutonReglages() + '</div>';
+      if (nb >= tot) h += '<h1 class="geant">Tout est décroché</h1><p>' + (tot >= 7 ? 'Les sept médailles sont' : (tot > 1 ? 'Les ' + tot + ' médailles de ton parcours sont' : 'La médaille de ton parcours est')) + ' sur ton porte-médailles, ' + esc(p.prenom) + '.</p></section><div class="bloc">' +
+        (tot < 7 ? '<div class="carte"><h2 class="sur gris">Et maintenant ?</h2><p class="resume">Tu peux viser plus loin. Choisis un nouvel objectif dans les Réglages : tes médailles restent.</p><div class="actions"><button class="btn sec petit" type="button" data-a="reglages">Choisir un nouvel objectif</button></div></div>' : '');
+      else {
+        h += '<h1 class="geant">Choisis ton prochain dossard</h1><p>' + (nb ? 'Une médaille de plus au mur. La suivante se choisit ici.' : 'Aucun objectif en cours pour l’instant.') + '</p></section><div class="bloc">';
+        parcours().forEach(function (o) { if (D.disponible(o, med)) h += carteChoix(o); });
+      }
+      return h + ratelier() + '</div>';
+    }
+    var o = D.objectif(bloc.obj), pos = D.position(bloc, a);
+    var droite = pos.etat === 'avant' ? 'Avant le départ' : (pos.etat === 'apres' ? 'Bloc terminé' : 'Semaine ' + (pos.k + 1) + ' sur ' + pos.n);
+    h += '<section class="bandeau"><div class="rang"><span class="sur">Objectif ' + Math.min(tot, nb + 1) + ' sur ' + tot + ' · ' + droite + '</span>' + boutonReglages() + '</div>' +
+      dossard(o, p.prenom, D.jMoins(pos.reste)) +
+      '<div class="prepa"><div class="rang"><span class="petit">Préparation : ' + esc(o.nom) + '</span><span class="sur">Jour J · ' + dCourt(pos.jourJ) + '</span></div>' + segments(pos) + '</div></section>';
+    return h + '<div class="bloc">' + carteDuJour(bloc, pos, a) + ratelier() + '</div>';
+  }
+
+  function ligneSeance(s, semId, i, sortie) {
+    return '<button class="ligne" type="button" data-a="ouvrir-seance" data-sem="' + semId + '" data-i="' + i + '">' +
+      '<span class="pastille' + (sortie ? ' ok' : '') + '">' + (sortie ? '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>' : (i + 1)) + '</span>' +
+      '<span class="l-g"><span class="l-titre">' + esc(s.titre) + '</span><span class="l-info">' + esc(D.court(s)) + (sortie ? ' · faite le ' + dCourt(sortie.d) : '') + '</span></span>' +
+      '<span class="chevron" aria-hidden="true">›</span></button>';
+  }
+  function blocSemaine(bloc, k, pos, jn) {
+    var sem = D.semaine(bloc, k), f = D.faites(jn, sem.id), nf = Object.keys(f).length;
+    var ici = pos.etat === 'encours' && pos.k === k;
+    var defaut = ici || (pos.etat === 'avant' && k === 0) || (pos.etat === 'apres' && k === pos.n - 1);
+    var ouvert = S.ui.ouv[sem.id] != null ? S.ui.ouv[sem.id] : defaut, puces = '';
+    if (ici) puces += '<span class="puce ici">En cours</span>';
+    if (sem.pause) puces += '<span class="puce">Pause</span>';
+    else {
+      if (sem.test) puces += '<span class="puce">Test</span>';
+      if (sem.allegee) puces += '<span class="puce">Allégée</span>';
+      if (sem.conso) puces += '<span class="puce">Consolidation</span>';
+      else if (sem.ajout) puces += '<span class="puce">Ajoutée</span>';
+    }
+    var h = '<details class="sem" data-sem="' + sem.id + '"' + (ouvert ? ' open' : '') + '><summary><span class="sem-g"><span class="sem-titre">Semaine ' + (k + 1) + '</span>' +
+      '<span class="sem-dates">du ' + dCourt(sem.debut) + ' au ' + dCourt(sem.fin) + '</span></span><span class="sem-d">' + puces +
+      (sem.pause ? '' : '<span class="compte" aria-label="' + nf + ' séances faites sur 3">' + nf + '/3</span>') + '</span></summary>';
+    if (sem.pause) h += '<p class="aide">Pas de séance cette semaine.</p>';
+    sem.s.forEach(function (s, i) { h += ligneSeance(s, sem.id, i, f[i]); });
+    var act = '', aVenir = pos.etat === 'avant' || k >= pos.k;
+    if (ici && !sem.pause) act += '<button class="lien" type="button" data-a="refaire" data-k="' + k + '">Refaire cette semaine ensuite</button>' +
+      '<button class="lien" type="button" data-a="decaler" data-k="' + k + '">Décaler d’une semaine</button>';
+    if (sem.ajout && aVenir && nf === 0) act += '<button class="lien" type="button" data-a="retirer-sem" data-k="' + k + '">' + (sem.pause ? 'Retirer la pause' : 'Retirer cette semaine') + '</button>';
+    if (act) h += '<div class="actions-sem">' + act + '</div>';
+    return h + '</details>';
+  }
+  var RESSENTIS = { facile: 'Facile', correct: 'Correct', dur: 'Dur' };
+  function detailSortie(x) {
+    var p = [];
+    if (x.km) p.push(D.fx(x.km) + ' km');
+    if (x.dp) p.push(D.mil(x.dp) + ' m D+');
+    if (x.min) p.push(x.min + ' min');
+    if (x.cont) p.push('sans marcher');
+    if (x.res && RESSENTIS[x.res]) p.push(RESSENTIS[x.res].toLowerCase());
+    return p.join(' · ');
+  }
+  var JOURS = [['L', 'lundi'], ['M', 'mardi'], ['M', 'mercredi'], ['J', 'jeudi'], ['V', 'vendredi'], ['S', 'samedi'], ['D', 'dimanche']];
+  function valeurCase(r) { return r.km ? D.fx(r.km) : (r.min ? r.min + '′' : ''); }
+  function titreSortie(x) { return x.titre || 'Sortie libre'; }
+  function calendrier(m, pj, a, jourJ) {
+    var h = '<table class="cal"><caption class="cache">Sorties de ' + esc(dMois(m)) + '</caption><thead><tr>';
+    JOURS.forEach(function (j) { h += '<th scope="col"><abbr title="' + j[1] + '">' + j[0] + '</abbr></th>'; });
+    h += '</tr></thead><tbody>';
+    D.grilleMois(m).forEach(function (ligne) {
+      h += '<tr>';
+      ligne.forEach(function (c) {
+        if (!c.dans) { h += '<td></td>'; return; }
+        var js = pj[c.d], n = +c.d.slice(8), cl = [], lab = dLong(c.d);
+        if (c.d === a) { cl.push('auj'); lab += ', aujourd’hui'; }
+        if (c.d === jourJ) { cl.push('jj'); lab += ', jour J'; }
+        if (js) {
+          var r = D.resumeJour(js); cl.push(r.res);
+          lab += ' : ' + js.map(function (x) { return titreSortie(x) + ', ' + detailSortie(x); }).join(' ; ') + '. Corriger';
+          h += '<td><button type="button" class="' + cl.join(' ') + '" data-a="corriger" data-id="' + esc(js[0].id) + '" aria-label="' + esc(lab) + '"><span class="haut"><span class="j">' + n + '</span>' + (r.dp ? '<span class="dp">+' + r.dp + '</span>' : '') + '</span>' +
+            '<span class="v">' + esc(valeurCase(r)) + (js.length > 1 ? '<small>×' + js.length + '</small>' : '') + '</span></button></td>';
+        } else if (c.d > a) {
+          h += '<td><span class="case ' + cl.join(' ') + '"><span class="j">' + n + '</span>' + (c.d === jourJ ? '<span class="v">J</span><span class="cache">, jour J</span>' : '') + '</span></td>';
+        } else {
+          h += '<td><button type="button" class="' + cl.join(' ') + '" data-a="sortie-libre" data-d="' + c.d + '" aria-label="' + esc(lab + ' : rien de noté. Ajouter une sortie') + '"><span class="j">' + n + '</span></button></td>';
+        }
+      });
+      h += '</tr>';
+    });
+    return h + '</tbody></table><p class="legende cal-leg"><span><i class="facile"></i>Facile</span><span><i class="correct"></i>Correct</span><span><i class="dur"></i>Dur</span></p>' +
+      '<p class="aide">Dans chaque case : les kilomètres en bas, le dénivelé en haut à droite.</p>';
+  }
+  function vueCarnet() {
+    var a = auj(), mAuj = a.slice(0, 7), m = S.ui.mois || mAuj, p = P();
+    var liste = D.duMois(Jn().sorties, m), t = D.totaux(liste), jourJ = p.bloc ? D.position(p.bloc, a).jourJ : null;
+    var mMax = jourJ && jourJ.slice(0, 7) > mAuj ? jourJ.slice(0, 7) : mAuj, nom = fMoisNom.format(D.dateDe(m + '-01'));
+    var h = '<section class="bandeau"><div class="rang"><span class="sur">Carnet</span><span class="sur">' + esc(dMois(m)) + '</span></div>' +
+      '<h1 class="geant">' + t.n + (t.n > 1 ? ' sorties' : ' sortie') + '</h1><p>' +
+      (t.n ? D.fx(t.km) + ' km et ' + D.mil(t.dp) + ' m de dénivelé ' + (m === mAuj ? 'ce mois-ci.' : 'sur le mois.')
+           : (m === mAuj ? 'Rien de noté ce mois-ci pour l’instant.' : 'Rien de noté sur ce mois.')) + '</p></section><div class="bloc">';
+    h += '<div class="mois"><button class="rond" type="button" id="mois-prec" data-a="mois" data-n="-1" aria-label="Mois précédent">' + icone('gauche') + '</button>' +
+      '<h2 class="mois-nom">' + esc(dMois(m)) + '</h2>' +
+      '<button class="rond" type="button" id="mois-suiv" data-a="mois" data-n="1" aria-label="Mois suivant"' + (m >= mMax ? ' disabled' : '') + '>' + icone('droite') + '</button></div>';
+    h += calendrier(m, D.parJour(liste), a, jourJ);
+    h += '<button class="btn" type="button" data-a="sortie-libre">Ajouter une sortie</button>';
+    h += '<div class="carte"><h2 class="sur gris">Sorties ' + (/^[aoàâ]/i.test(nom) ? 'd’' : 'de ') + esc(nom) + '</h2>';
+    if (!liste.length) return h + '<p class="aide">Touche un jour du calendrier pour y noter une sortie.</p></div></div>';
+    h += '<ul class="liste serree">';
+    liste.slice().sort(function (x, y) { return x.d < y.d ? 1 : (x.d > y.d ? -1 : 0); }).forEach(function (x) {
+      h += '<li><button class="ligne sortie" type="button" data-a="corriger" data-id="' + esc(x.id) + '"><span class="l-g"><span class="l-date">' + dJour(x.d) + '</span>' +
+        '<span class="l-titre">' + esc(titreSortie(x)) + '</span><span class="l-info">' + esc(detailSortie(x)) + (x.note ? ' · ' + esc(x.note) : '') + '</span></span>' +
+        '<span class="chevron" aria-hidden="true">›</span></button></li>';
+    });
+    return h + '</ul></div></div>';
+  }
+  function boutonSuppr(genre, id) {
+    var cle = genre + ':' + id;
+    if (S.ui.suppr === cle) return '<span class="conf"><button class="lien danger" type="button" id="oui-' + esc(cle) + '" data-a="suppr-oui" data-genre="' + genre + '" data-id="' + esc(id) + '">Supprimer</button>' +
+      '<button class="lien" type="button" data-a="suppr-non">Garder</button></span>';
+    return '<button class="lien" type="button" id="sup-' + esc(cle) + '" data-a="suppr" data-cle="' + esc(cle) + '">Effacer</button>';
+  }
+  function vuePlan() {
+    var p = P(), bloc = p.bloc, a = auj(), h = '';
+    if (!bloc) {
+      return '<section class="bandeau"><div class="rang"><span class="sur">Plan</span></div><h1 class="geant">Pas de plan en cours</h1>' +
+        '<p>Choisis un objectif pour obtenir sa préparation semaine par semaine.</p></section>' +
+        '<div class="bloc"><a class="btn" href="#medailles">Choisir un objectif</a></div>';
+    }
+    var o = D.objectif(bloc.obj), pos = D.position(bloc, a), jn = Jn();
+    h += '<section class="bandeau"><div class="rang"><span class="sur">Plan · ' + pos.n + ' semaines</span><span class="sur">' + D.jMoins(pos.reste) + '</span></div>' +
+      '<h1 class="geant">' + esc(o.nom) + '</h1><p>Trois séances par semaine, les jours qui t’arrangent, avec au moins un jour de repos entre deux. Jour J : ' + dLong(pos.jourJ) + '.</p></section><div class="bloc serre">';
+    for (var k = 0; k < pos.n; k++) h += blocSemaine(bloc, k, pos, jn);
+    return h + '</div>';
+  }
+
+  function vueRoutine() {
+    var rt = Rt(), a = auj(), ids = D.cochesDuJour(rt, a), n = D.serie(rt, a), h = '';
+    h += '<section class="bandeau"><div class="rang"><span class="sur">Routine du matin</span><span class="sur">Aujourd’hui : ' + ids.length + ' sur ' + rt.exos.length + '</span></div>' +
+      '<h1 class="geant">' + n + (n > 1 ? ' matins' : ' matin') + '</h1><p>' + (n ? 'd’affilée avec la routine complète.' : 'd’affilée pour l’instant. La série démarre dès que tout est coché.') + '</p>' +
+      '<div class="segments" aria-hidden="true" style="grid-template-columns:repeat(7,minmax(0,1fr))">';
+    for (var i = 6; i >= 0; i--) { var d = D.plusJours(a, -i); h += '<i class="' + (D.jourComplet(rt, d) ? 'fait' : (i === 0 ? 'ici' : '')) + '"></i>'; }
+    h += '</div></section><div class="bloc"><div class="rang"><h2 class="sur gris">Ta routine</h2>' +
+      '<button class="lien" type="button" id="rt-edit" data-a="routine-edit">' + (S.ui.edit ? 'Terminer' : 'Modifier') + '</button></div>';
+    if (!S.ui.edit) {
+      if (!rt.exos.length) h += '<p class="aide">Ta routine est vide. Passe par « Modifier » pour ajouter un exercice.</p>';
+      h += '<ul class="exos">';
+      rt.exos.forEach(function (e) {
+        h += '<li><label class="exo"><input id="ex-' + esc(e.id) + '" type="checkbox" data-c="exo" data-id="' + esc(e.id) + '"' + (ids.indexOf(e.id) >= 0 ? ' checked' : '') + '>' +
+          '<span class="exo-nom">' + esc(e.nom) + '</span><span class="exo-dose">' + esc(e.dose) + '</span></label></li>';
+      });
+      h += '</ul><p class="aide">Des exercices au poids du corps, sans matériel. Règle les doses sur ta forme du moment.</p>' +
+        '<a class="lien" href="#poids">Ensuite : note ton poids du matin</a>';
+    } else {
+      h += '<ul>';
+      rt.exos.forEach(function (e, i) {
+        h += '<li class="exo-edit"><div class="duo"><div class="champ"><label for="en-' + esc(e.id) + '">Exercice</label><input id="en-' + esc(e.id) + '" type="text" maxlength="40" value="' + esc(e.nom) + '" data-c="exo-nom" data-id="' + esc(e.id) + '"></div>' +
+          '<div class="champ"><label for="ed-' + esc(e.id) + '">Dose</label><input id="ed-' + esc(e.id) + '" type="text" maxlength="20" value="' + esc(e.dose) + '" data-c="exo-dose" data-id="' + esc(e.id) + '"></div></div>' +
+          '<div class="actions-sem" style="border:0">' +
+          (i > 0 ? '<button class="lien" type="button" id="eh-' + esc(e.id) + '" data-a="exo-haut" data-id="' + esc(e.id) + '">Monter</button>' : '') +
+          (i < rt.exos.length - 1 ? '<button class="lien" type="button" id="eb-' + esc(e.id) + '" data-a="exo-bas" data-id="' + esc(e.id) + '">Descendre</button>' : '') +
+          '<button class="lien danger" type="button" data-a="exo-suppr" data-id="' + esc(e.id) + '">Retirer</button></div></li>';
+      });
+      h += '</ul><form class="carte" data-f="exo-ajout" novalidate><h2 class="sur gris">Ajouter un exercice</h2><div class="duo">' +
+        '<div class="champ"><label for="ea-nom">Exercice</label><input id="ea-nom" name="nom" type="text" maxlength="40" placeholder="Fentes"></div>' +
+        '<div class="champ"><label for="ea-dose">Dose</label><input id="ea-dose" name="dose" type="text" maxlength="20" placeholder="2 × 12"></div></div>' +
+        '<p class="erreur" id="ea-erreur" role="alert" hidden></p><button class="btn sec petit" type="submit">Ajouter</button></form>';
+    }
+    return h + '</div>';
+  }
+
+  function svgCourbe(c) {
+    var g = c.g, r = r1, h = '<svg id="courbe" class="courbe" viewBox="0 0 350 190" tabindex="0" role="img" aria-label="Courbe de poids du ' + dCourt(c.d0) + ' au ' + dCourt(c.d1) +
+      '. Dernière moyenne sur 7 jours : ' + D.fx(c.pts[c.pts.length - 1].moy, 1) + ' kg. Flèches gauche et droite pour lire chaque pesée.">';
+    c.ticks.forEach(function (t) {
+      h += '<line class="grille" x1="' + g.x0 + '" x2="' + g.x1 + '" y1="' + r(t.y) + '" y2="' + r(t.y) + '"></line>' +
+        '<text class="axe" x="' + (g.x0 - 8) + '" y="' + r(t.y + 4) + '" text-anchor="end">' + t.v + '</text>';
+    });
+    h += '<text class="axe" x="' + g.x0 + '" y="182">' + dCourt(c.d0) + '</text>';
+    if (c.span >= 12) h += '<text class="axe" x="' + r(g.x0 + (g.x1 - g.x0) * D.ecartJours(c.d0, c.milieu) / c.span) + '" y="182" text-anchor="middle">' + dCourt(c.milieu) + '</text>';
+    h += '<text class="axe" x="' + g.x1 + '" y="182" text-anchor="end">' + dCourt(c.d1) + '</text>';
+    function chemin(cle) { return 'M' + c.pts.map(function (p) { return r(p.x) + ' ' + r(p[cle]); }).join('L'); }
+    var der = c.pts[c.pts.length - 1];
+    h += '<path class="brut" d="' + chemin('y') + '"></path><path class="moy" d="' + chemin('ym') + '"></path>' +
+      '<line id="repere" class="repere" x1="0" x2="0" y1="' + g.yh + '" y2="' + g.yb + '" visibility="hidden"></line>' +
+      '<circle class="anneau" cx="' + r(der.x) + '" cy="' + r(der.ym) + '" r="6"></circle><circle class="point" cx="' + r(der.x) + '" cy="' + r(der.ym) + '" r="4"></circle>' +
+      '<text class="valeur" x="' + r(der.x + 10) + '" y="' + r(der.ym + 4) + '">' + D.fx(der.moy, 1) + '</text>';
+    return h + '</svg>';
+  }
+  function texteLecture(p) { return dJour(p.d) + ' : ' + D.fx(p.kg, 1) + ' kg · moyenne sur 7 jours ' + D.fx(p.moy, 1) + ' kg'; }
+  function vuePoids() {
+    var liste = D.mesures(Pd()), st = D.statsPoids(liste), a = auj(), plage = S.ui.plage, h = '';
+    var vis = plage ? liste.filter(function (x) { return x.d >= D.plusJours(a, -plage + 1); }) : liste;
+    var nomPlage = plage === 28 ? '4 dernières semaines' : (plage === 91 ? '3 derniers mois' : 'Depuis le début');
+    h += '<section class="bandeau"><div class="rang"><span class="sur">Poids</span><span class="sur">' + nomPlage + '</span></div>' +
+      '<div class="gros-poids"><span class="num">' + (st ? D.fx(st.dernier.kg, 1) : '–') + '</span><span class="unite">KG</span></div>' +
+      '<p>' + (st ? 'Dernière pesée : ' + dLong(st.dernier.d) + '.' : 'Aucune pesée pour l’instant.') + '</p></section><div class="bloc">';
+    h += '<form class="carte" data-f="pesee" novalidate><div class="duo"><div class="champ"><label for="pe-kg">Pesée, en kg</label>' +
+      '<input class="grand" id="pe-kg" name="kg" type="text" inputmode="decimal" autocomplete="off" placeholder="' + (st ? D.fx(st.dernier.kg, 1) : '75,0') + '"></div>' +
+      '<div class="champ"><label for="pe-date">Date</label><input class="grand" style="font-size:18px" id="pe-date" name="date" type="date" value="' + a + '" max="' + a + '"></div></div>' +
+      '<p class="erreur" id="pe-erreur" role="alert" hidden></p><button class="btn" type="submit">Enregistrer la pesée</button></form>';
+    var c = D.courbe(vis, 350, 190); S.ui.courbe = c;
+    if (c) {
+      h += '<div class="carte"><h2 class="sur gris">Poids du matin · kg</h2>' + svgCourbe(c) +
+        '<p class="lecture" id="lecture" aria-live="polite">' + esc(texteLecture(c.pts[c.pts.length - 1])) + '</p>' +
+        '<p class="legende"><span><i></i>Pesées</span><span><i class="m"></i>Moyenne sur 7 jours</span></p></div>';
+    } else {
+      h += '<p class="aide">' + (liste.length >= 2 ? 'Moins de deux pesées sur cette période : élargis la période pour voir la courbe.' : 'La courbe apparaît à partir de deux pesées.') + '</p>';
+    }
+    h += '<div class="plages" role="group" aria-label="Période affichée">' +
+      [[28, '4 semaines'], [91, '3 mois'], [0, 'Tout']].map(function (x) {
+        return '<button type="button" id="pl-' + x[0] + '" data-a="plage" data-j="' + x[0] + '" aria-pressed="' + (plage === x[0]) + '">' + x[1] + '</button>';
+      }).join('') + '</div>';
+    if (st) {
+      h += '<div class="cellules"><div class="cellule"><b>' + D.fx(st.moy7, 1) + '<small>KG</small></b><span>Moyenne sur 7 jours</span></div>';
+      if (st.avant != null) {
+        h += '<div class="cellule"><b>' + D.fx(st.avant, 1) + '<small>KG</small></b><span>Il y a 4 semaines</span></div>' +
+          '<div class="cellule"><b>' + (st.ecart > 0.04 ? '+' : (st.ecart < -0.04 ? '−' : '')) + D.fx(Math.abs(st.ecart), 1) + '<small>KG</small></b><span>Écart</span></div>';
+      }
+      h += '</div><div class="carte"><h2 class="sur gris">Dernières pesées</h2><ul class="liste">';
+      liste.slice(-7).reverse().forEach(function (x) {
+        h += '<li><span class="l-g"><span class="l-date">' + dJour(x.d) + '</span><span class="l-titre">' + D.fx(x.kg, 1) + ' kg</span></span>' + boutonSuppr('pesee', x.d) + '</li>';
+      });
+      h += '</ul></div>';
+    }
+    return h + '</div>';
+  }
+
+  function etatObjectif(o) {
+    // Où en est une médaille du parcours : sert à la carte « prochaine étape » et à sa fiche.
+    var med = medailles(), bloc = P().bloc;
+    if (med[o.id]) return { cle: 'gagnee', texte: 'Décrochée le ' + dAn(med[o.id]) + '.' };
+    if (bloc && bloc.obj === o.id) return { cle: 'cours', texte: 'Objectif en cours · ' + D.jMoins(D.position(bloc, auj()).reste) };
+    if (D.disponible(o, med)) return { cle: 'dispo', texte: 'Disponible · ' + dureeBloc(o) + ' semaines de préparation' };
+    return { cle: 'attente', texte: 'À débloquer : il faut d’abord ' + D.manquants(o, med).map(function (x) { return D.objectif(x).nom; }).join(' et ') + '.' };
+  }
+  function vueMedailles() {
+    // La vitrine : le parcours en une ligne, la suite dans une carte, puis les bonus en grille par thème. Le détail s'ouvre au toucher.
+    var med = medailles(), nb = nbGagnees(), liste = parcours(), tot = liste.length, bo = bonus(), ctx = ctxBonus();
+    var nbBo = D.clesBonus(true).filter(function (k) { return bo[k]; }).length, totBo = D.totalBonus(bo);
+    var etats = liste.map(etatObjectif), cours = null, dispo = [];
+    var h = '<section class="bandeau"><div class="rang"><span class="sur">Médailles</span><span class="sur">Bonus : ' + nbBo + ' sur ' + totBo + '</span></div>' +
+      '<h1 class="geant">' + nb + ' sur ' + tot + '</h1><p>' + (nb >= tot ? 'Objectif atteint : ' : 'Objectif : ') + esc(D.nomBut(butCourant())) + '.</p></section><div class="bloc serre">' +
+      '<div class="rang"><h2 class="sur gris">Ton parcours</h2><span class="sur gris">' + nb + ' sur ' + tot + '</span></div><div class="vitrine-parcours"><div class="barre"></div><ul class="medailles' + (tot < 4 ? ' peu' : '') + '">';
+    liste.forEach(function (o, k) {
+      if (etats[k].cle === 'cours') cours = o; else if (etats[k].cle === 'dispo') dispo.push(o);
+      h += '<li><button class="vm" type="button" data-a="fiche" data-obj="' + o.id + '" aria-label="' + esc(o.nom + ' : ' + etats[k].texte) + '">' + medaille(o, classeMed(o)) + '</button></li>';
+    });
+    h += '</ul></div>';
+    if (cours || dispo.length) {
+      h += '<div class="prochaine">';
+      if (cours) h += '<p class="sur gris">Objectif en cours</p><div class="pr-ligne"><div><h3>' + esc(cours.nom) + '</h3><p>' + esc(cours.critere) + ' ' + esc(D.jMoins(D.position(P().bloc, auj()).reste)) + '.</p></div><a class="btn sec petit" href="#plan">Le plan</a></div>';
+      if (dispo.length) h += '<p class="sur gris">' + (cours ? 'Aussi disponible' : (dispo.length > 1 ? 'Prochaines étapes, au choix' : 'Prochaine étape')) + '</p>';
+      dispo.forEach(function (o) {
+        h += '<div class="pr-ligne"><div><h3>' + esc(o.nom) + '</h3><p>' + esc(o.critere) + ' ' + dureeBloc(o) + ' semaines de préparation.</p></div>' +
+          '<button class="btn sec petit" type="button" data-a="choisir" data-obj="' + o.id + '" aria-label="' + esc('Choisir l’objectif ' + o.nom) + '">Choisir</button></div>';
+      });
+      h += '</div>';
+    }
+    h += '<div class="rang entete-bonus"><h2 class="sur gris">Bonus</h2><span class="sur gris">' + nbBo + ' sur ' + totBo + '</span></div>';
+    D.THEMES.forEach(function (t) {
+      h += '<h3 class="theme sur gris">' + esc(t.nom) + '</h3><ul class="trois">';
+      t.ids.forEach(function (id) { h += caseBonus(D.bonus(id), bo, ctx); });
+      h += '</ul>';
+    });
+    return h + '<p class="aide">Trois points : bronze, argent, or. Un seul point : une médaille unique, en or d’emblée. Touche une médaille pour voir son détail.</p></div>';
+  }
+  function fFiche() {
+    // La fiche d'une médaille, ouverte depuis la vitrine
+    var f = S.f, h;
+    if (f.obj) {
+      var o = D.objectif(f.obj), e = etatObjectif(o), agir = e.cle === 'dispo' || e.cle === 'cours';
+      h = tete(o.nom, !agir) + '<div class="bloc fiche">' + medaille(o, classeMed(o)) + '<p class="f-crit">' + esc(o.critere) + '</p><p class="f-etat">' + esc(e.texte) + '</p>';
+      if (e.cle === 'dispo') h += '<button class="btn" type="button" data-a="choisir" data-obj="' + o.id + '" data-focus>Choisir cet objectif</button>';
+      else if (e.cle === 'cours') h += '<button class="btn sec" type="button" data-a="aller-plan" data-focus>Voir le plan</button>';
+      return h + '</div>';
+    }
+    var b = D.bonus(f.bonus), bo = bonus(), ctx = ctxBonus();
+    if (!b.paliers) {
+      return tete(b.nom, true) + '<div class="bloc fiche">' + medailleBonus(b.icone, bo[b.id] ? 'or' : '') + '<p class="f-crit">' + esc(b.critere) + '</p>' +
+        '<p class="f-etat">' + (bo[b.id] ? 'Décrochée le ' + dAn(bo[b.id]) + '.' : 'Pas encore décrochée.') + '</p>' + (bo[b.id] ? '<p class="f-mot">' + esc(b.mot) + '</p>' : '') + '</div>';
+    }
+    var niv = D.niveauBonus(b.id, bo), su = D.suiviBonus(b.id, ctx, niv);
+    h = tete(b.nom, true) + '<div class="bloc fiche">' + medailleBonus(iconeBonus(b, niv), niv ? D.RANGS[niv - 1] : '') +
+      '<p class="f-val">' + esc(su.valeur) + '</p><p class="f-crit">' + esc(b.critere) + '</p>' + pisteBonus(b, Math.min(3, niv), su) +
+      (niv >= 3 ? '<div class="secret"><div class="rang"><span class="sur">Palier secret · platine</span><span class="sur">' + esc(b.platine.icone ? b.platine.t : b.platine.l) + '</span></div>' +
+        '<i class="jauge" role="img" aria-label="' + esc('Vers le platine : ' + Math.round(su.partPlatine * 100) + ' %') + '"><b style="width:' + (su.partPlatine * 100).toFixed(1) + '%"></b></i></div>' : '') +
+      '<p class="f-etat">' + esc(su.phrase) + '</p><ul class="paliers">';
+    D.paliersBonus(b.id, ctx, bo).forEach(function (q) {
+      h += '<li' + (q.date ? ' class="ok"' : '') + '><i class="pt' + (q.date ? ' ' + q.niveau : '') + '"></i><b>' + q.nom + '</b><span>' + esc(q.seuil) + ' · ' + (q.date ? 'décroché le ' + dAn(q.date) : 'encore ' + esc(q.reste)) + '</span></li>';
+    });
+    return h + '</ul></div>';
+  }
+
+  // ---------- Feuilles ----------
+  function tete(titre, focus) {
+    return '<div class="tete"><h1 id="f-titre">' + esc(titre) + '</h1><button class="rond" style="margin:0" type="button" data-a="fermer" aria-label="Fermer"' + (focus ? ' data-focus' : '') + '>' + icone('fermer') + '</button></div>';
+  }
+  var LIBRE = { type: 'libre', titre: 'Sortie libre', resume: '', etapes: [], min: null, km: null, dp: null, conseil: '' };
+  function sortieParId(id) { var l = Jn().sorties; for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
+  function seanceDuPlan(ref) {
+    var bloc = P() && P().bloc; if (!ref || !bloc) return null;
+    for (var k = 0; k < bloc.semaines.length; k++) if (bloc.semaines[k].id === ref.w) return D.semaine(bloc, k).s[ref.i] || null;
+    return null;
+  }
+  // La feuille ouverte désigne soit une séance du plan (sem, i), soit une sortie déjà notée (id), soit une sortie libre à créer.
+  function sortieCourante() {
+    var f = S.f; if (!f) return null;
+    if (f.id) return sortieParId(f.id);
+    return f.libre ? null : (D.faites(Jn(), f.sem)[f.i] || null);
+  }
+  function seanceCourante() {
+    var f = S.f; if (!f) return null;
+    if (f.id) { var x = sortieParId(f.id); return (x && seanceDuPlan(x.ref)) || LIBRE; }
+    return f.libre ? LIBRE : seanceDuPlan({ w: f.sem, i: f.i });
+  }
+  function fSeance() {
+    var s = seanceCourante(), x = sortieCourante();
+    if (!s) return tete('Séance') + '<div class="bloc"><p>Cette séance n’existe plus dans ton plan.</p></div>';
+    var h = tete(s.titre) + '<div class="bloc"><p class="resume" style="font-size:16px;line-height:22px">' + esc(s.resume) + '</p>' + faits(s);
+    if (s.conseil) h += '<p class="aide">' + esc(s.conseil) + '</p>';
+    if (x) h += '<div class="encadre"><strong>Séance notée le ' + dLong(x.d) + '</strong><span>' + esc(detailSortie(x)) + (x.note ? ' · ' + esc(x.note) : '') + '</span>' +
+      '<div class="actions-sem" style="border:0">' + boutonSuppr('sortie', x.id) + '</div></div>';
+    h += '<div class="actions"><button class="btn" type="button" data-a="noter" data-focus>' + (x ? 'Corriger la saisie' : 'Noter la séance') + '</button></div>';
+    if (s.etapes.length > 1) {
+      h += '<h2 class="sur gris" style="margin-top:8px">Déroulé</h2><ol class="etapes">';
+      s.etapes.forEach(function (e) { h += '<li class="' + (e.t === 'marche' ? '' : 'fort') + '"><b>' + D.minTxt(e.s) + '</b><span>' + esc(e.l) + '</span></li>'; });
+      h += '</ol>';
+    }
+    return h + '</div>';
+  }
+  function fSaisie() {
+    var f = S.f, s = seanceCourante() || LIBRE, x = sortieCourante(), a = auj(), p = P(), med = medailles();
+    var libre = s.type === 'libre', pre = s.type !== 'test' && !libre;
+    var km = x ? (x.km ? D.fx(x.km) : '') : (pre && s.km != null ? D.fx(s.km) : '');
+    var dp = x ? (x.dp || '') : (pre && s.dp != null ? s.dp : '');
+    var min = x ? (x.min || '') : (s.min != null ? s.min : '');
+    var res = x && x.res ? x.res : 'correct', date = x ? x.d : (f.date || a);
+    var titre = x ? titreSortie(x) : (libre ? '' : s.titre);
+    var h = tete(x ? 'Corriger la sortie' : (libre ? 'Noter une sortie' : 'Noter la séance')) + '<form class="bloc" data-f="sortie" novalidate>' +
+      '<p class="resume">' + (titre ? esc(titre) + '. ' : '') + 'Recopie la distance et le dénivelé depuis ta montre.</p>' +
+      '<div class="champ"><label for="so-date">Date</label><input id="so-date" name="date" type="date" value="' + date + '" max="' + a + '"></div>' +
+      '<div class="duo"><div class="champ"><label for="so-km">Distance, en km</label><input id="so-km" name="km" type="text" inputmode="decimal" autocomplete="off" value="' + esc(km) + '" data-focus></div>' +
+      '<div class="champ"><label for="so-dp">Dénivelé, en mètres</label><input id="so-dp" name="dp" type="text" inputmode="numeric" autocomplete="off" value="' + esc(dp) + '"></div></div>' +
+      '<fieldset class="champ"><legend>Comment tu t’es senti</legend><div class="seg">';
+    Object.keys(RESSENTIS).forEach(function (k) {
+      h += '<label><input id="so-res-' + k + '" type="radio" name="res" value="' + k + '"' + (k === res ? ' checked' : '') + '><span>' + RESSENTIS[k] + '</span></label>';
+    });
+    h += '</div></fieldset>' +
+      '<div class="champ"><label for="so-min">Durée, en minutes (facultatif)</label><input id="so-min" name="min" type="text" inputmode="numeric" autocomplete="off" value="' + esc(min) + '"></div>' +
+      '<div class="champ"><label for="so-note">Note (facultatif)</label><input id="so-note" name="note" type="text" maxlength="120" value="' + esc(x && x.note ? x.note : '') + '"></div>';
+    // La case « sans marcher » ne sert qu'aux médailles 5 km et 10 km : elle disparaît une fois les deux décrochées.
+    if (!(med['5k'] && med['10k']) || (x && x.cont)) {
+      h += '<label class="choix"><input id="so-cont" name="cont" type="checkbox"' + (x && x.cont ? ' checked' : '') + '><span>J’ai couru toute la distance sans marcher<small>Nécessaire pour les médailles 5 km et 10 km.</small></span></label>';
+    }
+    if (!x && libre && p.bloc && D.position(p.bloc, a).etat !== 'avant') {
+      h += '<label class="choix"><input id="so-plan" name="plan" type="checkbox" checked><span>Compter comme une séance du plan<small>Elle valide la première séance encore à faire dans la semaine de cette date.</small></span></label>';
+    }
+    h += '<p class="erreur" id="so-erreur" role="alert" hidden></p><button class="btn" type="submit">Enregistrer</button>';
+    if (x) h += '<div class="actions-sem" style="border:0">' + boutonSuppr('sortie', x.id) + '</div>';
+    return h + '</form>';
+  }
+  function fBravo() {
+    var ids = S.f.gagnees || [], bs = S.f.bonus || [], h, autres;
+    if (ids.length) {
+      var o = D.objectif(ids[ids.length - 1]);
+      autres = ids.slice(0, -1).map(function (i) { return D.objectif(i).nom; }).concat(bs.map(nomCle));
+      h = '<div class="bravo"><p class="sur">' + (ids.length > 1 ? ids.length + ' médailles décrochées' : 'Médaille décrochée') + '</p>' +
+        '<h1 class="geant" id="f-titre">' + esc(o.nom) + '</h1>' + medaille(o, 'gagnee') +
+        '<p class="mot">' + esc(o.critere.replace(/\.$/, '')) + ' : c’est fait, ' + esc(P().prenom) + '.</p>';
+    } else {
+      var x = D.lireCle(bs[0]);
+      autres = bs.slice(1).map(nomCle);
+      h = '<div class="bravo"><p class="sur">' + (bs.length > 1 ? bs.length + ' médailles bonus' : (x.n ? ['Médaille de bronze', 'Médaille d’argent', 'Médaille d’or', 'Médaille de platine'][x.n - 1] : 'Médaille d’or')) + '</p>' +
+        '<h1 class="geant" id="f-titre">' + esc(x.n && x.p.icone ? x.p.t : x.b.nom) + '</h1>' + medailleCle(bs[0]) +
+        (x.n ? '<p class="palier">' + esc(x.p.l) + '</p>' : '') +
+        '<p class="mot">' + esc(x.n ? x.p.mot : x.b.mot) + '</p>' +
+        (x.n === 3 ? '<p class="indice">Un dernier palier, secret, vient de s’ouvrir.</p>' : '');
+    }
+    if (autres.length) h += '<p>Avec, au passage : ' + autres.map(esc).join(', ') + '.</p>';
+    var suite = ids.length && nbGagnees() < parcours().length ? 'Choisir le prochain objectif' : 'Voir mes médailles';
+    return h + '<div class="actions"><button class="btn clair" type="button" data-a="apres-bravo" data-focus>' + suite + '</button>' +
+      '<button class="btn sec" style="color:#FFFFFF;border-color:#FFFFFF" type="button" data-a="fermer">Fermer</button></div></div>';
+  }
+  function fChoisir() {
+    var o = D.objectif(S.f.obj), p = P(), a = auj(), n = dureeBloc(o);
+    var h = tete('Nouvel objectif') + '<form class="bloc" data-f="lancer-bloc" novalidate><div style="background:var(--bleu);margin:-20px -20px 0;padding:18px 20px 22px;display:flex;flex-direction:column">' + dossard(o, p.prenom, n + ' sem.') + '</div>' +
+      '<p class="resume" style="font-size:16px;line-height:22px">' + esc(o.critere) + ' La préparation dure ' + n + ' semaines, à raison de trois séances par semaine.</p>';
+    if (o.id === '5k') {
+      h += '<fieldset class="champ"><legend>Où en es-tu aujourd’hui ?</legend>';
+      D.DEPARTS.forEach(function (d, i) {
+        h += '<label class="choix"><input id="ch-niv-' + d.id + '" type="radio" name="niveau" value="' + d.id + '"' + (i === 0 ? ' checked' : '') + '><span>' + esc(d.nom) + '<small>' + esc(d.detail) + '</small></span></label>';
+      });
+      h += '</fieldset>';
+    }
+    h += '<div class="champ"><label for="ch-debut">Date de la première semaine</label><input id="ch-debut" name="debut" type="date" value="' + D.prochainLundi(a) + '" data-focus></div>';
+    if (p.bloc) h += '<p class="aide">Ton objectif en cours (' + esc(D.objectif(p.bloc.obj).nom) + ') sera remplacé. Tes sorties déjà notées restent dans le carnet.</p>';
+    return h + '<p class="erreur" id="ch-erreur" role="alert" hidden></p><button class="btn" type="submit">Lancer la préparation</button></form>';
+  }
+  function exportTexte() {
+    return JSON.stringify({ app: 'le-dossard', v: 1, exporte: auj(), profil: P(), journal: Jn(), routine: Rt(), poids: Pd() });
+  }
+  function fReglages() {
+    var p = P(), h = tete('Réglages') + '<div class="bloc">';
+    h += '<form class="carte" data-f="prenom" novalidate><div class="champ"><label for="rg-prenom">Prénom sur le dossard</label><div class="en-ligne"><input id="rg-prenom" name="prenom" type="text" maxlength="20" value="' + esc(p.prenom) + '"><button class="btn petit" type="submit">Changer</button></div></div></form>';
+    if (p.bloc) {
+      h += '<form class="carte" data-f="debut" novalidate><div class="champ"><label for="rg-debut">Première semaine du bloc en cours</label><div class="en-ligne"><input id="rg-debut" name="debut" type="date" value="' + p.bloc.debut + '"><button class="btn petit" type="submit">Changer</button></div>' +
+        '<p class="aide">Changer cette date déplace toutes les semaines et le jour J.</p></div></form>';
+    }
+    var but = butCourant(), ry = D.lireRythme(p), nbP = parcours().length, rapide = D.rapidePermis(p);
+    h += '<form class="carte" data-f="objectif" novalidate><h2 class="sur gris">Ton objectif</h2><div class="duo"><div class="champ"><label for="rg-dist">Distance</label><select id="rg-dist" name="dist">';
+    D.BUTS.dist.forEach(function (id) { h += '<option value="' + id + '"' + (id === but.dist ? ' selected' : '') + '>' + esc(D.objectif(id).nom) + '</option>'; });
+    h += '</select></div><div class="champ"><label for="rg-deniv">Dénivelé</label><select id="rg-deniv" name="deniv"><option value="">Sans</option>';
+    D.BUTS.deniv.forEach(function (id) { h += '<option value="' + id + '"' + (id === but.deniv ? ' selected' : '') + '>' + esc(D.objectif(id).nom) + '</option>'; });
+    h += '</select></div></div><p class="aide">Aujourd’hui : ' + esc(D.nomBut(but)) + ', soit ' + nbP + (nbP > 1 ? ' médailles' : ' médaille') + '. Les médailles déjà décrochées restent.</p>' +
+      '<button class="btn sec petit" type="submit">Changer d’objectif</button></form>';
+    h += '<form class="carte" data-f="rythme" novalidate><fieldset class="champ"><legend>Ton rythme</legend>';
+    D.RYTHMES.forEach(function (r) {
+      var ferme = r.id === 'rapide' && !rapide;
+      h += '<label class="choix"><input id="rg-ry-' + r.id + '" type="radio" name="rythme" value="' + r.id + '"' + (r.id === ry ? ' checked' : '') + (ferme ? ' disabled' : '') + '><span>' + r.nom +
+        '<small>' + esc(r.detail) + (ferme ? ' S’ouvre une fois les 5 km décrochés.' : '') + '</small></span></label>';
+    });
+    h += '</fieldset><p class="aide">Le changement vaut pour les semaines qui restent et pour les prochaines préparations.</p><button class="btn sec petit" type="submit">Changer de rythme</button></form>';
+    h += '<p class="erreur" id="rg-erreur" role="alert" hidden></p>';
+    h += '<div class="carte"><h2 class="sur gris">Feu vert médical</h2><p class="resume">' + (p.feuVert ? 'Confirmé le ' + dAn(p.feuVert) + '.' : 'Pas encore confirmé. La question t’attend sur l’accueil avant la première séance.') + '</p></div>';
+    h += '<div class="carte"><h2 class="sur gris">Tes données</h2><p class="resume">' + (S.mode === 'nuage'
+      ? 'Elles sont enregistrées avec cette page, dans un espace privé lié à ton compte : tu les retrouves sur tous tes appareils.'
+      : 'Elles sont enregistrées dans ce navigateur uniquement. Fais une copie de temps en temps.') + '</p>' +
+      '<div class="actions"><button class="btn sec petit" type="button" data-a="copier">Copier mes données</button></div>' +
+      (S.ui.copie ? '<div class="champ"><label for="rg-copie">Copie de tes données</label><textarea id="rg-copie" readonly>' + esc(S.ui.copie) + '</textarea><p class="aide">Si la copie automatique a échoué, sélectionne ce texte et copie-le.</p></div>' : '') +
+      '<form class="carte" data-f="importer" novalidate><div class="champ"><label for="rg-import">Restaurer une copie</label><textarea id="rg-import" name="texte" placeholder="Colle ici une copie de tes données"></textarea></div>' +
+      '<label class="choix"><input id="rg-import-ok" name="ok" type="checkbox"><span>Remplacer toutes mes données actuelles par cette copie</span></label>' +
+      '<button class="btn sec petit" type="submit">Restaurer</button></form></div>';
+    h += '<form class="carte" data-f="effacer" novalidate><h2 class="sur gris">Tout effacer</h2><div class="champ"><label for="rg-efface">Écris EFFACER pour repartir de zéro</label><div class="en-ligne"><input id="rg-efface" name="mot" type="text" autocomplete="off"><button class="btn petit" style="background:var(--alerte)" type="submit">Effacer</button></div></div></form>';
+    h += '<div class="carte"><h2 class="sur gris">À propos du programme</h2><p class="aide">Trois séances par semaine, une progression par petits paliers et une semaine allégée toutes les trois ou quatre semaines. Le premier bloc alterne marche et course. La routine du matin ajoute le renforcement. C’est un cadre général, pas un avis médical : en cas de douleur, de fatigue inhabituelle ou de doute, lève le pied et parles-en à ton médecin.</p></div>';
+    return h + '</div>';
+  }
+  function rendreFeuille(focus) {
+    var f = S.f;
+    var fond = document.getElementById('app');
+    if (!f) { feuille.hidden = true; feuille.innerHTML = ''; document.body.classList.remove('fige'); fond.inert = false; return; }
+    var actif = document.activeElement && document.activeElement.id, h;
+    if (f.type === 'seance') h = f.mode === 'saisie' ? fSaisie() : f.mode === 'bravo' ? fBravo() : fSeance();
+    else if (f.type === 'choisir') h = fChoisir();
+    else if (f.type === 'fiche') h = fFiche();
+    else h = fReglages();
+    feuille.innerHTML = '<div class="panneau" role="dialog" aria-modal="true" aria-labelledby="f-titre">' + h + '</div>';
+    feuille.hidden = false; document.body.classList.add('fige'); fond.inert = true;
+    var cible = focus ? feuille.querySelector('[data-focus]') : (actif ? document.getElementById(actif) : null);
+    if (cible) { try { cible.focus({ preventScroll: !focus }); } catch (e) {} }
+  }
+  function ouvrirFeuille(f) { S.f = f; S.ui.suppr = null; rendreFeuille(true); }
+  function fermerFeuille(sansRendu) { S.f = null; S.ui.copie = null; rendreFeuille(); if (!sansRendu) rendre(); }
+  function haut() {
+    var e = S.ui.versBonus ? vue.querySelector('.entete-bonus') : null; S.ui.versBonus = false;
+    if (e) e.scrollIntoView(); else window.scrollTo(0, 0);
+  }
+  function allerA(r) { if (route() === r) { rendre(); haut(); } else location.hash = '#' + r; }
+
+  // ---------- Rendu ----------
+  function route() { var h = (location.hash || '').replace(/^#/, ''); return ROUTES.indexOf(h) >= 0 ? h : 'objectif'; }
+  function rendre() {
+    S.aRendre = false;
+    var actif = document.activeElement && vue.contains(document.activeElement) ? document.activeElement.id : null;
+    var r = route(), nav = false, h;
+    if (!S.pret) h = vueChargement();
+    else if (!P()) h = banniere() + vueDepart();
+    else {
+      nav = true;
+      h = banniere() + (r === 'plan' ? vuePlan() : r === 'carnet' ? vueCarnet() : r === 'routine' ? vueRoutine() : r === 'poids' ? vuePoids() : r === 'medailles' ? vueMedailles() : vueObjectif());
+    }
+    vue.innerHTML = h; vue.setAttribute('data-vue', !S.pret ? 'chargement' : (nav ? r : 'depart'));
+    onglets.hidden = !nav;
+    Array.prototype.forEach.call(onglets.querySelectorAll('a'), function (a) {
+      if (a.getAttribute('href') === '#' + r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    if (actif) { var el = document.getElementById(actif); if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} } }
+  }
+  // Rendu demandé par l'arrière-plan (données reçues, état de l'enregistrement) : on n'interrompt pas une saisie en cours.
+  function rendreFond() {
+    var el = document.activeElement;
+    if (el && vue.contains(el) && /^(INPUT|TEXTAREA)$/.test(el.tagName) && el.type !== 'checkbox' && el.type !== 'radio') { S.aRendre = true; return; }
+    rendre();
+  }
+  function erreur(id, msg) { var el = document.getElementById(id); if (el) { el.textContent = msg; el.hidden = !msg; } }
+
+  // ---------- Actions ----------
+  function blocEtPos() { var b = P().bloc; return { b: b, pos: D.position(b, auj()) }; }
+  function indexSemaine(bloc, id) { for (var k = 0; k < bloc.semaines.length; k++) if (bloc.semaines[k].id === id) return k; return -1; }
+  function selCourbe(i) {
+    var c = S.ui.courbe; if (!c) return;
+    i = Math.max(0, Math.min(c.pts.length - 1, i)); S.ui.sel = i;
+    var p = c.pts[i], rep = document.getElementById('repere'), lec = document.getElementById('lecture');
+    if (rep) { rep.setAttribute('x1', r1(p.x)); rep.setAttribute('x2', r1(p.x)); rep.setAttribute('visibility', 'visible'); }
+    if (lec) lec.textContent = texteLecture(p);
+  }
+  function pointeCourbe(ev) {
+    var svg = ev.target.closest && ev.target.closest('#courbe'), c = S.ui.courbe; if (!svg || !c) return;
+    var b = svg.getBoundingClientRect(), x = (ev.clientX - b.left) / b.width * 350, best = 0, d = Infinity;
+    c.pts.forEach(function (p, i) { var e = Math.abs(p.x - x); if (e < d) { d = e; best = i; } });
+    selCourbe(best);
+  }
+  var ACTIONS = {
+    'reglages': function () { ouvrirFeuille({ type: 'reglages' }); },
+    'fermer': function () { fermerFeuille(); },
+    'fiche': function (el) { ouvrirFeuille({ type: 'fiche', obj: el.getAttribute('data-obj'), bonus: el.getAttribute('data-bonus') }); },
+    'aller-plan': function () { fermerFeuille(true); allerA('plan'); },
+    'reessayer': function () { Depot.reessayer(); },
+    'reprendre-local': function () { Depot.reprendreLocal(); allerA('objectif'); dire('Données de ce navigateur reprises.'); },
+    'ouvrir-seance': function (el) {
+      ouvrirFeuille({ type: 'seance', mode: el.getAttribute('data-mode') === 'saisie' ? 'saisie' : 'detail', sem: el.getAttribute('data-sem'), i: +el.getAttribute('data-i') });
+    },
+    'sortie-libre': function (el) { ouvrirFeuille({ type: 'seance', mode: 'saisie', libre: true, date: el.getAttribute('data-d') || null }); },
+    'corriger': function (el) { ouvrirFeuille({ type: 'seance', mode: 'saisie', id: el.getAttribute('data-id') }); },
+    'noter': function () { S.f.mode = 'saisie'; rendreFeuille(true); },
+    'feu-oui': function () { P().feuVert = auj(); garder('profil'); rendre(); dire('C’est noté. Bonne reprise.'); },
+    'mois': function (el) {
+      var n = +el.getAttribute('data-n');
+      S.ui.mois = D.plusMois(S.ui.mois || auj().slice(0, 7), n); rendre();
+      var b = document.getElementById(n < 0 ? 'mois-prec' : 'mois-suiv'); if (b && !b.disabled) b.focus();
+    },
+    'apres-bravo': function () { var seulBonus = !(S.f.gagnees || []).length; fermerFeuille(true); S.ui.versBonus = seulBonus; allerA('medailles'); },
+    'refaire': function (el) { var x = blocEtPos(); D.refaire(x.b, +el.getAttribute('data-k')); garder('profil'); rendre(); dire('Semaine ajoutée : le jour J recule de 7 jours.'); },
+    'refaire-prec': function (el) {
+      var x = blocEtPos(), k = +el.getAttribute('data-k'), prec = x.b.semaines[k - 1];
+      x.b.vu = x.b.vu || {}; if (prec) x.b.vu[prec.id] = 1; // la question ne se repose pas pour cette semaine
+      D.refairePrecedente(x.b, k); garder('profil'); rendre(); dire('La semaine est reprogrammée. Le jour J recule de 7 jours.');
+    },
+    'ignorer-prec': function (el) { var b = P().bloc; b.vu = b.vu || {}; b.vu[el.getAttribute('data-sem')] = 1; garder('profil'); rendre(); },
+    'decaler': function (el) { var x = blocEtPos(); D.decaler(x.b, +el.getAttribute('data-k')); garder('profil'); rendre(); dire('Semaine de pause ajoutée : tout le plan glisse de 7 jours.'); },
+    'retirer-sem': function (el) { var x = blocEtPos(); D.retirer(x.b, +el.getAttribute('data-k')); garder('profil'); rendre(); dire('Semaine retirée : le jour J avance de 7 jours.'); },
+    'suppr': function (el) {
+      S.ui.suppr = el.getAttribute('data-cle'); if (S.f) rendreFeuille(); rendre();
+      var b = (S.f ? feuille : vue).querySelector('[data-a="suppr-oui"]'); if (b) b.focus();
+    },
+    'suppr-non': function () { S.ui.suppr = null; if (S.f) rendreFeuille(); rendre(); },
+    'suppr-oui': function (el) {
+      var genre = el.getAttribute('data-genre'), id = el.getAttribute('data-id');
+      S.ui.suppr = null;
+      if (genre === 'sortie') {
+        var jn = Jn(); jn.sorties = jn.sorties.filter(function (x) { return x.id !== id; }); garder('journal'); dire('Sortie effacée.');
+        if (S.f && S.f.mode === 'saisie') { fermerFeuille(); return; } // la sortie qu'on corrigeait n'existe plus
+      } else { delete Pd().mesures[id]; garder('poids'); dire('Pesée effacée.'); }
+      if (S.f) rendreFeuille(); rendre();
+    },
+    'routine-edit': function () { S.ui.edit = !S.ui.edit; rendre(); var b = document.getElementById('rt-edit'); if (b) b.focus(); },
+    'exo-haut': function (el) { deplacerExo(el.getAttribute('data-id'), -1); },
+    'exo-bas': function (el) { deplacerExo(el.getAttribute('data-id'), 1); },
+    'exo-suppr': function (el) {
+      var rt = Rt(), id = el.getAttribute('data-id');
+      rt.exos = rt.exos.filter(function (e) { return e.id !== id; });
+      garder('routine'); rendre();
+    },
+    'plage': function (el) { S.ui.plage = +el.getAttribute('data-j'); rendre(); var b = document.getElementById('pl-' + S.ui.plage); if (b) b.focus(); },
+    'choisir': function (el) { ouvrirFeuille({ type: 'choisir', obj: el.getAttribute('data-obj') }); },
+    'copier': function () {
+      var t = exportTexte();
+      function repli() { S.ui.copie = t; rendreFeuille(); var z = document.getElementById('rg-copie'); if (z) { z.focus(); z.select(); } }
+      try { navigator.clipboard.writeText(t).then(function () { dire('Tes données sont copiées. Colle-les dans une note pour les garder.'); }, repli); } catch (e) { repli(); }
+    }
+  };
+  function deplacerExo(id, sens) {
+    var rt = Rt(), i = -1;
+    rt.exos.forEach(function (e, k) { if (e.id === id) i = k; });
+    var j = i + sens; if (i < 0 || j < 0 || j >= rt.exos.length) return;
+    var t = rt.exos[i]; rt.exos[i] = rt.exos[j]; rt.exos[j] = t;
+    garder('routine'); rendre();
+    var b = document.getElementById((sens < 0 ? 'eh-' : 'eb-') + id) || document.getElementById((sens < 0 ? 'eb-' : 'eh-') + id); if (b) b.focus();
+  }
+  function lireDate(v, idErr, futurePermise) {
+    if (!D.dateValide(v)) { erreur(idErr, 'Choisis une date valide.'); return null; }
+    if (!futurePermise && v > auj()) { erreur(idErr, 'Cette date est dans le futur : choisis aujourd’hui ou un jour passé.'); return null; }
+    return v;
+  }
+  var FORMS = {
+    'demarrer': function (f) {
+      var prenom = f.prenom.value.trim(), niv = f.niveau.value, debut = f.debut.value, dep = 0;
+      if (!prenom) { erreur('ob-erreur', 'Écris ton prénom : il s’affiche sur le dossard.'); f.prenom.focus(); return; }
+      if (!D.dateValide(debut)) { erreur('ob-erreur', 'Choisis la date de ta première semaine.'); f.debut.focus(); return; }
+      D.DEPARTS.forEach(function (d) { if (d.id === niv) dep = d.depart; });
+      var but = D.BUTS.dist.indexOf(f.dist.value) >= 0 ? { dist: f.dist.value, deniv: D.BUTS.deniv.indexOf(f.deniv.value) >= 0 ? f.deniv.value : null } : D.lireBut(null);
+      var ry = D.lireRythme({ rythme: f.rythme.value });
+      if (ry === 'rapide' && !D.rapidePermis({ niveau: niv })) ry = 'regulier';
+      S.docs.profil = { v: 1, prenom: prenom, cree: auj(), feuVert: null, medailles: {}, passes: [], nbBlocs: 1, but: but, rythme: ry, niveau: niv, bloc: D.nouveauBloc('5k', debut, dep, 'b1', ry) };
+      if (!S.docs.routine) S.docs.routine = D.routineDefaut();
+      garder('profil', 'routine'); allerA('objectif'); dire('Ton programme est créé.');
+    },
+    'sortie': function (f) {
+      var s = seanceCourante() || LIBRE, anc = sortieCourante(), p = P(), jn = Jn();
+      var d = lireDate(f.date.value, 'so-erreur'); if (!d) { f.date.focus(); return; }
+      var tMin = f.min.value.trim(), tKm = f.km.value.trim(), tDp = f.dp.value.trim();
+      var min = tMin ? D.nombre(tMin) : null, km = tKm ? D.nombre(tKm) : null, dp = tDp ? D.nombre(tDp) : null;
+      if (tKm && (km == null || km > 300)) { erreur('so-erreur', 'La distance se note en kilomètres. Exemple : 4,6.'); f.km.focus(); return; }
+      if (tDp && (dp == null || dp > 15000)) { erreur('so-erreur', 'Le dénivelé se note en mètres, sans décimale. Exemple : 90.'); f.dp.focus(); return; }
+      if (tMin && (min == null || min < 1 || min > 1440)) { erreur('so-erreur', 'La durée se note en minutes, entre 1 et 1440. Exemple : 35.'); f.min.focus(); return; }
+      if (!km && !min) { erreur('so-erreur', 'Note au moins la distance ou la durée.'); f.km.focus(); return; }
+      var libre = !!(S.f.libre || S.f.id);
+      var ref = anc ? (anc.ref || null) : (libre ? null : { w: S.f.sem, i: S.f.i }), titre = anc ? titreSortie(anc) : s.titre;
+      if (!anc && libre && f.plan && f.plan.checked) {
+        var cible = D.seanceAFaire(p.bloc, jn, d);
+        if (cible) { ref = { w: cible.w, i: cible.i }; titre = cible.s.titre; }
+      }
+      var x = { id: anc ? anc.id : 'o' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), d: d,
+        min: min ? Math.round(min) : null, km: km ? Math.round(km * 100) / 100 : null, dp: dp ? Math.round(dp) : null,
+        cont: f.cont ? !!f.cont.checked : !!(anc && anc.cont), res: f.res.value || 'correct', note: f.note.value.trim().slice(0, 120), titre: titre, ref: ref };
+      jn.sorties = jn.sorties.filter(function (y) { return y.id !== x.id; }); jn.sorties.push(x);
+      if (route() === 'carnet') S.ui.mois = d.slice(0, 7);
+      var gagnees = D.nouvellesMedailles({ km: x.km || 0, dp: x.dp || 0, cont: x.cont }, p.medailles || {}, idsParcours());
+      if (gagnees.length) {
+        p.medailles = p.medailles || {};
+        gagnees.forEach(function (id) { p.medailles[id] = d; });
+        if (p.bloc && p.medailles[p.bloc.obj]) { p.passes = p.passes || []; p.passes.push({ obj: p.bloc.obj, debut: p.bloc.debut, fin: d }); p.bloc = null; }
+        garder('profil');
+      }
+      garder('journal');
+      var bs = majBonus();
+      if (gagnees.length || bs.length) { S.f = { type: 'seance', mode: 'bravo', gagnees: gagnees, bonus: bs }; rendreFeuille(true); rendre(); return; }
+      fermerFeuille(); dire(anc ? 'Sortie corrigée.' : 'Sortie enregistrée.');
+    },
+    'pesee': function (f) {
+      var d = lireDate(f.date.value, 'pe-erreur'); if (!d) { f.date.focus(); return; }
+      var kg = D.nombre(f.kg.value);
+      if (kg == null || kg < 25 || kg > 300) { erreur('pe-erreur', 'Écris ton poids en kilos, par exemple 80,4.'); f.kg.focus(); return; }
+      Pd().mesures[d] = Math.round(kg * 10) / 10; garder('poids'); S.ui.sel = null; rendre();
+      dire('Pesée du ' + dCourt(d) + ' enregistrée.');
+    },
+    'exo-ajout': function (f) {
+      var nom = f.nom.value.trim(), dose = f.dose.value.trim(), rt = Rt();
+      if (!nom) { erreur('ea-erreur', 'Donne un nom à l’exercice.'); f.nom.focus(); return; }
+      rt.n = (rt.n || rt.exos.length) + 1;
+      rt.exos.push({ id: 'e' + rt.n, nom: nom.slice(0, 40), dose: dose.slice(0, 20) });
+      garder('routine'); rendre(); var z = document.getElementById('ea-nom'); if (z) z.focus();
+    },
+    'lancer-bloc': function (f) {
+      var p = P(), id = S.f.obj, debut = f.debut.value, dep = 0;
+      if (!D.dateValide(debut)) { erreur('ch-erreur', 'Choisis la date de ta première semaine.'); f.debut.focus(); return; }
+      if (id === '5k' && f.niveau) D.DEPARTS.forEach(function (d) { if (d.id === f.niveau.value) dep = d.depart; });
+      if (p.bloc) { p.passes = p.passes || []; p.passes.push({ obj: p.bloc.obj, debut: p.bloc.debut, fin: auj(), arret: true }); }
+      p.bloc = D.nouveauBloc(id, debut, dep, cleBloc(p), D.lireRythme(p)); S.ui.ouv = {};
+      garder('profil'); fermerFeuille(true); allerA('objectif');
+      dire('Nouvel objectif : ' + D.objectif(id).nom + '.');
+    },
+    'objectif': function (f) {
+      var p = P(), but = { dist: f.dist.value, deniv: f.deniv.value || null }, med = p.medailles || {};
+      if (D.BUTS.dist.indexOf(but.dist) < 0) return;
+      var ids = D.etapes(but).map(function (o) { return o.id; });
+      var hors = Object.keys(med).concat(p.bloc ? [p.bloc.obj] : []).filter(function (id, k, l) { return ids.indexOf(id) < 0 && l.indexOf(id) === k; });
+      if (hors.length) { erreur('rg-erreur', 'Ce parcours laisserait de côté ' + hors.map(function (id) { return D.objectif(id).nom; }).join(' et ') + ', que tu as déjà décroché ou que tu prépares. Choisis un objectif qui le contient.'); return; }
+      p.but = but; p.medailles = med;
+      var rat = D.rattraper(Jn().sorties, ids, med); Object.keys(rat).forEach(function (id) { med[id] = rat[id]; });
+      garder('profil'); rendre(); rendreFeuille(); dire('Objectif : ' + D.nomBut(but) + '.');
+    },
+    'rythme': function (f) {
+      var p = P(), r = D.lireRythme({ rythme: f.rythme.value }), nom = '';
+      if (r === 'rapide' && !D.rapidePermis(p)) { erreur('rg-erreur', 'Le rythme rapide s’ouvre une fois les 5 km décrochés.'); return; }
+      D.RYTHMES.forEach(function (x) { if (x.id === r) nom = x.nom.toLowerCase(); });
+      p.rythme = r;
+      if (p.bloc) { var pos = D.position(p.bloc, auj()); D.changerRythme(p.bloc, pos.etat === 'avant' ? -1 : (pos.etat === 'apres' ? p.bloc.semaines.length - 1 : pos.k), r); S.ui.ouv = {}; }
+      garder('profil'); rendre(); rendreFeuille();
+      dire('Rythme ' + nom + (p.bloc ? ' : jour J le ' + dCourt(D.position(p.bloc, auj()).jourJ) + '.' : '.'));
+    },
+    'prenom': function (f) {
+      var v = f.prenom.value.trim();
+      if (!v) { erreur('rg-erreur', 'Le prénom ne peut pas rester vide.'); f.prenom.focus(); return; }
+      P().prenom = v.slice(0, 20); garder('profil'); erreur('rg-erreur', ''); rendre(); dire('Prénom mis à jour.');
+    },
+    'debut': function (f) {
+      var v = f.debut.value;
+      if (!D.dateValide(v)) { erreur('rg-erreur', 'Choisis une date valide pour la première semaine.'); f.debut.focus(); return; }
+      P().bloc.debut = v; garder('profil'); erreur('rg-erreur', ''); rendre(); dire('Le plan démarre maintenant ' + dLong(v) + '.');
+    },
+    'importer': function (f) {
+      var o = null;
+      try { o = JSON.parse(f.texte.value); } catch (e) { o = null; }
+      if (!o || o.app !== 'le-dossard' || !o.profil || typeof o.profil.prenom !== 'string') { erreur('rg-erreur', 'Ce texte n’est pas une copie du Dossard. Colle la copie entière, sans la modifier.'); f.texte.focus(); return; }
+      if (!f.ok.checked) { erreur('rg-erreur', 'Coche la case pour confirmer le remplacement de tes données.'); f.ok.focus(); return; }
+      S.docs.profil = o.profil;
+      S.docs.journal = (o.journal && Array.isArray(o.journal.sorties)) ? o.journal : { sorties: [] };
+      S.docs.routine = (o.routine && Array.isArray(o.routine.exos)) ? o.routine : D.routineDefaut();
+      S.docs.poids = (o.poids && o.poids.mesures && typeof o.poids.mesures === 'object') ? o.poids : { mesures: {} };
+      garder('profil', 'journal', 'routine', 'poids'); fermerFeuille(); dire('Copie restaurée.');
+    },
+    'effacer': function (f) {
+      if (f.mot.value.trim() !== 'EFFACER') { erreur('rg-erreur', 'Écris EFFACER en majuscules pour confirmer.'); f.mot.focus(); return; }
+      S.docs.profil = null; S.docs.journal = { sorties: [] }; S.docs.routine = D.routineDefaut(); S.docs.poids = { mesures: {} };
+      S.ui = { plage: 28, ouv: {}, suppr: null, edit: false, sel: null, mois: null };
+      garder('profil', 'journal', 'routine', 'poids'); fermerFeuille(); window.scrollTo(0, 0); dire('Tout est effacé.');
+    }
+  };
+  var CHANGES = {
+    'creation': function (el) { majCreation(el); },
+    'exo': function (el) {
+      var rt = Rt(), tout = D.basculer(rt, auj(), el.getAttribute('data-id'), el.checked);
+      garder('routine'); rendre();
+      var bs = tout ? majBonus() : [];
+      if (bs.length) direBonus(bs);
+      else if (tout) dire('Routine complète. ' + D.serie(rt, auj()) + (D.serie(rt, auj()) > 1 ? ' matins d’affilée.' : ' matin au compteur.'));
+    },
+    'exo-nom': function (el) { majExo(el, 'nom', 40); },
+    'exo-dose': function (el) { majExo(el, 'dose', 20); }
+  };
+  function majExo(el, champ, max) {
+    var id = el.getAttribute('data-id'), v = el.value.trim().slice(0, max);
+    Rt().exos.forEach(function (e) { if (e.id === id) { if (champ === 'nom' && !v) { el.value = e.nom; return; } e[champ] = v; } });
+    garder('routine');
+  }
+
+  // ---------- Écoute ----------
+  document.addEventListener('click', function (ev) {
+    if (ev.target === feuille && S.f) { fermerFeuille(); return; }
+    var el = ev.target.closest('[data-a]'); if (!el) return;
+    var fn = ACTIONS[el.getAttribute('data-a')]; if (fn) fn(el, ev);
+  });
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target.closest('form[data-f]'); if (!f) return;
+    ev.preventDefault();
+    var fn = FORMS[f.getAttribute('data-f')]; if (fn) fn(f);
+  });
+  document.addEventListener('change', function (ev) {
+    var el = ev.target.closest('[data-c]'); if (!el) return;
+    var fn = CHANGES[el.getAttribute('data-c')]; if (fn) fn(el);
+  });
+  document.addEventListener('input', function (ev) {
+    var f = ev.target.closest && ev.target.closest('form[data-f]'), e = f && f.querySelector('.erreur');
+    if (e && !e.hidden) { e.hidden = true; e.textContent = ''; }
+  });
+  document.addEventListener('focusout', function () { if (S.aRendre) setTimeout(function () { if (S.aRendre) rendreFond(); }, 0); });
+  document.addEventListener('toggle', function (ev) {
+    var d = ev.target; if (d && d.matches && d.matches('details.sem')) S.ui.ouv[d.getAttribute('data-sem')] = d.open;
+  }, true);
+  document.addEventListener('pointermove', pointeCourbe);
+  document.addEventListener('pointerdown', pointeCourbe);
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && S.f) { fermerFeuille(); return; }
+    if ((ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && ev.target && ev.target.id === 'courbe' && S.ui.courbe) {
+      ev.preventDefault();
+      var i = S.ui.sel == null ? S.ui.courbe.pts.length - 1 : S.ui.sel;
+      selCourbe(i + (ev.key === 'ArrowLeft' ? -1 : 1));
+    }
+  });
+  window.addEventListener('hashchange', function () {
+    S.ui.suppr = null; S.ui.sel = null; S.ui.edit = false; S.ui.mois = null;
+    rendre(); haut();
+    try { vue.focus({ preventScroll: true }); } catch (e) {}
+  });
+
+  rendre();
+  Depot.ouvrir();
+})();
+</script>
+<script>
+// Fonctionnement hors connexion : une copie du site est gardée sur l'appareil (voir sw.js).
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>

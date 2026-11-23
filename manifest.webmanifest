@@ -1,0 +1,17 @@
+{
+  "name": "Le Dossard",
+  "short_name": "Le Dossard",
+  "description": "Carnet d’entraînement au trail : un objectif, des étapes, un rythme, et une médaille à chaque arrivée.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#3B6CB0",
+  "theme_color": "#3B6CB0",
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icones/icone-masquable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

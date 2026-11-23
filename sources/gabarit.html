@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le Dossard</title>
+<meta name="description" content="Le Dossard, carnet d’entraînement au trail : un objectif, des étapes, un rythme, et une médaille à chaque arrivée.">
+<meta name="theme-color" content="#3B6CB0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Le Dossard">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icones/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icones/favicon-48.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<style>
+/* Polices Barlow servies par le site lui-même (dossier polices/), sans appel à un autre serveur. */
+@font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;src:url(polices/barlow-400.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:500;font-display:swap;src:url(polices/barlow-500.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;src:url(polices/barlow-600.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:600;font-display:swap;src:url(polices/barlow-condensed-600.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;src:url(polices/barlow-condensed-700.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:800;font-display:swap;src:url(polices/barlow-condensed-800.woff2) format('woff2')}
+</style>
+<style>
+/*STYLE*/
+</style>
+<style>
+/* Appli installée sur l'écran d'accueil : la barre d'onglets laisse la place du trait d'accueil de l'iPhone. */
+.onglets{height:calc(64px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px)}
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.annonce{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.panneau>.bloc{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+.bravo{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<main id="vue" tabindex="-1"></main>
+<nav class="onglets" id="onglets" aria-label="Navigation" hidden>
+<a href="#objectif">Objectif</a>
+<a href="#plan">Plan</a>
+<a href="#carnet">Carnet</a>
+<a href="#routine">Routine</a>
+<a href="#poids">Poids</a>
+<a href="#medailles">Médailles</a>
+</nav>
+</div>
+<div class="feuille" id="feuille" hidden></div>
+<div class="annonce" id="annonce" role="status" aria-live="polite"></div>
+<script>
+// Version autonome : l'appli enregistre les données dans le navigateur de l'appareil.
+window.DOSSARD_AUTONOME = true;
+</script>
+<script>
+/*LOGIQUE*/
+</script>
+<script>
+/*ICONES*/
+</script>
+<script>
+/*INTERFACE*/
+</script>
+<script>
+// Fonctionnement hors connexion : une copie du site est gardée sur l'appareil (voir sw.js).
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>
