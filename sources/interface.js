@@ -36,7 +36,7 @@
   function medailles() { var p = P(); return (p && p.medailles) || {}; }
   function cleBloc(p) { p.nbBlocs = (p.nbBlocs || 0) + 1; return 'b' + p.nbBlocs; }
   function bonus() { var p = P(); return (p && p.bonus) || {}; }
-  function ctxBonus() { return { sorties: Jn().sorties, routine: Rt(), auj: auj() }; }
+  function ctxBonus() { var pd = Pd(); return { sorties: Jn().sorties, routine: Rt(), poids: D.mesures(pd), sommeil: D.nuits(pd), auj: auj() }; }
   // Le parcours : les médailles de l'objectif choisi, dans l'ordre. Un programme d'avant ce choix garde les sept.
   function butCourant() { return D.lireBut(P()); }
   function parcours() { return D.etapes(butCourant()); }
@@ -518,7 +518,7 @@
           '<span class="exo-nom">' + esc(e.nom) + '</span><span class="exo-dose">' + esc(e.dose) + '</span></label></li>';
       });
       h += '</ul><p class="aide">Des exercices au poids du corps, sans matériel. Règle les doses sur ta forme du moment.</p>' +
-        '<a class="lien" href="#poids">Ensuite : note ton poids du matin</a>';
+        '<a class="lien" href="#poids">Ensuite : note ta pesée et ta nuit</a>';
     } else {
       h += '<ul>';
       rt.exos.forEach(function (e, i) {
@@ -537,9 +537,20 @@
     return h + '</div>';
   }
 
-  function svgCourbe(c) {
-    var g = c.g, r = r1, h = '<svg id="courbe" class="courbe" viewBox="0 0 350 190" tabindex="0" role="img" aria-label="Courbe de poids du ' + dCourt(c.d0) + ' au ' + dCourt(c.d1) +
-      '. Dernière moyenne sur 7 jours : ' + D.fx(c.pts[c.pts.length - 1].moy, 1) + ' kg. Flèches gauche et droite pour lire chaque pesée.">';
+  // Les deux courbes de la page Suivi : le poids et le score de sommeil. Même dessin, mêmes gestes de lecture.
+  var COURBES = {
+    'courbe': { rep: 'repere', lec: 'lecture', quoi: 'Courbe de poids', pas: 'chaque pesée',
+      val: function (v) { return D.fx(v, 1); }, fin: function (v) { return D.fx(v, 1) + ' kg'; },
+      lire: function (p) { return dJour(p.d) + ' : ' + D.fx(p.kg, 1) + ' kg · moyenne sur 7 jours ' + D.fx(p.moy, 1) + ' kg'; } },
+    'courbe-nuit': { rep: 'repere-nuit', lec: 'lecture-nuit', quoi: 'Courbe du score de sommeil', pas: 'chaque nuit',
+      val: function (v) { return String(Math.round(v)); }, fin: function (v) { return Math.round(v) + ' sur 100'; },
+      lire: function (p) { return dJour(p.d) + ' : ' + p.s + ' sur 100 · moyenne sur 7 nuits ' + Math.round(p.moy); } }
+  };
+  function svgCourbe(c, id) {
+    id = id || 'courbe';
+    var o = COURBES[id], g = c.g, r = r1, der = c.pts[c.pts.length - 1];
+    var h = '<svg id="' + id + '" class="courbe" viewBox="0 0 350 190" tabindex="0" role="img" aria-label="' + esc(o.quoi + ' du ' + dCourt(c.d0) + ' au ' + dCourt(c.d1) +
+      '. Dernière moyenne sur 7 jours : ' + o.fin(der.moy) + '. Flèches gauche et droite pour lire ' + o.pas + '.') + '">';
     c.ticks.forEach(function (t) {
       h += '<line class="grille" x1="' + g.x0 + '" x2="' + g.x1 + '" y1="' + r(t.y) + '" y2="' + r(t.y) + '"></line>' +
         '<text class="axe" x="' + (g.x0 - 8) + '" y="' + r(t.y + 4) + '" text-anchor="end">' + t.v + '</text>';
@@ -548,46 +559,72 @@
     if (c.span >= 12) h += '<text class="axe" x="' + r(g.x0 + (g.x1 - g.x0) * D.ecartJours(c.d0, c.milieu) / c.span) + '" y="182" text-anchor="middle">' + dCourt(c.milieu) + '</text>';
     h += '<text class="axe" x="' + g.x1 + '" y="182" text-anchor="end">' + dCourt(c.d1) + '</text>';
     function chemin(cle) { return 'M' + c.pts.map(function (p) { return r(p.x) + ' ' + r(p[cle]); }).join('L'); }
-    var der = c.pts[c.pts.length - 1];
     h += '<path class="brut" d="' + chemin('y') + '"></path><path class="moy" d="' + chemin('ym') + '"></path>' +
-      '<line id="repere" class="repere" x1="0" x2="0" y1="' + g.yh + '" y2="' + g.yb + '" visibility="hidden"></line>' +
+      '<line id="' + o.rep + '" class="repere" x1="0" x2="0" y1="' + g.yh + '" y2="' + g.yb + '" visibility="hidden"></line>' +
       '<circle class="anneau" cx="' + r(der.x) + '" cy="' + r(der.ym) + '" r="6"></circle><circle class="point" cx="' + r(der.x) + '" cy="' + r(der.ym) + '" r="4"></circle>' +
-      '<text class="valeur" x="' + r(der.x + 10) + '" y="' + r(der.ym + 4) + '">' + D.fx(der.moy, 1) + '</text>';
+      '<text class="valeur" x="' + r(der.x + 10) + '" y="' + r(der.ym + 4) + '">' + o.val(der.moy) + '</text>';
     return h + '</svg>';
   }
-  function texteLecture(p) { return dJour(p.d) + ' : ' + D.fx(p.kg, 1) + ' kg · moyenne sur 7 jours ' + D.fx(p.moy, 1) + ' kg'; }
+  function carteCourbe(c, id, titre, jours, moyenne) {
+    var o = COURBES[id];
+    return '<div class="carte"><h2 class="sur gris">' + titre + '</h2>' + svgCourbe(c, id) +
+      '<p class="lecture" id="' + o.lec + '" aria-live="polite">' + esc(o.lire(c.pts[c.pts.length - 1])) + '</p>' +
+      '<p class="legende"><span><i></i>' + jours + '</span><span><i class="m"></i>' + moyenne + '</span></p></div>';
+  }
   function vuePoids() {
-    var liste = D.mesures(Pd()), st = D.statsPoids(liste), a = auj(), plage = S.ui.plage, h = '';
-    var vis = plage ? liste.filter(function (x) { return x.d >= D.plusJours(a, -plage + 1); }) : liste;
+    // La page Suivi : la pesée et le score de sommeil du matin, chacun avec sa courbe.
+    var pd = Pd(), liste = D.mesures(pd), nuits = D.nuits(pd), a = auj(), plage = S.ui.plage, h = '';
+    var st = D.statsPoids(liste), sn = D.statsNuits(nuits, a);
+    function vis(l) { return plage ? l.filter(function (x) { return x.d >= D.plusJours(a, -plage + 1); }) : l; }
     var nomPlage = plage === 28 ? '4 dernières semaines' : (plage === 91 ? '3 derniers mois' : 'Depuis le début');
-    h += '<section class="bandeau"><div class="rang"><span class="sur">Poids</span><span class="sur">' + nomPlage + '</span></div>' +
-      '<div class="gros-poids"><span class="num">' + (st ? D.fx(st.dernier.kg, 1) : '–') + '</span><span class="unite">KG</span></div>' +
-      '<p>' + (st ? 'Dernière pesée : ' + dLong(st.dernier.d) + '.' : 'Aucune pesée pour l’instant.') + '</p></section><div class="bloc">';
+    h += '<section class="bandeau"><div class="rang"><span class="sur">Suivi</span><span class="sur">' + nomPlage + '</span></div><div class="deux-gros">' +
+      '<div><div class="gros-poids"><span class="num">' + (st ? D.fx(st.dernier.kg, 1) : '–') + '</span><span class="unite">KG</span></div>' +
+      '<p>' + (st ? 'Pesée · ' + dJour(st.dernier.d) : 'Aucune pesée') + '</p></div>' +
+      '<div><div class="gros-poids"><span class="num">' + (sn ? sn.dernier.s : '–') + '</span><span class="unite">/100</span></div>' +
+      '<p>' + (sn ? 'Nuit · ' + dJour(sn.dernier.d) : 'Aucune nuit notée') + '</p></div></div></section><div class="bloc">';
     h += '<form class="carte" data-f="pesee" novalidate><div class="duo"><div class="champ"><label for="pe-kg">Pesée, en kg</label>' +
       '<input class="grand" id="pe-kg" name="kg" type="text" inputmode="decimal" autocomplete="off" placeholder="' + (st ? D.fx(st.dernier.kg, 1) : '75,0') + '"></div>' +
-      '<div class="champ"><label for="pe-date">Date</label><input class="grand" style="font-size:18px" id="pe-date" name="date" type="date" value="' + a + '" max="' + a + '"></div></div>' +
-      '<p class="erreur" id="pe-erreur" role="alert" hidden></p><button class="btn" type="submit">Enregistrer la pesée</button></form>';
-    var c = D.courbe(vis, 350, 190); S.ui.courbe = c;
-    if (c) {
-      h += '<div class="carte"><h2 class="sur gris">Poids du matin · kg</h2>' + svgCourbe(c) +
-        '<p class="lecture" id="lecture" aria-live="polite">' + esc(texteLecture(c.pts[c.pts.length - 1])) + '</p>' +
-        '<p class="legende"><span><i></i>Pesées</span><span><i class="m"></i>Moyenne sur 7 jours</span></p></div>';
-    } else {
-      h += '<p class="aide">' + (liste.length >= 2 ? 'Moins de deux pesées sur cette période : élargis la période pour voir la courbe.' : 'La courbe apparaît à partir de deux pesées.') + '</p>';
-    }
+      '<div class="champ"><label for="pe-nuit">Score de sommeil</label>' +
+      '<input class="grand" id="pe-nuit" name="nuit" type="text" inputmode="numeric" autocomplete="off" placeholder="' + (sn ? sn.dernier.s : '80') + '"></div></div>' +
+      '<div class="champ"><label for="pe-date">Date</label><input class="grand" style="font-size:18px" id="pe-date" name="date" type="date" value="' + a + '" max="' + a + '"></div>' +
+      '<p class="aide">Remplis l’un, l’autre ou les deux. Le score de sommeil est celui que ta montre affiche au réveil, sur 100.</p>' +
+      '<p class="erreur" id="pe-erreur" role="alert" hidden></p><button class="btn" type="submit">Enregistrer</button></form>';
     h += '<div class="plages" role="group" aria-label="Période affichée">' +
       [[28, '4 semaines'], [91, '3 mois'], [0, 'Tout']].map(function (x) {
         return '<button type="button" id="pl-' + x[0] + '" data-a="plage" data-j="' + x[0] + '" aria-pressed="' + (plage === x[0]) + '">' + x[1] + '</button>';
       }).join('') + '</div>';
+    var c = D.courbe(vis(liste), 350, 190), cn = D.courbe(vis(nuits), 350, 190, 's');
+    S.ui.courbes = { 'courbe': c, 'courbe-nuit': cn };
+    // Le poids
+    if (c) h += carteCourbe(c, 'courbe', 'Poids du matin · kg', 'Pesées', 'Moyenne sur 7 jours');
+    else h += '<p class="aide">' + (liste.length >= 2 ? 'Moins de deux pesées sur cette période : élargis la période pour voir la courbe de poids.' : 'La courbe de poids apparaît à partir de deux pesées.') + '</p>';
     if (st) {
       h += '<div class="cellules"><div class="cellule"><b>' + D.fx(st.moy7, 1) + '<small>KG</small></b><span>Moyenne sur 7 jours</span></div>';
       if (st.avant != null) {
         h += '<div class="cellule"><b>' + D.fx(st.avant, 1) + '<small>KG</small></b><span>Il y a 4 semaines</span></div>' +
           '<div class="cellule"><b>' + (st.ecart > 0.04 ? '+' : (st.ecart < -0.04 ? '−' : '')) + D.fx(Math.abs(st.ecart), 1) + '<small>KG</small></b><span>Écart</span></div>';
       }
-      h += '</div><div class="carte"><h2 class="sur gris">Dernières pesées</h2><ul class="liste">';
+      h += '</div>';
+    }
+    // Le sommeil
+    if (cn) h += carteCourbe(cn, 'courbe-nuit', 'Score de sommeil · sur 100', 'Nuits', 'Moyenne sur 7 nuits');
+    else h += '<p class="aide">' + (nuits.length >= 2 ? 'Moins de deux nuits sur cette période : élargis la période pour voir la courbe de sommeil.' : 'La courbe de sommeil apparaît à partir de deux nuits notées.') + '</p>';
+    if (sn) {
+      h += '<div class="cellules"><div class="cellule"><b>' + Math.round(sn.moy7) + '</b><span>Moyenne sur 7 nuits</span></div>' +
+        '<div class="cellule"><b>' + sn.cours + '</b><span>' + (sn.cours > 1 ? 'Nuits' : 'Nuit') + ' d’affilée à ' + D.SEUIL_NUIT + ' ou plus</span></div>' +
+        '<div class="cellule"><b>' + sn.max + '</b><span>Meilleure série</span></div></div>';
+    }
+    if (st) {
+      h += '<div class="carte"><h2 class="sur gris">Dernières pesées</h2><ul class="liste">';
       liste.slice(-7).reverse().forEach(function (x) {
         h += '<li><span class="l-g"><span class="l-date">' + dJour(x.d) + '</span><span class="l-titre">' + D.fx(x.kg, 1) + ' kg</span></span>' + boutonSuppr('pesee', x.d) + '</li>';
+      });
+      h += '</ul></div>';
+    }
+    if (sn) {
+      h += '<div class="carte"><h2 class="sur gris">Dernières nuits</h2><ul class="liste">';
+      nuits.slice(-7).reverse().forEach(function (x) {
+        h += '<li><span class="l-g"><span class="l-date">' + dJour(x.d) + '</span><span class="l-titre">' + x.s + ' sur 100</span></span>' + boutonSuppr('nuit', x.d) + '</li>';
       });
       h += '</ul></div>';
     }
@@ -855,18 +892,19 @@
   // ---------- Actions ----------
   function blocEtPos() { var b = P().bloc; return { b: b, pos: D.position(b, auj()) }; }
   function indexSemaine(bloc, id) { for (var k = 0; k < bloc.semaines.length; k++) if (bloc.semaines[k].id === id) return k; return -1; }
-  function selCourbe(i) {
-    var c = S.ui.courbe; if (!c) return;
-    i = Math.max(0, Math.min(c.pts.length - 1, i)); S.ui.sel = i;
-    var p = c.pts[i], rep = document.getElementById('repere'), lec = document.getElementById('lecture');
+  function selCourbe(i, id) {
+    id = id || 'courbe';
+    var c = (S.ui.courbes || {})[id], o = COURBES[id]; if (!c) return;
+    i = Math.max(0, Math.min(c.pts.length - 1, i)); (S.ui.sel || (S.ui.sel = {}))[id] = i;
+    var p = c.pts[i], rep = document.getElementById(o.rep), lec = document.getElementById(o.lec);
     if (rep) { rep.setAttribute('x1', r1(p.x)); rep.setAttribute('x2', r1(p.x)); rep.setAttribute('visibility', 'visible'); }
-    if (lec) lec.textContent = texteLecture(p);
+    if (lec) lec.textContent = o.lire(p);
   }
   function pointeCourbe(ev) {
-    var svg = ev.target.closest && ev.target.closest('#courbe'), c = S.ui.courbe; if (!svg || !c) return;
+    var svg = ev.target.closest && ev.target.closest('svg.courbe'), c = svg && (S.ui.courbes || {})[svg.id]; if (!c) return;
     var b = svg.getBoundingClientRect(), x = (ev.clientX - b.left) / b.width * 350, best = 0, d = Infinity;
     c.pts.forEach(function (p, i) { var e = Math.abs(p.x - x); if (e < d) { d = e; best = i; } });
-    selCourbe(best);
+    selCourbe(best, svg.id);
   }
   var ACTIONS = {
     'reglages': function () { ouvrirFeuille({ type: 'reglages' }); },
@@ -908,7 +946,8 @@
       if (genre === 'sortie') {
         var jn = Jn(); jn.sorties = jn.sorties.filter(function (x) { return x.id !== id; }); garder('journal'); dire('Sortie effacée.');
         if (S.f && S.f.mode === 'saisie') { fermerFeuille(); return; } // la sortie qu'on corrigeait n'existe plus
-      } else { delete Pd().mesures[id]; garder('poids'); dire('Pesée effacée.'); }
+      } else if (genre === 'nuit') { var pn = Pd(); if (pn.nuits) delete pn.nuits[id]; garder('poids'); dire('Nuit effacée.'); }
+      else { delete Pd().mesures[id]; garder('poids'); dire('Pesée effacée.'); }
       if (S.f) rendreFeuille(); rendre();
     },
     'routine-edit': function () { S.ui.edit = !S.ui.edit; rendre(); var b = document.getElementById('rt-edit'); if (b) b.focus(); },
@@ -986,11 +1025,21 @@
       fermerFeuille(); dire(anc ? 'Sortie corrigée.' : 'Sortie enregistrée.');
     },
     'pesee': function (f) {
+      // La pesée, le score de sommeil, ou les deux, pour une même date.
       var d = lireDate(f.date.value, 'pe-erreur'); if (!d) { f.date.focus(); return; }
-      var kg = D.nombre(f.kg.value);
-      if (kg == null || kg < 25 || kg > 300) { erreur('pe-erreur', 'Écris ton poids en kilos, par exemple 80,4.'); f.kg.focus(); return; }
-      Pd().mesures[d] = Math.round(kg * 10) / 10; garder('poids'); S.ui.sel = null; rendre();
-      dire('Pesée du ' + dCourt(d) + ' enregistrée.');
+      var tk = f.kg.value.trim(), tn = f.nuit.value.trim(), kg = null, nuit = null;
+      if (!tk && !tn) { erreur('pe-erreur', 'Écris ta pesée, ton score de sommeil, ou les deux.'); f.kg.focus(); return; }
+      if (tk) { kg = D.nombre(tk); if (kg == null || kg < 25 || kg > 300) { erreur('pe-erreur', 'Écris ton poids en kilos, par exemple 80,4.'); f.kg.focus(); return; } }
+      if (tn) { nuit = D.nombre(tn); if (nuit == null || nuit > 100 || Math.round(nuit) !== nuit) { erreur('pe-erreur', 'Le score de sommeil est un nombre entier entre 0 et 100.'); f.nuit.focus(); return; } }
+      var pd = Pd();
+      if (kg != null) pd.mesures[d] = Math.round(kg * 10) / 10;
+      if (nuit != null) { if (!pd.nuits) pd.nuits = {}; pd.nuits[d] = nuit; }
+      garder('poids'); S.ui.sel = null;
+      // Une médaille du sommeil ou du poids vient d'être décrochée : on la fête. Les autres, s'il y en a en attente, sont simplement annoncées.
+      var bs = majBonus(), fete = bs.filter(function (k) { return /^(loir|sac)-/.test(k); }); rendre();
+      if (fete.length) { dire(''); ouvrirFeuille({ type: 'seance', mode: 'bravo', gagnees: [], bonus: fete.concat(bs.filter(function (k) { return fete.indexOf(k) < 0; })) }); return; }
+      dire((kg != null && nuit != null ? 'Pesée et score de sommeil du ' + dCourt(d) + ' enregistrés.' : kg != null ? 'Pesée du ' + dCourt(d) + ' enregistrée.' : 'Score de sommeil du ' + dCourt(d) + ' enregistré.') +
+        (bs.length ? ' ' + (bs.length > 1 ? 'Médailles bonus : ' : 'Médaille bonus : ') + bs.map(nomCle).join(', ') + '.' : ''));
     },
     'exo-ajout': function (f) {
       var nom = f.nom.value.trim(), dose = f.dose.value.trim(), rt = Rt();
@@ -1046,6 +1095,7 @@
       S.docs.journal = (o.journal && Array.isArray(o.journal.sorties)) ? o.journal : { sorties: [] };
       S.docs.routine = (o.routine && Array.isArray(o.routine.exos)) ? o.routine : D.routineDefaut();
       S.docs.poids = (o.poids && o.poids.mesures && typeof o.poids.mesures === 'object') ? o.poids : { mesures: {} };
+      if (S.docs.poids.nuits != null && typeof S.docs.poids.nuits !== 'object') delete S.docs.poids.nuits;
       garder('profil', 'journal', 'routine', 'poids'); fermerFeuille(); dire('Copie restaurée.');
     },
     'effacer': function (f) {
@@ -1100,10 +1150,11 @@
   document.addEventListener('pointerdown', pointeCourbe);
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && S.f) { fermerFeuille(); return; }
-    if ((ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && ev.target && ev.target.id === 'courbe' && S.ui.courbe) {
+    var idc = ev.target && ev.target.id, cc = idc && COURBES[idc] && (S.ui.courbes || {})[idc];
+    if ((ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && cc) {
       ev.preventDefault();
-      var i = S.ui.sel == null ? S.ui.courbe.pts.length - 1 : S.ui.sel;
-      selCourbe(i + (ev.key === 'ArrowLeft' ? -1 : 1));
+      var sel = (S.ui.sel || {})[idc], i = sel == null ? cc.pts.length - 1 : sel;
+      selCourbe(i + (ev.key === 'ArrowLeft' ? -1 : 1), idc);
     }
   });
   window.addEventListener('hashchange', function () {

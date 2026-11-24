@@ -205,6 +205,12 @@ input.grand{min-height:52px;font:800 26px var(--titre)}
 .gros-poids{display:flex;align-items:baseline;gap:8px;font-family:var(--titre);font-weight:800}
 .gros-poids .num{font-size:96px;line-height:.9}
 .gros-poids .unite{font-size:34px;line-height:1}
+/* Page Suivi : la dernière pesée et la dernière nuit, côte à côte dans le bandeau */
+.deux-gros{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.deux-gros .gros-poids{gap:6px}
+.deux-gros .gros-poids .num{font-size:clamp(40px,14.4vw,56px)}
+.deux-gros .gros-poids .unite{font-size:clamp(15px,5.6vw,22px)}
+.deux-gros p{margin-top:8px}
 .courbe{display:block;width:100%;height:auto;touch-action:pan-y;cursor:crosshair;border-radius:4px}
 .courbe .grille{stroke:#E0E1DC;stroke-width:1}
 .courbe .axe{font-size:11px;fill:var(--gris);font-variant-numeric:tabular-nums}

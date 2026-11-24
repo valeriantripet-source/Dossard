@@ -40,6 +40,12 @@
     // Une marmotte debout, qui s'assoupit
     marmotte: '<path d="M15.2 10.8c1.500.1 2.9-.5 3-1.800.1-1.2-1-2-2.3-2.3-.7-1.3-1.9-2.1-3.3-2.1-2.6 0-4.5 1.9-5 4.6-1.4 1.7-2.2 3.9-2.2 6.3 0 1.900.6 3.7 1.5 5h10.4c.9-1.2 1.4-2.7 1.3-4.3-.1-1.5-.7-2.8-1.6-3.8-.7-.5-1.3-1-1.8-1.6z"></path>' +
       '<circle cx="9.7" cy="5.2" r="1.4"' + P + '></circle><circle cx="13.9" cy="7.5" r=".85"' + P + '></circle><circle cx="17.7" cy="8.3" r=".8"' + P + '></circle>' +
-      '<path d="M14.3 13.2l2.2 2M6.7 19.1l-3 1.3M18.8 2.4h2.7l-2.7 3h2.7"></path>'
+      '<path d="M14.3 13.2l2.2 2M6.7 19.1l-3 1.3M18.8 2.4h2.7l-2.7 3h2.7"></path>',
+    // Un croissant de lune, une étoile et un point de lumière
+    loir: '<path d="M18.6 15.1A7.6 7.6 0 1 1 8.9 5.4a7.2 7.2 0 0 0 9.7 9.7z"></path>' +
+      '<path d="M16.8 2.6l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8z"' + P + '></path><circle cx="20.6" cy="10.4" r=".9"' + P + '></circle>',
+    // Un sac de trail : son dos arrondi, sa poignée, sa fermeture et sa poche
+    sac: '<path d="M7 10.5a5 5 0 0 1 10 0V19a1.8 1.8 0 0 1-1.8 1.8H8.8A1.8 1.8 0 0 1 7 19z"></path>' +
+      '<path d="M10 5.8V4.6a2 2 0 0 1 4 0v1.2M9.5 10.3h5"></path><path d="M9.7 14.2h4.6v3.4H9.7z"></path>'
   };
 })(typeof window !== 'undefined' ? window : globalThis);

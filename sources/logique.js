@@ -440,30 +440,77 @@
     var m = (poids && poids.mesures) || {};
     return Object.keys(m).sort().map(function (d) { return { d: d, kg: m[d] }; });
   }
-  function moyenne7(liste, d) {
+  // Les scores de sommeil sont rangés à côté des pesées, dans le même document : une nuit par date, celle du réveil.
+  function nuits(poids) {
+    var m = (poids && poids.nuits) || {};
+    return Object.keys(m).sort().filter(function (d) { return typeof m[d] === 'number'; }).map(function (d) { return { d: d, s: m[d] }; });
+  }
+  function moyenne7(liste, d, cle) {
+    cle = cle || 'kg';
     var debut = plusJours(d, -6), s = 0, n = 0;
-    for (var i = 0; i < liste.length; i++) { var x = liste[i]; if (x.d >= debut && x.d <= d) { s += x.kg; n++; } }
+    for (var i = 0; i < liste.length; i++) { var x = liste[i]; if (x.d >= debut && x.d <= d) { s += x[cle]; n++; } }
     return n ? s / n : null;
+  }
+  // Nuits d'affilée à 80 ou plus. « cours » : la série qui tient encore (jusqu'à aujourd'hui, ou hier si ce matin n'est pas noté) ;
+  // « max » : la plus longue jamais faite. Un jour sans score coupe la série, comme une nuit sous 80.
+  var SEUIL_NUIT = 80;
+  function seriesNuits(liste, a) {
+    var bonnes = {}, notees = {}, max = 0, n = 0, prec = null;
+    (liste || []).forEach(function (x) {
+      notees[x.d] = 1;
+      if (x.s >= SEUIL_NUIT) { n = (prec && plusJours(prec, 1) === x.d) ? n + 1 : 1; prec = x.d; bonnes[x.d] = 1; if (n > max) max = n; }
+      else { n = 0; prec = null; }
+    });
+    // Ce matin déjà noté : la série part d'aujourd'hui (et vaut zéro si la nuit est sous 80). Pas encore noté : elle tient jusqu'à hier.
+    var cours = 0, d = notees[a] ? a : plusJours(a, -1);
+    while (bonnes[d] && cours < 5000) { cours++; d = plusJours(d, -1); }
+    return { cours: cours, max: max };
+  }
+  function statsNuits(liste, a) {
+    if (!liste.length) return null;
+    var der = liste[liste.length - 1], se = seriesNuits(liste, a);
+    return { dernier: der, moy7: moyenne7(liste, der.d, 's'), cours: se.cours, max: se.max };
+  }
+  // Kilos perdus depuis la première pesée, lus sur la moyenne de 7 jours pour qu'un seul matin léger ne suffise pas.
+  // « cours » : aujourd'hui ; « max » : au mieux.
+  function pertePoids(liste) {
+    if (!liste || liste.length < 2) return { cours: 0, max: 0 };
+    var depart = liste[0].kg, cours = 0, max = 0;
+    liste.forEach(function (x) { cours = depart - moyenne7(liste, x.d); if (cours > max) max = cours; });
+    return { cours: Math.max(0, Math.round(cours * 10) / 10), max: Math.round(max * 10) / 10 };
   }
   function statsPoids(liste) {
     if (!liste.length) return null;
     var der = liste[liste.length - 1], m7 = moyenne7(liste, der.d), avant = moyenne7(liste, plusJours(der.d, -28));
     return { dernier: der, moy7: m7, avant: avant, ecart: (avant != null && m7 != null) ? m7 - avant : null };
   }
-  function courbe(liste, L, H) {
-    // Géométrie de la courbe : pesées (gris) et moyenne sur 7 jours (bleu), une seule échelle.
+  function courbe(liste, L, H, cle) {
+    // Géométrie d'une courbe : les valeurs du jour (gris) et leur moyenne sur 7 jours (bleu), une seule échelle.
+    // cle : 'kg' pour les pesées (par défaut), 's' pour les scores de sommeil.
+    cle = cle || 'kg';
     if (!liste || liste.length < 2) return null;
     var g = { x0: 34, x1: L - 44, yh: 12, yb: H - 28 };
     var d0 = liste[0].d, d1 = liste[liste.length - 1].d, span = Math.max(1, ecartJours(d0, d1));
-    var kgs = liste.map(function (x) { return x.kg; });
-    var mn = Math.min.apply(null, kgs), mx = Math.max.apply(null, kgs);
-    var bas = Math.floor(mn - 0.3), haut = Math.ceil(mx + 0.3);
-    if (haut - bas < 2) { if ((mn - bas) < (haut - mx)) bas -= 1; else haut += 1; }
-    var pas = 1; while ((haut - bas) / pas > 4) pas *= 2;
-    bas = Math.floor(bas / pas) * pas; haut = Math.ceil(haut / pas) * pas;
+    var vals = liste.map(function (x) { return x[cle]; });
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), bas, haut, pas;
+    if (cle === 's') {
+      // Scores sur 100 : des graduations rondes (de 5 en 5, de 10 en 10...), jamais au-dessus de 100, quatre intervalles au plus.
+      var ronds = [5, 10, 20, 50];
+      for (var k = 0; k < ronds.length; k++) {
+        pas = ronds[k]; bas = Math.floor(mn / pas) * pas; haut = Math.min(100, Math.ceil(mx / pas) * pas);
+        if (haut - bas < 2 * pas) { if (haut + pas <= 100 && (mn - bas) >= (haut - mx)) haut += pas; else bas = Math.max(0, bas - pas); }
+        if (haut - bas < 2 * pas) { if (haut + pas <= 100) haut += pas; else bas = Math.max(0, bas - pas); }
+        if ((haut - bas) / pas <= 4) break;
+      }
+    } else {
+      bas = Math.floor(mn - 0.3); haut = Math.ceil(mx + 0.3);
+      if (haut - bas < 2) { if ((mn - bas) < (haut - mx)) bas -= 1; else haut += 1; }
+      pas = 1; while ((haut - bas) / pas > 4) pas *= 2;
+      bas = Math.floor(bas / pas) * pas; haut = Math.ceil(haut / pas) * pas;
+    }
     function X(d) { return g.x0 + (g.x1 - g.x0) * ecartJours(d0, d) / span; }
     function Y(v) { return g.yb - (v - bas) / (haut - bas) * (g.yb - g.yh); }
-    var pts = liste.map(function (x) { return { d: x.d, kg: x.kg, moy: moyenne7(liste, x.d), x: X(x.d), y: Y(x.kg) }; });
+    var pts = liste.map(function (x) { var p = { d: x.d, moy: moyenne7(liste, x.d, cle), x: X(x.d), y: Y(x[cle]) }; p[cle] = x[cle]; return p; });
     pts.forEach(function (p) { p.ym = Y(p.moy); });
     var ticks = []; for (var v = bas; v <= haut + 1e-9; v += pas) ticks.push({ v: v, y: Y(v) });
     return { g: g, pts: pts, ticks: ticks, bas: bas, haut: haut, d0: d0, d1: d1, milieu: plusJours(d0, Math.round(span / 2)), span: span };
@@ -535,7 +582,7 @@
   }
   function un(sorties, test) { return (sorties || []).some(test); }
   function combien(sorties, test) { return (sorties || []).filter(test).length; }
-  // Cinq médailles évolutives (bronze, argent, or) et quatre uniques.
+  // Dix médailles évolutives (bronze, argent, or) et quatre uniques.
   // mesure : la valeur du moment ; record : le meilleur déjà atteint, quand une série peut retomber.
   var NIVEAUX = ['bronze', 'argent', 'or'], NOMS_NIVEAUX = ['Bronze', 'Argent', 'Or'], VERS = ['le bronze', 'l’argent', 'l’or'];
   // Un quatrième rang, secret : le platine n'apparaît qu'une fois l'or décroché.
@@ -544,6 +591,7 @@
   function semainesTxt(n) { return pl(n, 'semaine', 'semaines'); }
   function matinsTxt(n) { return pl(n, 'matin', 'matins'); }
   function sortiesTxt(n) { return pl(n, 'sortie', 'sorties'); }
+  function nuitsTxt(n) { return pl(n, 'nuit', 'nuits'); }
   var BONUS = [
     { id: 'bornes', nom: 'Les bornes', icone: 'bornes', critere: 'Kilomètres cumulés.',
       mesure: function (c) { return somme(c.sorties, 'km'); },
@@ -602,6 +650,20 @@
                 { s: 20, t: '20', l: '20 sorties de 10 km ou plus', mot: 'Vingt sorties longues. L’endurance s’installe.' },
                 { s: 50, t: '50', l: '50 sorties de 10 km ou plus', mot: 'Cinquante sorties de 10 km ou plus. Le long cours, c’est chez toi.' }],
       platine: { s: 100, t: '100', l: '100 sorties de 10 km ou plus', mot: 'Cent sorties longues. La distance n’a plus de secret.' } },
+    { id: 'loir', nom: 'Loir', icone: 'loir', critere: 'Nuits d’affilée avec un score de sommeil de 80 ou plus.',
+      mesure: function (c) { return seriesNuits(c.sommeil, c.auj).cours; }, record: function (c) { return seriesNuits(c.sommeil, c.auj).max; },
+      fmt: nuitsTxt, reste: nuitsTxt,
+      paliers: [{ s: 3, t: '3', l: '3 nuits d’affilée à 80 ou plus', mot: 'Trois bonnes nuits de suite. Le repos fait partie de l’entraînement.' },
+                { s: 6, t: '6', l: '6 nuits d’affilée à 80 ou plus', mot: 'Six nuits d’affilée à 80 ou plus. Le sommeil devient un allié.' },
+                { s: 10, t: '10', l: '10 nuits d’affilée à 80 ou plus', mot: 'Dix nuits d’affilée à 80 ou plus. Tu dors comme un loir.' }],
+      platine: { s: 15, t: '15', l: '15 nuits d’affilée à 80 ou plus', mot: 'Quinze nuits d’affilée à 80 ou plus. La récupération n’a plus de secret.' } },
+    { id: 'sac', nom: 'Sac allégé', icone: 'sac', critere: 'Kilos perdus depuis ta première pesée, lus sur la moyenne de 7 jours. Sans se presser.',
+      mesure: function (c) { return pertePoids(c.poids).cours; }, record: function (c) { return pertePoids(c.poids).max; },
+      fmt: function (v) { return fx(v) + ' kg'; }, reste: function (r) { return fx(Math.ceil(r * 10) / 10) + ' kg'; },
+      paliers: [{ s: 5, t: '5 kg', l: '5 kg de moins qu’à ta première pesée', mot: 'Cinq kilos de moins qu’au départ. Le sac est plus léger.' },
+                { s: 10, t: '10 kg', l: '10 kg de moins qu’à ta première pesée', mot: 'Dix kilos de moins : dix litres d’eau que tu ne portes plus.' },
+                { s: 15, t: '15 kg', l: '15 kg de moins qu’à ta première pesée', mot: 'Quinze kilos de moins qu’au départ. Les montées le sentent.' }],
+      platine: { s: 25, t: '25 kg', l: '25 kg de moins qu’à ta première pesée', mot: 'Vingt-cinq kilos de moins qu’au départ. Le même dossard, un tout autre coureur.' } },
     { id: 'premier', nom: 'Premier pas', icone: 'premier', critere: 'Ta première sortie notée.',
       mot: 'La première est notée : le carnet est ouvert.',
       ok: function (c) { return c.sorties.length >= 1; } },
@@ -616,7 +678,8 @@
       ok: function (c) { return reposLong(c.sorties, c.auj); } }
   ];
   function bonus(id) { for (var i = 0; i < BONUS.length; i++) if (BONUS[i].id === id) return BONUS[i]; return null; }
-  function contexte(c) { return { sorties: (c && c.sorties) || [], routine: (c && c.routine) || null, auj: c.auj }; }
+  // poids : la liste des pesées ; sommeil : la liste des nuits (voir mesures() et nuits()).
+  function contexte(c) { return { sorties: (c && c.sorties) || [], routine: (c && c.routine) || null, poids: (c && c.poids) || [], sommeil: (c && c.sommeil) || [], auj: c.auj }; }
   // Une médaille décrochée se note par une clé : « marmotte » pour une unique, « bornes-2 » pour l'argent des bornes.
   function clesBonus(avecSecrets) {
     var l = [];
@@ -625,7 +688,7 @@
     return l;
   }
   function totalBonus(gagnees) {
-    // Ce qu'il y a à décrocher, vu d'ici : les 28 médailles, plus un platine pour chaque or déjà décroché.
+    // Ce qu'il y a à décrocher, vu d'ici : les 34 médailles, plus un platine pour chaque or déjà décroché.
     var n = clesBonus().length;
     BONUS.forEach(function (b) { if (b.paliers && gagnees && gagnees[b.id + '-3']) n++; });
     return n;
@@ -668,12 +731,13 @@
     return o;
   }
   var ANCIENNES = { cent: 'bornes-1', cervin: 'sommets-2', everest: 'sommets-3', semaine: 'metronome-1', metronome: 'metronome-2', routine30: 'routine-2', givre: 'givre-1' };
-  // Les thèmes de la vitrine : chaque médaille bonus est rangée dans un thème, trois par thème.
+  // Les thèmes de la vitrine : chaque médaille bonus est rangée dans un thème, trois par thème au plus.
   var THEMES = [
     { id: 'km', nom: 'Kilomètres', ids: ['premier', 'bornes', 'long'] },
     { id: 'deniv', nom: 'Dénivelé', ids: ['sommets', 'grimpeur', 'chamois'] },
     { id: 'regul', nom: 'Régularité', ids: ['metronome', 'fidele', 'routine'] },
-    { id: 'temps', nom: 'Par tous les temps', ids: ['givre', 'joursans', 'marmotte'] }
+    { id: 'temps', nom: 'Par tous les temps', ids: ['givre', 'joursans', 'marmotte'] },
+    { id: 'forme', nom: 'Forme', ids: ['loir', 'sac'] }
   ];
   function paliersBonus(id, c, gagnees) {
     // Pour la fiche d'une médaille évolutive : chaque palier, son seuil, sa date s'il est décroché, sinon ce qui manque.
@@ -707,6 +771,7 @@
     nouveauBloc: nouveauBloc, position: position, semaine: semaine, faites: faites, nbFaites: nbFaites,
     refaire: refaire, refairePrecedente: refairePrecedente, decaler: decaler, retirer: retirer, jMoins: jMoins, court: court,
     routineDefaut: routineDefaut, cochesDuJour: cochesDuJour, jourComplet: jourComplet, basculer: basculer, serie: serie,
-    mesures: mesures, moyenne7: moyenne7, statsPoids: statsPoids, courbe: courbe
+    mesures: mesures, moyenne7: moyenne7, statsPoids: statsPoids, courbe: courbe,
+    nuits: nuits, seriesNuits: seriesNuits, statsNuits: statsNuits, pertePoids: pertePoids, SEUIL_NUIT: SEUIL_NUIT
   };
 })(typeof window !== 'undefined' ? window : globalThis);
