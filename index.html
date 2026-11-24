@@ -142,8 +142,8 @@ main{flex:1;padding-bottom:96px;outline:none}
    sur un écran court, tout se resserre pour que le porte-médailles reste visible sans faire défiler. */
 [data-vue="objectif"]{--h:clamp(0px,100vh - 640px,220px);--num-max:128px;--num:min(var(--num-max),72px + var(--h)*.255)}
 @supports (height:100svh){[data-vue="objectif"]{--h:clamp(0px,100svh - 640px,220px)}}
-[data-vue="objectif"] .bandeau{padding:calc(12px + var(--h)*.045) 20px calc(12px + var(--h)*.036);gap:calc(8px + var(--h)*.018)}
-[data-vue="objectif"] .dossard{margin:calc(4px + var(--h)*.009) 0 calc(8px + var(--h)*.009)}
+[data-vue="objectif"] .bandeau{padding:calc(10px + var(--h)*.0545) 20px calc(10px + var(--h)*.0455);gap:calc(8px + var(--h)*.018)}
+[data-vue="objectif"] .dossard{margin:calc(2px + var(--h)*.018) 0 calc(6px + var(--h)*.018)}
 [data-vue="objectif"] .dossard-haut{min-height:calc(28px + var(--h)*.027);padding:4px 26px;font-size:calc(14px + var(--h)*.0045)}
 [data-vue="objectif"] .dossard-num{gap:calc(6px + var(--h)*.009);padding:calc(8px + var(--h)*.009) 12px calc(4px + var(--h)*.009)}
 [data-vue="objectif"] .dossard-num .num{font-size:var(--num)}
@@ -157,14 +157,16 @@ main{flex:1;padding-bottom:96px;outline:none}
 [data-vue="objectif"] .trou.a,[data-vue="objectif"] .trou.b{top:calc(9px + var(--h)*.0135)}
 [data-vue="objectif"] .trou.c,[data-vue="objectif"] .trou.e{bottom:calc(14px + var(--h)*.018)}
 [data-vue="objectif"] .prepa{gap:calc(4px + var(--h)*.009)}
-[data-vue="objectif"] .bloc{padding-top:calc(14px + var(--h)*.027);gap:calc(12px + var(--h)*.009)}
+[data-vue="objectif"] .bloc{padding-top:calc(12px + var(--h)*.036);gap:calc(12px + var(--h)*.009)}
 [data-vue="objectif"] .carte{gap:6px}
 [data-vue="objectif"] .titre-seance{font-size:30px;line-height:32px}
 [data-vue="objectif"] .faits{margin-top:0}
 [data-vue="objectif"] .fait{border-top-width:2px;padding-top:3px}
 [data-vue="objectif"] .fait b{font-size:24px;line-height:26px}
-[data-vue="objectif"] .ratelier{gap:6px;margin-top:calc(2px + var(--h)*.027)}
-[data-vue="objectif"] .ruban{height:calc(20px + var(--h)*.018)}
+[data-vue="objectif"] .ratelier{gap:6px;margin-top:calc(var(--h)*.036)}
+[data-vue="objectif"] .ruban{height:calc(18px + var(--h)*.027)}
+/* La signature de l'auteur, sous le porte-médailles */
+.credit{margin-top:-4px;text-align:center;font:600 12px/16px var(--titre);letter-spacing:.12em;text-transform:uppercase;color:var(--gris)}
 /* Deux boutons sur une ligne : l'action principale prend la place, la seconde reste à sa largeur */
 .actions.paire{flex-wrap:nowrap;margin-top:4px}
 .actions.paire>.btn{flex:1 1 auto;min-height:48px;white-space:nowrap}
@@ -1510,6 +1512,8 @@ window.DOSSARD_AUTONOME = true;
     liste.forEach(function (o) { h += medaille(o, classeMed(o)); });
     return h + '</span></a>';
   }
+  // La signature de l'auteur, sous le porte-médailles de l'accueil
+  function credit() { return '<p class="credit">Créé par Valérian Tripet</p>'; }
   function dossard(o, prenom, droite) {
     var t = o.gros.length >= 4 ? ' l' : (o.gros.length === 3 ? ' m' : '');
     return '<div class="dossard"><div class="dossard-haut">Objectif · ' + esc(o.titre) + '</div>' +
@@ -1677,14 +1681,14 @@ window.DOSSARD_AUTONOME = true;
         h += '<h1 class="geant">Choisis ton prochain dossard</h1><p>' + (nb ? 'Une médaille de plus au mur. La suivante se choisit ici.' : 'Aucun objectif en cours pour l’instant.') + '</p></section><div class="bloc">';
         parcours().forEach(function (o) { if (D.disponible(o, med)) h += carteChoix(o); });
       }
-      return h + ratelier() + '</div>';
+      return h + ratelier() + credit() + '</div>';
     }
     var o = D.objectif(bloc.obj), pos = D.position(bloc, a);
     var droite = pos.etat === 'avant' ? 'Avant le départ' : (pos.etat === 'apres' ? 'Bloc terminé' : 'Semaine ' + (pos.k + 1) + ' sur ' + pos.n);
     h += '<section class="bandeau"><div class="rang"><span class="sur">Objectif ' + Math.min(tot, nb + 1) + ' sur ' + tot + ' · ' + droite + '</span>' + boutonReglages() + '</div>' +
       dossard(o, p.prenom, D.jMoins(pos.reste)) +
       '<div class="prepa"><div class="rang"><span class="petit">Préparation : ' + esc(o.nom) + '</span><span class="sur">Jour J · ' + dCourt(pos.jourJ) + '</span></div>' + segments(pos) + '</div></section>';
-    return h + '<div class="bloc">' + carteDuJour(bloc, pos, a) + ratelier() + '</div>';
+    return h + '<div class="bloc">' + carteDuJour(bloc, pos, a) + ratelier() + credit() + '</div>';
   }
 
   function ligneSeance(s, semId, i, sortie) {

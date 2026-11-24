@@ -211,6 +211,8 @@
     liste.forEach(function (o) { h += medaille(o, classeMed(o)); });
     return h + '</span></a>';
   }
+  // La signature de l'auteur, sous le porte-médailles de l'accueil
+  function credit() { return '<p class="credit">Créé par Valérian Tripet</p>'; }
   function dossard(o, prenom, droite) {
     var t = o.gros.length >= 4 ? ' l' : (o.gros.length === 3 ? ' m' : '');
     return '<div class="dossard"><div class="dossard-haut">Objectif · ' + esc(o.titre) + '</div>' +
@@ -378,14 +380,14 @@
         h += '<h1 class="geant">Choisis ton prochain dossard</h1><p>' + (nb ? 'Une médaille de plus au mur. La suivante se choisit ici.' : 'Aucun objectif en cours pour l’instant.') + '</p></section><div class="bloc">';
         parcours().forEach(function (o) { if (D.disponible(o, med)) h += carteChoix(o); });
       }
-      return h + ratelier() + '</div>';
+      return h + ratelier() + credit() + '</div>';
     }
     var o = D.objectif(bloc.obj), pos = D.position(bloc, a);
     var droite = pos.etat === 'avant' ? 'Avant le départ' : (pos.etat === 'apres' ? 'Bloc terminé' : 'Semaine ' + (pos.k + 1) + ' sur ' + pos.n);
     h += '<section class="bandeau"><div class="rang"><span class="sur">Objectif ' + Math.min(tot, nb + 1) + ' sur ' + tot + ' · ' + droite + '</span>' + boutonReglages() + '</div>' +
       dossard(o, p.prenom, D.jMoins(pos.reste)) +
       '<div class="prepa"><div class="rang"><span class="petit">Préparation : ' + esc(o.nom) + '</span><span class="sur">Jour J · ' + dCourt(pos.jourJ) + '</span></div>' + segments(pos) + '</div></section>';
-    return h + '<div class="bloc">' + carteDuJour(bloc, pos, a) + ratelier() + '</div>';
+    return h + '<div class="bloc">' + carteDuJour(bloc, pos, a) + ratelier() + credit() + '</div>';
   }
 
   function ligneSeance(s, semId, i, sortie) {
