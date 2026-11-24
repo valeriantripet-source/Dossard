@@ -137,6 +137,40 @@ main{flex:1;padding-bottom:96px;outline:none}
 .med.bonus.platine .ruban,.bravo .med.bonus.platine .ruban{background:linear-gradient(90deg,var(--encre) 0%,var(--encre) 34%,#FFFFFF 34%,#FFFFFF 66%,var(--encre) 66%,var(--encre) 100%)}
 .med.bonus.platine .disque{border:2px solid var(--encre);background:var(--platine);color:var(--encre);box-shadow:inset 0 0 0 3px #FFFFFF,inset 0 0 0 4.5px var(--encre)}
 
+/* Accueil : le dossard, la séance du jour et le porte-médailles tiennent ensemble sur l'écran du téléphone.
+   --h : la hauteur d'écran au-delà de 640 px (220 px au plus). Le dossard et les marges grandissent avec elle ;
+   sur un écran court, tout se resserre pour que le porte-médailles reste visible sans faire défiler. */
+[data-vue="objectif"]{--h:clamp(0px,100vh - 640px,220px);--num-max:128px;--num:min(var(--num-max),72px + var(--h)*.255)}
+@supports (height:100svh){[data-vue="objectif"]{--h:clamp(0px,100svh - 640px,220px)}}
+[data-vue="objectif"] .bandeau{padding:calc(12px + var(--h)*.045) 20px calc(12px + var(--h)*.036);gap:calc(8px + var(--h)*.018)}
+[data-vue="objectif"] .dossard{margin:calc(4px + var(--h)*.009) 0 calc(8px + var(--h)*.009)}
+[data-vue="objectif"] .dossard-haut{min-height:calc(28px + var(--h)*.027);padding:4px 26px;font-size:calc(14px + var(--h)*.0045)}
+[data-vue="objectif"] .dossard-num{gap:calc(6px + var(--h)*.009);padding:calc(8px + var(--h)*.009) 12px calc(4px + var(--h)*.009)}
+[data-vue="objectif"] .dossard-num .num{font-size:var(--num)}
+[data-vue="objectif"] .dossard-num .num.m{font-size:calc(var(--num)*.845)}
+[data-vue="objectif"] .dossard-num .num.l{font-size:calc(var(--num)*.72)}
+[data-vue="objectif"] .dossard-num .unite{font-size:calc(var(--num)*.3125)}
+[data-vue="objectif"] .dossard-num .unite.d{font-size:calc(var(--num)*.235)}
+[data-vue="objectif"] .dossard-bas{min-height:calc(38px + var(--h)*.036);padding:calc(4px + var(--h)*.009) 28px}
+[data-vue="objectif"] .dossard-bas .nom{font-size:calc(24px + var(--h)*.018)}
+[data-vue="objectif"] .jmoins{font-size:calc(18px + var(--h)*.009);line-height:calc(22px + var(--h)*.009)}
+[data-vue="objectif"] .trou.a,[data-vue="objectif"] .trou.b{top:calc(9px + var(--h)*.0135)}
+[data-vue="objectif"] .trou.c,[data-vue="objectif"] .trou.e{bottom:calc(14px + var(--h)*.018)}
+[data-vue="objectif"] .prepa{gap:calc(4px + var(--h)*.009)}
+[data-vue="objectif"] .bloc{padding-top:calc(14px + var(--h)*.027);gap:calc(12px + var(--h)*.009)}
+[data-vue="objectif"] .carte{gap:6px}
+[data-vue="objectif"] .titre-seance{font-size:30px;line-height:32px}
+[data-vue="objectif"] .faits{margin-top:0}
+[data-vue="objectif"] .fait{border-top-width:2px;padding-top:3px}
+[data-vue="objectif"] .fait b{font-size:24px;line-height:26px}
+[data-vue="objectif"] .ratelier{gap:6px;margin-top:calc(2px + var(--h)*.027)}
+[data-vue="objectif"] .ruban{height:calc(20px + var(--h)*.018)}
+/* Deux boutons sur une ligne : l'action principale prend la place, la seconde reste à sa largeur */
+.actions.paire{flex-wrap:nowrap;margin-top:4px}
+.actions.paire>.btn{flex:1 1 auto;min-height:48px;white-space:nowrap}
+.actions.paire>.btn.sec{flex:0 0 auto;padding:0 16px}
+@media (max-width:340px){.actions.paire>.btn{padding:0 10px;font-size:18px;letter-spacing:.06em}.actions.paire>.btn.sec{padding:0 12px}}
+
 /* Plan */
 details.sem{border-top:2px solid var(--encre)}
 details.sem>summary{list-style:none;cursor:pointer;min-height:58px;padding:8px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -397,6 +431,7 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
   .dossard-num .num{font-size:108px}
   .dossard-num .num.m{font-size:92px}
   .dossard-num .num.l{font-size:78px}
+  [data-vue="objectif"]{--num-max:108px}
   .onglets{padding:0 2px}
   .onglets a{font-size:12px;letter-spacing:.02em;padding:0 1px}
   .mois-nom{font-size:22px}
@@ -1582,8 +1617,8 @@ window.DOSSARD_AUTONOME = true;
   function carteSeance(s, semId, i, etiquette) {
     return '<section class="carte"><p class="sur gris">' + etiquette + '</p><h2 class="titre-seance">' + esc(s.titre) + '</h2>' +
       '<p class="resume">' + esc(s.resume) + '</p>' + faits(s) +
-      '<div class="actions"><button class="btn" type="button" data-a="ouvrir-seance" data-mode="saisie" data-sem="' + semId + '" data-i="' + i + '">Noter la séance</button></div>' +
-      '<button class="lien" type="button" data-a="ouvrir-seance" data-sem="' + semId + '" data-i="' + i + '">Voir le détail de la séance</button></section>';
+      '<div class="actions paire"><button class="btn" type="button" data-a="ouvrir-seance" data-mode="saisie" data-sem="' + semId + '" data-i="' + i + '">Noter la séance</button>' +
+      '<button class="btn sec" type="button" data-a="ouvrir-seance" data-sem="' + semId + '" data-i="' + i + '" aria-label="Voir le détail de la séance">Détail</button></div></section>';
   }
   function carteFeuVert(pos) {
     // La question se pose avant la première séance : à partir de deux semaines avant le départ, et tant qu'elle reste sans réponse.

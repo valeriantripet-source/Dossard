@@ -318,8 +318,8 @@
   function carteSeance(s, semId, i, etiquette) {
     return '<section class="carte"><p class="sur gris">' + etiquette + '</p><h2 class="titre-seance">' + esc(s.titre) + '</h2>' +
       '<p class="resume">' + esc(s.resume) + '</p>' + faits(s) +
-      '<div class="actions"><button class="btn" type="button" data-a="ouvrir-seance" data-mode="saisie" data-sem="' + semId + '" data-i="' + i + '">Noter la séance</button></div>' +
-      '<button class="lien" type="button" data-a="ouvrir-seance" data-sem="' + semId + '" data-i="' + i + '">Voir le détail de la séance</button></section>';
+      '<div class="actions paire"><button class="btn" type="button" data-a="ouvrir-seance" data-mode="saisie" data-sem="' + semId + '" data-i="' + i + '">Noter la séance</button>' +
+      '<button class="btn sec" type="button" data-a="ouvrir-seance" data-sem="' + semId + '" data-i="' + i + '" aria-label="Voir le détail de la séance">Détail</button></div></section>';
   }
   function carteFeuVert(pos) {
     // La question se pose avant la première séance : à partir de deux semaines avant le départ, et tant qu'elle reste sans réponse.
