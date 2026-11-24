@@ -247,6 +247,7 @@ input.grand{min-height:52px;font:800 26px var(--titre)}
 .deux-gros .gros-poids .num{font-size:clamp(40px,14.4vw,56px)}
 .deux-gros .gros-poids .unite{font-size:clamp(15px,5.6vw,22px)}
 .deux-gros p{margin-top:8px}
+.bandeau>.deux-gros+p{margin-top:2px}
 .courbe{display:block;width:100%;height:auto;touch-action:pan-y;cursor:crosshair;border-radius:4px}
 .courbe .grille{stroke:#E0E1DC;stroke-width:1}
 .courbe .axe{font-size:11px;fill:var(--gris);font-variant-numeric:tabular-nums}
@@ -337,7 +338,6 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .pts i.argent{background:var(--argent)}
 .pts i.or{background:var(--or)}
 .pts i.platine{border:1.5px solid var(--encre);background:radial-gradient(circle,var(--encre) 0,var(--encre) 1.6px,var(--platine) 2.2px)}
-.trois+.aide{margin-top:14px}
 /* La fiche d'une médaille */
 .fiche{align-items:center;text-align:center;gap:8px}
 .fiche>.med{transform:scale(2);margin:38px 0 40px}

@@ -647,9 +647,14 @@
     var med = medailles(), nb = nbGagnees(), liste = parcours(), tot = liste.length, bo = bonus(), ctx = ctxBonus();
     var nbBo = D.clesBonus(true).filter(function (k) { return bo[k]; }).length, totBo = D.totalBonus(bo);
     var etats = liste.map(etatObjectif), cours = null, dispo = [];
-    var h = '<section class="bandeau"><div class="rang"><span class="sur">Médailles</span><span class="sur">Bonus : ' + nbBo + ' sur ' + totBo + '</span></div>' +
-      '<h1 class="geant">' + nb + ' sur ' + tot + '</h1><p>' + (nb >= tot ? 'Objectif atteint : ' : 'Objectif : ') + esc(D.nomBut(butCourant())) + '.</p></section><div class="bloc serre">' +
-      '<div class="rang"><h2 class="sur gris">Ton parcours</h2><span class="sur gris">' + nb + ' sur ' + tot + '</span></div><div class="vitrine-parcours"><div class="barre"></div><ul class="medailles' + (tot < 4 ? ' peu' : '') + '">';
+    // Le bandeau : les deux compteurs côte à côte, comme sur la page Suivi. Chaque chiffre n'apparaît qu'une fois ;
+    // le titre, lu par les lecteurs d'écran, les dit en toutes lettres.
+    var h = '<section class="bandeau"><h1 class="cache">Médailles. Ton parcours : ' + nb + ' sur ' + tot + '. Bonus : ' + nbBo + ' sur ' + totBo + '.</h1>' +
+      '<div class="sur" aria-hidden="true">Médailles</div><div class="deux-gros" aria-hidden="true">' +
+      '<div><div class="gros-poids"><span class="num">' + nb + '</span><span class="unite">/' + tot + '</span></div><p>Ton parcours</p></div>' +
+      '<div><div class="gros-poids"><span class="num">' + nbBo + '</span><span class="unite">/' + totBo + '</span></div><p>Médailles bonus</p></div></div>' +
+      '<p>' + (nb >= tot ? 'Objectif atteint : ' : 'Objectif : ') + esc(D.nomBut(butCourant())) + '.</p></section><div class="bloc serre">' +
+      '<div class="rang"><h2 class="sur gris">Ton parcours</h2></div><div class="vitrine-parcours"><div class="barre"></div><ul class="medailles' + (tot < 4 ? ' peu' : '') + '">';
     liste.forEach(function (o, k) {
       if (etats[k].cle === 'cours') cours = o; else if (etats[k].cle === 'dispo') dispo.push(o);
       h += '<li><button class="vm" type="button" data-a="fiche" data-obj="' + o.id + '" aria-label="' + esc(o.nom + ' : ' + etats[k].texte) + '">' + medaille(o, classeMed(o)) + '</button></li>';
@@ -665,13 +670,13 @@
       });
       h += '</div>';
     }
-    h += '<div class="rang entete-bonus"><h2 class="sur gris">Bonus</h2><span class="sur gris">' + nbBo + ' sur ' + totBo + '</span></div>';
+    h += '<div class="rang entete-bonus"><h2 class="sur gris">Médailles bonus</h2></div>';
     D.THEMES.forEach(function (t) {
       h += '<h3 class="theme sur gris">' + esc(t.nom) + '</h3><ul class="trois">';
       t.ids.forEach(function (id) { h += caseBonus(D.bonus(id), bo, ctx); });
       h += '</ul>';
     });
-    return h + '<p class="aide">Trois points : bronze, argent, or. Un seul point : une médaille unique, en or d’emblée. Touche une médaille pour voir son détail.</p></div>';
+    return h + '</div>';
   }
   function fFiche() {
     // La fiche d'une médaille, ouverte depuis la vitrine
