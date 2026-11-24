@@ -582,7 +582,7 @@
   }
   function un(sorties, test) { return (sorties || []).some(test); }
   function combien(sorties, test) { return (sorties || []).filter(test).length; }
-  // Dix médailles évolutives (bronze, argent, or) et quatre uniques.
+  // Treize médailles évolutives (bronze, argent, or) et deux uniques.
   // mesure : la valeur du moment ; record : le meilleur déjà atteint, quand une série peut retomber.
   var NIVEAUX = ['bronze', 'argent', 'or'], NOMS_NIVEAUX = ['Bronze', 'Argent', 'Or'], VERS = ['le bronze', 'l’argent', 'l’or'];
   // Un quatrième rang, secret : le platine n'apparaît qu'une fois l'or décroché.
@@ -592,6 +592,16 @@
   function matinsTxt(n) { return pl(n, 'matin', 'matins'); }
   function sortiesTxt(n) { return pl(n, 'sortie', 'sorties'); }
   function nuitsTxt(n) { return pl(n, 'nuit', 'nuits'); }
+  function randosTxt(n) { return pl(n, 'randonnée', 'randonnées'); }
+  // Chamois : chaque palier demande une distance ET un dénivelé, dans la même sortie. Le quatrième est le platine.
+  var CHAMOIS = [{ km: 3, dp: 100 }, { km: 8, dp: 500 }, { km: 12, dp: 1000 }, { km: 20, dp: 1400 }];
+  function rangChamois(x) { var n = 0; CHAMOIS.forEach(function (q, i) { if (x && (x.km || 0) >= q.km && (x.dp || 0) >= q.dp) n = i + 1; }); return n; }
+  function meilleureChamois(sorties) {
+    // La sortie qui va le plus haut dans les paliers ; à égalité, celle qui a le plus de dénivelé.
+    var m = null, r = 0;
+    (sorties || []).forEach(function (x) { var n = rangChamois(x); if (n > r || (n > 0 && n === r && (x.dp || 0) > (m.dp || 0))) { m = x; r = n; } });
+    return { rang: r, sortie: m };
+  }
   var BONUS = [
     { id: 'bornes', nom: 'Les bornes', icone: 'bornes', critere: 'Kilomètres cumulés.',
       mesure: function (c) { return somme(c.sorties, 'km'); },
@@ -664,15 +674,37 @@
                 { s: 10, t: '10 kg', l: '10 kg de moins qu’à ta première pesée', mot: 'Dix kilos de moins : dix litres d’eau que tu ne portes plus.' },
                 { s: 15, t: '15 kg', l: '15 kg de moins qu’à ta première pesée', mot: 'Quinze kilos de moins qu’au départ. Les montées le sentent.' }],
       platine: { s: 25, t: '25 kg', l: '25 kg de moins qu’à ta première pesée', mot: 'Vingt-cinq kilos de moins qu’au départ. Le même dossard, un tout autre coureur.' } },
-    { id: 'premier', nom: 'Premier pas', icone: 'premier', critere: 'Ta première sortie notée.',
-      mot: 'La première est notée : le carnet est ouvert.',
-      ok: function (c) { return c.sorties.length >= 1; } },
+    { id: 'rando', nom: 'Randonneur', icone: 'rando', critere: 'Randonnées notées : coche « C’était une randonnée » en notant ta sortie.',
+      mesure: function (c) { return combien(c.sorties, function (x) { return !!x.rando; }); },
+      fmt: randosTxt, reste: randosTxt,
+      paliers: [{ s: 3, t: '3', l: '3 randonnées', mot: 'Trois randonnées au carnet. Le sentier te va bien.' },
+                { s: 10, t: '10', l: '10 randonnées', mot: 'Dix randonnées. Les chaussures sont faites à ton pied.' },
+                { s: 25, t: '25', l: '25 randonnées', mot: 'Vingt-cinq randonnées. Les panneaux jaunes n’ont plus de secret.' }],
+      platine: { s: 50, t: '50', l: '50 randonnées', mot: 'Cinquante randonnées. Randonneur, pour de bon.' } },
+    // Chamois : la mesure est le rang du meilleur palier atteint par une seule sortie (0 à 4).
+    { id: 'chamois', nom: 'Chamois', icone: 'chamois', critere: 'Une sortie à la fois longue et qui grimpe : la distance et le dénivelé comptent dans la même sortie.',
+      mesure: function (c) { return meilleureChamois(c.sorties).rang; },
+      valeur: function (c) { var m = meilleureChamois(c.sorties).sortie; return m ? fx(m.km) + ' km · ' + mil(m.dp) + ' m' : 'Pas encore'; },
+      fmt: function (v) { return v + ' sur 3'; },
+      vers: function (p) { return p.v; },
+      paliers: [{ s: 1, t: '3 km · 100 m', l: '3 km et 100 m de dénivelé dans la même sortie', v: 'Pour le bronze : une sortie d’au moins 3 km avec 100 m de dénivelé ou plus.',
+                  mot: 'Trois kilomètres et 100 m de dénivelé dans la même sortie : ça grimpe.' },
+                { s: 2, t: '8 km · 500 m', l: '8 km et 500 m de dénivelé dans la même sortie', v: 'Pour l’argent : une sortie d’au moins 8 km avec 500 m de dénivelé ou plus.',
+                  mot: 'Huit kilomètres et 500 m de dénivelé d’une traite. Le pied montagnard.' },
+                { s: 3, t: '12 km · 1\u00a0000 m', l: '12 km et 1\u00a0000 m de dénivelé dans la même sortie', v: 'Pour l’or : une sortie d’au moins 12 km avec 1\u00a0000 m de dénivelé ou plus.',
+                  mot: 'Douze kilomètres et 1\u00a0000 m de dénivelé dans la même sortie. Un vrai chamois.' }],
+      platine: { s: 4, t: '20 km · 1\u00a0400 m', l: '20 km et 1\u00a0400 m de dénivelé dans la même sortie', v: 'Pour le platine : une sortie d’au moins 20 km avec 1\u00a0400 m de dénivelé ou plus.',
+                 mot: 'Vingt kilomètres et 1\u00a0400 m de dénivelé dans la même sortie. La montagne est à toi.' } },
+    { id: 'jambes', nom: 'Jambes légères', icone: 'jambes', critere: 'Sorties notées « facile ».',
+      mesure: function (c) { return combien(c.sorties, function (x) { return x.res === 'facile'; }); },
+      fmt: sortiesTxt, reste: sortiesTxt,
+      paliers: [{ s: 10, t: '10', l: '10 sorties notées « facile »', mot: 'Dix sorties notées « facile ». Les jambes répondent.' },
+                { s: 30, t: '30', l: '30 sorties notées « facile »', mot: 'Trente sorties faciles. Ce qui coûtait hier passe tout seul.' },
+                { s: 75, t: '75', l: '75 sorties notées « facile »', mot: 'Soixante-quinze sorties faciles. La forme est là.' }],
+      platine: { s: 150, t: '150', l: '150 sorties notées « facile »', mot: 'Cent cinquante sorties faciles. Des jambes légères, pour de bon.' } },
     { id: 'joursans', nom: 'Jour sans', icone: 'joursans', critere: 'Une sortie notée « dur ».',
       mot: 'Les jours sans font partie du jeu. Celui-là est noté.',
       ok: function (c) { return un(c.sorties, function (x) { return x.res === 'dur'; }); } },
-    { id: 'chamois', nom: 'Chamois', icone: 'chamois', critere: 'Plus de 100 m de dénivelé par kilomètre, sur une sortie d’au moins 3 km.',
-      mot: 'Plus de 100 m de dénivelé par kilomètre : ça grimpe.',
-      ok: function (c) { return un(c.sorties, function (x) { return x.km >= 3 && (x.dp || 0) / x.km >= 100; }); } },
     { id: 'marmotte', nom: 'Marmotte', icone: 'marmotte', critere: 'Sept jours de suite sans courir.',
       mot: 'Une semaine entière sans courir. Le repos compte aussi.',
       ok: function (c) { return reposLong(c.sorties, c.auj); } }
@@ -688,7 +720,7 @@
     return l;
   }
   function totalBonus(gagnees) {
-    // Ce qu'il y a à décrocher, vu d'ici : les 34 médailles, plus un platine pour chaque or déjà décroché.
+    // Ce qu'il y a à décrocher, vu d'ici : les 41 médailles, plus un platine pour chaque or déjà décroché.
     var n = clesBonus().length;
     BONUS.forEach(function (b) { if (b.paliers && gagnees && gagnees[b.id + '-3']) n++; });
     return n;
@@ -725,19 +757,19 @@
       var p = niveau === 3 ? b.platine : b.paliers[niveau], r = Math.max(0, p.s - v);
       suite = b.vers ? b.vers(p, r) : 'Encore ' + b.reste(r) + ' avant ' + (niveau === 3 ? 'le platine' : VERS[niveau]) + '.';
     }
-    var o = { valeur: b.fmt(v), part: Math.round(part * 1000) / 1000, phrase: (fait + ' ' + suite).trim() };
+    var o = { valeur: b.valeur ? b.valeur(c) : b.fmt(v), part: Math.round(part * 1000) / 1000, phrase: (fait + ' ' + suite).trim() };
     // Une fois l'or décroché : la part du chemin faite entre l'or et le platine.
     if (niveau >= 3) o.partPlatine = niveau === 4 ? 1 : Math.round(Math.max(0, Math.min(1, (v - s[2]) / (b.platine.s - s[2]))) * 1000) / 1000;
     return o;
   }
-  var ANCIENNES = { cent: 'bornes-1', cervin: 'sommets-2', everest: 'sommets-3', semaine: 'metronome-1', metronome: 'metronome-2', routine30: 'routine-2', givre: 'givre-1' };
+  var ANCIENNES = { cent: 'bornes-1', cervin: 'sommets-2', everest: 'sommets-3', semaine: 'metronome-1', metronome: 'metronome-2', routine30: 'routine-2', givre: 'givre-1', chamois: 'chamois-1' };
   // Les thèmes de la vitrine : chaque médaille bonus est rangée dans un thème, trois par thème au plus.
   var THEMES = [
-    { id: 'km', nom: 'Kilomètres', ids: ['premier', 'bornes', 'long'] },
+    { id: 'km', nom: 'Kilomètres', ids: ['rando', 'bornes', 'long'] },
     { id: 'deniv', nom: 'Dénivelé', ids: ['sommets', 'grimpeur', 'chamois'] },
     { id: 'regul', nom: 'Régularité', ids: ['metronome', 'fidele', 'routine'] },
     { id: 'temps', nom: 'Par tous les temps', ids: ['givre', 'joursans', 'marmotte'] },
-    { id: 'forme', nom: 'Forme', ids: ['loir', 'sac'] }
+    { id: 'forme', nom: 'Forme', ids: ['loir', 'sac', 'jambes'] }
   ];
   function paliersBonus(id, c, gagnees) {
     // Pour la fiche d'une médaille évolutive : chaque palier, son seuil, sa date s'il est décroché, sinon ce qui manque.
@@ -746,7 +778,7 @@
     if (gagnees && gagnees[id + '-3']) liste.push(b.platine); // le palier secret ne se montre qu'une fois l'or décroché
     return liste.map(function (p, i) {
       var date = (gagnees && gagnees[id + '-' + (i + 1)]) || null;
-      return { niveau: RANGS[i], nom: noms[i], seuil: p.icone ? p.t + ' · ' + mil(p.s) + ' m' : (/[a-z]/i.test(p.t) ? p.t : b.fmt(p.s)), date: date, reste: date ? null : b.reste(Math.max(0, p.s - v)) };
+      return { niveau: RANGS[i], nom: noms[i], seuil: p.icone ? p.t + ' · ' + mil(p.s) + ' m' : (/[a-z]/i.test(p.t) ? p.t : b.fmt(p.s)), date: date, reste: date || !b.reste ? null : b.reste(Math.max(0, p.s - v)) };
     });
   }
   function migrerBonus(anciens) {
@@ -761,7 +793,7 @@
     lundiDe: lundiDe, plusMois: plusMois, grilleMois: grilleMois, parJour: parJour, duMois: duMois, totaux: totaux,
     resumeJour: resumeJour, seanceAFaire: seanceAFaire,
     BONUS: BONUS, NIVEAUX: NIVEAUX, bonus: bonus, clesBonus: clesBonus, lireCle: lireCle, bonusGagnes: bonusGagnes, niveauBonus: niveauBonus,
-    suiviBonus: suiviBonus, migrerBonus: migrerBonus, THEMES: THEMES, paliersBonus: paliersBonus, RANGS: RANGS, totalBonus: totalBonus,
+    suiviBonus: suiviBonus, migrerBonus: migrerBonus, CHAMOIS: CHAMOIS, rangChamois: rangChamois, THEMES: THEMES, paliersBonus: paliersBonus, RANGS: RANGS, totalBonus: totalBonus,
     BUTS: BUTS, lireBut: lireBut, nomBut: nomBut, etapes: etapes, estBut: estBut, RYTHMES: RYTHMES, lireRythme: lireRythme, RAPIDE: RAPIDE, sequence: sequence,
     dureeParcours: dureeParcours, rapidePermis: rapidePermis, rattraper: rattraper, changerRythme: changerRythme, semainesPleines: semainesPleines, serieMax: serieMax,
     iso: iso, dateDe: dateDe, dateValide: dateValide, plusJours: plusJours, ecartJours: ecartJours, prochainLundi: prochainLundi,

@@ -427,6 +427,7 @@
     if (x.km) p.push(D.fx(x.km) + ' km');
     if (x.dp) p.push(D.mil(x.dp) + ' m D+');
     if (x.min) p.push(x.min + ' min');
+    if (x.rando) p.push('randonnée');
     if (x.cont) p.push('sans marcher');
     if (x.res && RESSENTIS[x.res]) p.push(RESSENTIS[x.res].toLowerCase());
     return p.join(' · ');
@@ -689,12 +690,12 @@
     }
     var niv = D.niveauBonus(b.id, bo), su = D.suiviBonus(b.id, ctx, niv);
     h = tete(b.nom, true) + '<div class="bloc fiche">' + medailleBonus(iconeBonus(b, niv), niv ? D.RANGS[niv - 1] : '') +
-      '<p class="f-val">' + esc(su.valeur) + '</p><p class="f-crit">' + esc(b.critere) + '</p>' + pisteBonus(b, Math.min(3, niv), su) +
+      '<p class="f-val' + (su.valeur.length > 11 ? ' long' : '') + '">' + esc(su.valeur) + '</p><p class="f-crit">' + esc(b.critere) + '</p>' + pisteBonus(b, Math.min(3, niv), su) +
       (niv >= 3 ? '<div class="secret"><div class="rang"><span class="sur">Palier secret · platine</span><span class="sur">' + esc(b.platine.icone ? b.platine.t : b.platine.l) + '</span></div>' +
         '<i class="jauge" role="img" aria-label="' + esc('Vers le platine : ' + Math.round(su.partPlatine * 100) + ' %') + '"><b style="width:' + (su.partPlatine * 100).toFixed(1) + '%"></b></i></div>' : '') +
       '<p class="f-etat">' + esc(su.phrase) + '</p><ul class="paliers">';
     D.paliersBonus(b.id, ctx, bo).forEach(function (q) {
-      h += '<li' + (q.date ? ' class="ok"' : '') + '><i class="pt' + (q.date ? ' ' + q.niveau : '') + '"></i><b>' + q.nom + '</b><span>' + esc(q.seuil) + ' · ' + (q.date ? 'décroché le ' + dAn(q.date) : 'encore ' + esc(q.reste)) + '</span></li>';
+      h += '<li' + (q.date ? ' class="ok"' : '') + '><i class="pt' + (q.date ? ' ' + q.niveau : '') + '"></i><b>' + q.nom + '</b><span>' + esc(q.seuil) + ' · ' + (q.date ? 'décroché le ' + dAn(q.date) : (q.reste ? 'encore ' + esc(q.reste) : 'à décrocher')) + '</span></li>';
     });
     return h + '</ul></div>';
   }
@@ -757,6 +758,7 @@
       '<div class="champ"><label for="so-min">Durée, en minutes (facultatif)</label><input id="so-min" name="min" type="text" inputmode="numeric" autocomplete="off" value="' + esc(min) + '"></div>' +
       '<div class="champ"><label for="so-note">Note (facultatif)</label><input id="so-note" name="note" type="text" maxlength="120" value="' + esc(x && x.note ? x.note : '') + '"></div>';
     // La case « sans marcher » ne sert qu'aux médailles 5 km et 10 km : elle disparaît une fois les deux décrochées.
+    h += '<label class="choix"><input id="so-rando" name="rando" type="checkbox"' + (x && x.rando ? ' checked' : '') + '><span>C’était une randonnée<small>Marche sur sentier ou en montagne. Compte pour la médaille Randonneur.</small></span></label>';
     if (!(med['5k'] && med['10k']) || (x && x.cont)) {
       h += '<label class="choix"><input id="so-cont" name="cont" type="checkbox"' + (x && x.cont ? ' checked' : '') + '><span>J’ai couru toute la distance sans marcher<small>Nécessaire pour les médailles 5 km et 10 km.</small></span></label>';
     }
@@ -1012,6 +1014,9 @@
       var x = { id: anc ? anc.id : 'o' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), d: d,
         min: min ? Math.round(min) : null, km: km ? Math.round(km * 100) / 100 : null, dp: dp ? Math.round(dp) : null,
         cont: f.cont ? !!f.cont.checked : !!(anc && anc.cont), res: f.res.value || 'correct', note: f.note.value.trim().slice(0, 120), titre: titre, ref: ref };
+      if (f.rando ? f.rando.checked : (anc && anc.rando)) x.rando = true;
+      // Une sortie libre notée comme randonnée en porte le nom dans le carnet
+      if (!x.ref && (x.titre === LIBRE.titre || x.titre === 'Randonnée')) x.titre = x.rando ? 'Randonnée' : LIBRE.titre;
       jn.sorties = jn.sorties.filter(function (y) { return y.id !== x.id; }); jn.sorties.push(x);
       if (route() === 'carnet') S.ui.mois = d.slice(0, 7);
       var gagnees = D.nouvellesMedailles({ km: x.km || 0, dp: x.dp || 0, cont: x.cont }, p.medailles || {}, idsParcours());

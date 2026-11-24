@@ -366,6 +366,7 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .fiche{align-items:center;text-align:center;gap:8px}
 .fiche>.med{transform:scale(2);margin:38px 0 40px}
 .f-val{font:800 52px/.95 var(--titre);font-variant-numeric:tabular-nums}
+.f-val.long{font-size:34px;line-height:1.05}
 .f-crit{font-size:14px;line-height:19px;color:var(--gris)}
 .f-etat{font-size:15px;line-height:20px;font-weight:600}
 .f-mot{font-size:15px;line-height:21px}
@@ -1051,7 +1052,7 @@ window.DOSSARD_AUTONOME = true;
   }
   function un(sorties, test) { return (sorties || []).some(test); }
   function combien(sorties, test) { return (sorties || []).filter(test).length; }
-  // Dix médailles évolutives (bronze, argent, or) et quatre uniques.
+  // Treize médailles évolutives (bronze, argent, or) et deux uniques.
   // mesure : la valeur du moment ; record : le meilleur déjà atteint, quand une série peut retomber.
   var NIVEAUX = ['bronze', 'argent', 'or'], NOMS_NIVEAUX = ['Bronze', 'Argent', 'Or'], VERS = ['le bronze', 'l’argent', 'l’or'];
   // Un quatrième rang, secret : le platine n'apparaît qu'une fois l'or décroché.
@@ -1061,6 +1062,16 @@ window.DOSSARD_AUTONOME = true;
   function matinsTxt(n) { return pl(n, 'matin', 'matins'); }
   function sortiesTxt(n) { return pl(n, 'sortie', 'sorties'); }
   function nuitsTxt(n) { return pl(n, 'nuit', 'nuits'); }
+  function randosTxt(n) { return pl(n, 'randonnée', 'randonnées'); }
+  // Chamois : chaque palier demande une distance ET un dénivelé, dans la même sortie. Le quatrième est le platine.
+  var CHAMOIS = [{ km: 3, dp: 100 }, { km: 8, dp: 500 }, { km: 12, dp: 1000 }, { km: 20, dp: 1400 }];
+  function rangChamois(x) { var n = 0; CHAMOIS.forEach(function (q, i) { if (x && (x.km || 0) >= q.km && (x.dp || 0) >= q.dp) n = i + 1; }); return n; }
+  function meilleureChamois(sorties) {
+    // La sortie qui va le plus haut dans les paliers ; à égalité, celle qui a le plus de dénivelé.
+    var m = null, r = 0;
+    (sorties || []).forEach(function (x) { var n = rangChamois(x); if (n > r || (n > 0 && n === r && (x.dp || 0) > (m.dp || 0))) { m = x; r = n; } });
+    return { rang: r, sortie: m };
+  }
   var BONUS = [
     { id: 'bornes', nom: 'Les bornes', icone: 'bornes', critere: 'Kilomètres cumulés.',
       mesure: function (c) { return somme(c.sorties, 'km'); },
@@ -1133,15 +1144,37 @@ window.DOSSARD_AUTONOME = true;
                 { s: 10, t: '10 kg', l: '10 kg de moins qu’à ta première pesée', mot: 'Dix kilos de moins : dix litres d’eau que tu ne portes plus.' },
                 { s: 15, t: '15 kg', l: '15 kg de moins qu’à ta première pesée', mot: 'Quinze kilos de moins qu’au départ. Les montées le sentent.' }],
       platine: { s: 25, t: '25 kg', l: '25 kg de moins qu’à ta première pesée', mot: 'Vingt-cinq kilos de moins qu’au départ. Le même dossard, un tout autre coureur.' } },
-    { id: 'premier', nom: 'Premier pas', icone: 'premier', critere: 'Ta première sortie notée.',
-      mot: 'La première est notée : le carnet est ouvert.',
-      ok: function (c) { return c.sorties.length >= 1; } },
+    { id: 'rando', nom: 'Randonneur', icone: 'rando', critere: 'Randonnées notées : coche « C’était une randonnée » en notant ta sortie.',
+      mesure: function (c) { return combien(c.sorties, function (x) { return !!x.rando; }); },
+      fmt: randosTxt, reste: randosTxt,
+      paliers: [{ s: 3, t: '3', l: '3 randonnées', mot: 'Trois randonnées au carnet. Le sentier te va bien.' },
+                { s: 10, t: '10', l: '10 randonnées', mot: 'Dix randonnées. Les chaussures sont faites à ton pied.' },
+                { s: 25, t: '25', l: '25 randonnées', mot: 'Vingt-cinq randonnées. Les panneaux jaunes n’ont plus de secret.' }],
+      platine: { s: 50, t: '50', l: '50 randonnées', mot: 'Cinquante randonnées. Randonneur, pour de bon.' } },
+    // Chamois : la mesure est le rang du meilleur palier atteint par une seule sortie (0 à 4).
+    { id: 'chamois', nom: 'Chamois', icone: 'chamois', critere: 'Une sortie à la fois longue et qui grimpe : la distance et le dénivelé comptent dans la même sortie.',
+      mesure: function (c) { return meilleureChamois(c.sorties).rang; },
+      valeur: function (c) { var m = meilleureChamois(c.sorties).sortie; return m ? fx(m.km) + ' km · ' + mil(m.dp) + ' m' : 'Pas encore'; },
+      fmt: function (v) { return v + ' sur 3'; },
+      vers: function (p) { return p.v; },
+      paliers: [{ s: 1, t: '3 km · 100 m', l: '3 km et 100 m de dénivelé dans la même sortie', v: 'Pour le bronze : une sortie d’au moins 3 km avec 100 m de dénivelé ou plus.',
+                  mot: 'Trois kilomètres et 100 m de dénivelé dans la même sortie : ça grimpe.' },
+                { s: 2, t: '8 km · 500 m', l: '8 km et 500 m de dénivelé dans la même sortie', v: 'Pour l’argent : une sortie d’au moins 8 km avec 500 m de dénivelé ou plus.',
+                  mot: 'Huit kilomètres et 500 m de dénivelé d’une traite. Le pied montagnard.' },
+                { s: 3, t: '12 km · 1\u00a0000 m', l: '12 km et 1\u00a0000 m de dénivelé dans la même sortie', v: 'Pour l’or : une sortie d’au moins 12 km avec 1\u00a0000 m de dénivelé ou plus.',
+                  mot: 'Douze kilomètres et 1\u00a0000 m de dénivelé dans la même sortie. Un vrai chamois.' }],
+      platine: { s: 4, t: '20 km · 1\u00a0400 m', l: '20 km et 1\u00a0400 m de dénivelé dans la même sortie', v: 'Pour le platine : une sortie d’au moins 20 km avec 1\u00a0400 m de dénivelé ou plus.',
+                 mot: 'Vingt kilomètres et 1\u00a0400 m de dénivelé dans la même sortie. La montagne est à toi.' } },
+    { id: 'jambes', nom: 'Jambes légères', icone: 'jambes', critere: 'Sorties notées « facile ».',
+      mesure: function (c) { return combien(c.sorties, function (x) { return x.res === 'facile'; }); },
+      fmt: sortiesTxt, reste: sortiesTxt,
+      paliers: [{ s: 10, t: '10', l: '10 sorties notées « facile »', mot: 'Dix sorties notées « facile ». Les jambes répondent.' },
+                { s: 30, t: '30', l: '30 sorties notées « facile »', mot: 'Trente sorties faciles. Ce qui coûtait hier passe tout seul.' },
+                { s: 75, t: '75', l: '75 sorties notées « facile »', mot: 'Soixante-quinze sorties faciles. La forme est là.' }],
+      platine: { s: 150, t: '150', l: '150 sorties notées « facile »', mot: 'Cent cinquante sorties faciles. Des jambes légères, pour de bon.' } },
     { id: 'joursans', nom: 'Jour sans', icone: 'joursans', critere: 'Une sortie notée « dur ».',
       mot: 'Les jours sans font partie du jeu. Celui-là est noté.',
       ok: function (c) { return un(c.sorties, function (x) { return x.res === 'dur'; }); } },
-    { id: 'chamois', nom: 'Chamois', icone: 'chamois', critere: 'Plus de 100 m de dénivelé par kilomètre, sur une sortie d’au moins 3 km.',
-      mot: 'Plus de 100 m de dénivelé par kilomètre : ça grimpe.',
-      ok: function (c) { return un(c.sorties, function (x) { return x.km >= 3 && (x.dp || 0) / x.km >= 100; }); } },
     { id: 'marmotte', nom: 'Marmotte', icone: 'marmotte', critere: 'Sept jours de suite sans courir.',
       mot: 'Une semaine entière sans courir. Le repos compte aussi.',
       ok: function (c) { return reposLong(c.sorties, c.auj); } }
@@ -1157,7 +1190,7 @@ window.DOSSARD_AUTONOME = true;
     return l;
   }
   function totalBonus(gagnees) {
-    // Ce qu'il y a à décrocher, vu d'ici : les 34 médailles, plus un platine pour chaque or déjà décroché.
+    // Ce qu'il y a à décrocher, vu d'ici : les 41 médailles, plus un platine pour chaque or déjà décroché.
     var n = clesBonus().length;
     BONUS.forEach(function (b) { if (b.paliers && gagnees && gagnees[b.id + '-3']) n++; });
     return n;
@@ -1194,19 +1227,19 @@ window.DOSSARD_AUTONOME = true;
       var p = niveau === 3 ? b.platine : b.paliers[niveau], r = Math.max(0, p.s - v);
       suite = b.vers ? b.vers(p, r) : 'Encore ' + b.reste(r) + ' avant ' + (niveau === 3 ? 'le platine' : VERS[niveau]) + '.';
     }
-    var o = { valeur: b.fmt(v), part: Math.round(part * 1000) / 1000, phrase: (fait + ' ' + suite).trim() };
+    var o = { valeur: b.valeur ? b.valeur(c) : b.fmt(v), part: Math.round(part * 1000) / 1000, phrase: (fait + ' ' + suite).trim() };
     // Une fois l'or décroché : la part du chemin faite entre l'or et le platine.
     if (niveau >= 3) o.partPlatine = niveau === 4 ? 1 : Math.round(Math.max(0, Math.min(1, (v - s[2]) / (b.platine.s - s[2]))) * 1000) / 1000;
     return o;
   }
-  var ANCIENNES = { cent: 'bornes-1', cervin: 'sommets-2', everest: 'sommets-3', semaine: 'metronome-1', metronome: 'metronome-2', routine30: 'routine-2', givre: 'givre-1' };
+  var ANCIENNES = { cent: 'bornes-1', cervin: 'sommets-2', everest: 'sommets-3', semaine: 'metronome-1', metronome: 'metronome-2', routine30: 'routine-2', givre: 'givre-1', chamois: 'chamois-1' };
   // Les thèmes de la vitrine : chaque médaille bonus est rangée dans un thème, trois par thème au plus.
   var THEMES = [
-    { id: 'km', nom: 'Kilomètres', ids: ['premier', 'bornes', 'long'] },
+    { id: 'km', nom: 'Kilomètres', ids: ['rando', 'bornes', 'long'] },
     { id: 'deniv', nom: 'Dénivelé', ids: ['sommets', 'grimpeur', 'chamois'] },
     { id: 'regul', nom: 'Régularité', ids: ['metronome', 'fidele', 'routine'] },
     { id: 'temps', nom: 'Par tous les temps', ids: ['givre', 'joursans', 'marmotte'] },
-    { id: 'forme', nom: 'Forme', ids: ['loir', 'sac'] }
+    { id: 'forme', nom: 'Forme', ids: ['loir', 'sac', 'jambes'] }
   ];
   function paliersBonus(id, c, gagnees) {
     // Pour la fiche d'une médaille évolutive : chaque palier, son seuil, sa date s'il est décroché, sinon ce qui manque.
@@ -1215,7 +1248,7 @@ window.DOSSARD_AUTONOME = true;
     if (gagnees && gagnees[id + '-3']) liste.push(b.platine); // le palier secret ne se montre qu'une fois l'or décroché
     return liste.map(function (p, i) {
       var date = (gagnees && gagnees[id + '-' + (i + 1)]) || null;
-      return { niveau: RANGS[i], nom: noms[i], seuil: p.icone ? p.t + ' · ' + mil(p.s) + ' m' : (/[a-z]/i.test(p.t) ? p.t : b.fmt(p.s)), date: date, reste: date ? null : b.reste(Math.max(0, p.s - v)) };
+      return { niveau: RANGS[i], nom: noms[i], seuil: p.icone ? p.t + ' · ' + mil(p.s) + ' m' : (/[a-z]/i.test(p.t) ? p.t : b.fmt(p.s)), date: date, reste: date || !b.reste ? null : b.reste(Math.max(0, p.s - v)) };
     });
   }
   function migrerBonus(anciens) {
@@ -1230,7 +1263,7 @@ window.DOSSARD_AUTONOME = true;
     lundiDe: lundiDe, plusMois: plusMois, grilleMois: grilleMois, parJour: parJour, duMois: duMois, totaux: totaux,
     resumeJour: resumeJour, seanceAFaire: seanceAFaire,
     BONUS: BONUS, NIVEAUX: NIVEAUX, bonus: bonus, clesBonus: clesBonus, lireCle: lireCle, bonusGagnes: bonusGagnes, niveauBonus: niveauBonus,
-    suiviBonus: suiviBonus, migrerBonus: migrerBonus, THEMES: THEMES, paliersBonus: paliersBonus, RANGS: RANGS, totalBonus: totalBonus,
+    suiviBonus: suiviBonus, migrerBonus: migrerBonus, CHAMOIS: CHAMOIS, rangChamois: rangChamois, THEMES: THEMES, paliersBonus: paliersBonus, RANGS: RANGS, totalBonus: totalBonus,
     BUTS: BUTS, lireBut: lireBut, nomBut: nomBut, etapes: etapes, estBut: estBut, RYTHMES: RYTHMES, lireRythme: lireRythme, RAPIDE: RAPIDE, sequence: sequence,
     dureeParcours: dureeParcours, rapidePermis: rapidePermis, rattraper: rattraper, changerRythme: changerRythme, semainesPleines: semainesPleines, serieMax: serieMax,
     iso: iso, dateDe: dateDe, dateValide: dateValide, plusJours: plusJours, ecartJours: ecartJours, prochainLundi: prochainLundi,
@@ -1251,15 +1284,16 @@ window.DOSSARD_AUTONOME = true;
   'use strict';
   var P = ' fill="currentColor" stroke="none"';
   root.DT_ICONES = {
-    // Une chaussure de course
-    premier: '<path d="M3 17.5v-6l3.4 1.3c.9.3 1.9-.1 2.3-.9l1-2.1 4.3 3.6c.9.8 2 1.3 3.2 1.5l2 .4c1.1.2 1.8 1.1 1.8 2.2"></path>' +
-      '<path d="M3 17.5h18v1.2a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 18.7z"></path><path d="M11.3 12.3l1.3-1.5M13.7 14.1l1.2-1.4"></path>',
+    // Un poteau de randonnée et ses deux panneaux
+    rando: '<path d="M12 3v18M8.5 21h7"></path><path d="M12 4.6h5.8l2.2 2.2-2.2 2.2H12z"></path><path d="M12 11.2H6.2L4 13.4l2.2 2.2H12z"></path>',
+    // Une plume
+    jambes: '<path d="M20 4C13 4 8.5 8 8 13.8l-.2 2.4 2.4-.2C16 15.5 20 11 20 4z"></path><path d="M4.5 19.5L15.6 8.4"></path>',
     // Un métronome
     metronome: '<path d="M9.2 3.5h5.6l3.7 17h-13z"></path><path d="M6.4 16.3h11.2M12 16.3l4.3-9.7"></path><circle cx="14.7" cy="10.2" r="1.7"' + P + '></circle>',
     // Le soleil qui se lève
     routine: '<path d="M2.5 17.5h19M7.5 21h9"></path><path d="M6.8 17.5a5.2 5.2 0 0 1 10.4 0"></path><path d="M12 6.3v2.7M5 10l1.9 1.9M19 10l-1.9 1.9"></path>',
-    // Une route qui file vers l'horizon
-    bornes: '<path d="M8.6 3.5L3.8 20.5M15.4 3.5l4.8 17"></path><path d="M12 4v2.6M12 10.2v3.2M12 17v3.5"></path>',
+    // Un sentier qui serpente vers les sommets
+    bornes: '<path d="M2.5 12.5L8 4.5l3.3 4.9L13.8 6.6l7.7 5.9"></path><path d="M8 21.2c0-3 7.5-2.4 7.5-5.4 0-2.6-4.6-2-4.6-4.6"></path>',
     // La Dôle : la crête du Jura et la boule blanche du sommet
     dole: '<path d="M2.5 20l4.4-3.7 3.5-1.1 4.3-4.8h3.3l1.2 3.9 2.8 5.7z"' + P.replace(' stroke="none"', '') + '></path><circle cx="16.3" cy="7.3" r="2.6"></circle>',
     // Le Cervin : sa pointe penchée et son épaule
@@ -1728,6 +1762,7 @@ window.DOSSARD_AUTONOME = true;
     if (x.km) p.push(D.fx(x.km) + ' km');
     if (x.dp) p.push(D.mil(x.dp) + ' m D+');
     if (x.min) p.push(x.min + ' min');
+    if (x.rando) p.push('randonnée');
     if (x.cont) p.push('sans marcher');
     if (x.res && RESSENTIS[x.res]) p.push(RESSENTIS[x.res].toLowerCase());
     return p.join(' · ');
@@ -1990,12 +2025,12 @@ window.DOSSARD_AUTONOME = true;
     }
     var niv = D.niveauBonus(b.id, bo), su = D.suiviBonus(b.id, ctx, niv);
     h = tete(b.nom, true) + '<div class="bloc fiche">' + medailleBonus(iconeBonus(b, niv), niv ? D.RANGS[niv - 1] : '') +
-      '<p class="f-val">' + esc(su.valeur) + '</p><p class="f-crit">' + esc(b.critere) + '</p>' + pisteBonus(b, Math.min(3, niv), su) +
+      '<p class="f-val' + (su.valeur.length > 11 ? ' long' : '') + '">' + esc(su.valeur) + '</p><p class="f-crit">' + esc(b.critere) + '</p>' + pisteBonus(b, Math.min(3, niv), su) +
       (niv >= 3 ? '<div class="secret"><div class="rang"><span class="sur">Palier secret · platine</span><span class="sur">' + esc(b.platine.icone ? b.platine.t : b.platine.l) + '</span></div>' +
         '<i class="jauge" role="img" aria-label="' + esc('Vers le platine : ' + Math.round(su.partPlatine * 100) + ' %') + '"><b style="width:' + (su.partPlatine * 100).toFixed(1) + '%"></b></i></div>' : '') +
       '<p class="f-etat">' + esc(su.phrase) + '</p><ul class="paliers">';
     D.paliersBonus(b.id, ctx, bo).forEach(function (q) {
-      h += '<li' + (q.date ? ' class="ok"' : '') + '><i class="pt' + (q.date ? ' ' + q.niveau : '') + '"></i><b>' + q.nom + '</b><span>' + esc(q.seuil) + ' · ' + (q.date ? 'décroché le ' + dAn(q.date) : 'encore ' + esc(q.reste)) + '</span></li>';
+      h += '<li' + (q.date ? ' class="ok"' : '') + '><i class="pt' + (q.date ? ' ' + q.niveau : '') + '"></i><b>' + q.nom + '</b><span>' + esc(q.seuil) + ' · ' + (q.date ? 'décroché le ' + dAn(q.date) : (q.reste ? 'encore ' + esc(q.reste) : 'à décrocher')) + '</span></li>';
     });
     return h + '</ul></div>';
   }
@@ -2058,6 +2093,7 @@ window.DOSSARD_AUTONOME = true;
       '<div class="champ"><label for="so-min">Durée, en minutes (facultatif)</label><input id="so-min" name="min" type="text" inputmode="numeric" autocomplete="off" value="' + esc(min) + '"></div>' +
       '<div class="champ"><label for="so-note">Note (facultatif)</label><input id="so-note" name="note" type="text" maxlength="120" value="' + esc(x && x.note ? x.note : '') + '"></div>';
     // La case « sans marcher » ne sert qu'aux médailles 5 km et 10 km : elle disparaît une fois les deux décrochées.
+    h += '<label class="choix"><input id="so-rando" name="rando" type="checkbox"' + (x && x.rando ? ' checked' : '') + '><span>C’était une randonnée<small>Marche sur sentier ou en montagne. Compte pour la médaille Randonneur.</small></span></label>';
     if (!(med['5k'] && med['10k']) || (x && x.cont)) {
       h += '<label class="choix"><input id="so-cont" name="cont" type="checkbox"' + (x && x.cont ? ' checked' : '') + '><span>J’ai couru toute la distance sans marcher<small>Nécessaire pour les médailles 5 km et 10 km.</small></span></label>';
     }
@@ -2313,6 +2349,9 @@ window.DOSSARD_AUTONOME = true;
       var x = { id: anc ? anc.id : 'o' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), d: d,
         min: min ? Math.round(min) : null, km: km ? Math.round(km * 100) / 100 : null, dp: dp ? Math.round(dp) : null,
         cont: f.cont ? !!f.cont.checked : !!(anc && anc.cont), res: f.res.value || 'correct', note: f.note.value.trim().slice(0, 120), titre: titre, ref: ref };
+      if (f.rando ? f.rando.checked : (anc && anc.rando)) x.rando = true;
+      // Une sortie libre notée comme randonnée en porte le nom dans le carnet
+      if (!x.ref && (x.titre === LIBRE.titre || x.titre === 'Randonnée')) x.titre = x.rando ? 'Randonnée' : LIBRE.titre;
       jn.sorties = jn.sorties.filter(function (y) { return y.id !== x.id; }); jn.sorties.push(x);
       if (route() === 'carnet') S.ui.mois = d.slice(0, 7);
       var gagnees = D.nouvellesMedailles({ km: x.km || 0, dp: x.dp || 0, cont: x.cont }, p.medailles || {}, idsParcours());

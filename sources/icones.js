@@ -3,15 +3,16 @@
   'use strict';
   var P = ' fill="currentColor" stroke="none"';
   root.DT_ICONES = {
-    // Une chaussure de course
-    premier: '<path d="M3 17.5v-6l3.4 1.3c.9.3 1.9-.1 2.3-.9l1-2.1 4.3 3.6c.9.8 2 1.3 3.2 1.5l2 .4c1.1.2 1.8 1.1 1.8 2.2"></path>' +
-      '<path d="M3 17.5h18v1.2a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 18.7z"></path><path d="M11.3 12.3l1.3-1.5M13.7 14.1l1.2-1.4"></path>',
+    // Un poteau de randonnée et ses deux panneaux
+    rando: '<path d="M12 3v18M8.5 21h7"></path><path d="M12 4.6h5.8l2.2 2.2-2.2 2.2H12z"></path><path d="M12 11.2H6.2L4 13.4l2.2 2.2H12z"></path>',
+    // Une plume
+    jambes: '<path d="M20 4C13 4 8.5 8 8 13.8l-.2 2.4 2.4-.2C16 15.5 20 11 20 4z"></path><path d="M4.5 19.5L15.6 8.4"></path>',
     // Un métronome
     metronome: '<path d="M9.2 3.5h5.6l3.7 17h-13z"></path><path d="M6.4 16.3h11.2M12 16.3l4.3-9.7"></path><circle cx="14.7" cy="10.2" r="1.7"' + P + '></circle>',
     // Le soleil qui se lève
     routine: '<path d="M2.5 17.5h19M7.5 21h9"></path><path d="M6.8 17.5a5.2 5.2 0 0 1 10.4 0"></path><path d="M12 6.3v2.7M5 10l1.9 1.9M19 10l-1.9 1.9"></path>',
-    // Une route qui file vers l'horizon
-    bornes: '<path d="M8.6 3.5L3.8 20.5M15.4 3.5l4.8 17"></path><path d="M12 4v2.6M12 10.2v3.2M12 17v3.5"></path>',
+    // Un sentier qui serpente vers les sommets
+    bornes: '<path d="M2.5 12.5L8 4.5l3.3 4.9L13.8 6.6l7.7 5.9"></path><path d="M8 21.2c0-3 7.5-2.4 7.5-5.4 0-2.6-4.6-2-4.6-4.6"></path>',
     // La Dôle : la crête du Jura et la boule blanche du sommet
     dole: '<path d="M2.5 20l4.4-3.7 3.5-1.1 4.3-4.8h3.3l1.2 3.9 2.8 5.7z"' + P.replace(' stroke="none"', '') + '></path><circle cx="16.3" cy="7.3" r="2.6"></circle>',
     // Le Cervin : sa pointe penchée et son épaule
