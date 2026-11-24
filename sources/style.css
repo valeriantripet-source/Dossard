@@ -1,6 +1,6 @@
 :root{
   /* Mise en page : une colonne de téléphone (480 px au plus), un bandeau bleu en tête de chaque écran,
-     le dossard comme pièce centrale de l'accueil, une barre de six onglets fixée en bas. Thème clair unique. */
+     le dossard comme pièce centrale de l'accueil, une barre de quatre onglets fixée en bas. Thème clair unique. */
   --fond:#F4F4F1;
   --carte:#FFFFFF;
   --encre:#101418;
@@ -426,8 +426,13 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 
 /* Onglets */
 .onglets{position:fixed;left:50%;bottom:0;z-index:20;transform:translateX(-50%);width:100%;max-width:480px;height:64px;padding:0 6px;background:var(--fond);border-top:2px solid var(--encre);display:flex}
-.onglets a{flex:1 1 auto;min-width:44px;padding:0 2px;display:flex;align-items:center;justify-content:center;color:var(--gris);font:700 13px var(--titre);letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
+.onglets a{flex:1 1 0;min-width:44px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--gris);font:700 13px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
+.onglets a svg{display:block;flex:none}
 .onglets a[aria-current="page"]{color:var(--bleu);box-shadow:inset 0 3px 0 var(--encre)}
+/* Deux pages sous un même onglet : deux boutons en tête de page */
+.sous-onglets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:14px 20px 0}
+.sous-onglets a{min-height:44px;border:2px solid var(--encre);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--encre);font:700 15px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
+.sous-onglets a[aria-current="page"]{background:var(--encre);color:#FFFFFF}
 
 @media (max-width:360px){
   .geant{font-size:46px}
@@ -436,6 +441,6 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
   .dossard-num .num.l{font-size:78px}
   [data-vue="objectif"]{--num-max:108px}
   .onglets{padding:0 2px}
-  .onglets a{font-size:12px;letter-spacing:.02em;padding:0 1px}
+  .onglets a{font-size:12px;letter-spacing:.05em;padding:0 1px}
   .mois-nom{font-size:22px}
 }

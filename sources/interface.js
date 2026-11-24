@@ -877,14 +877,24 @@
     else {
       nav = true;
       h = banniere() + (r === 'plan' ? vuePlan() : r === 'carnet' ? vueCarnet() : r === 'routine' ? vueRoutine() : r === 'poids' ? vuePoids() : r === 'medailles' ? vueMedailles() : vueObjectif());
+      var sn = sousOnglets(r); if (sn) h = h.replace('</section>', '</section>' + sn); // juste sous le bandeau
     }
     vue.innerHTML = h; vue.setAttribute('data-vue', !S.pret ? 'chargement' : (nav ? r : 'depart'));
     if (S.pret) ouverture(true);
     onglets.hidden = !nav;
     Array.prototype.forEach.call(onglets.querySelectorAll('a'), function (a) {
-      if (a.getAttribute('href') === '#' + r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      // Un onglet est actif pour chacune des pages qu'il réunit (data-g), sinon pour la sienne.
+      var g = a.getAttribute('data-g');
+      if (g ? (' ' + g + ' ').indexOf(' ' + r + ' ') >= 0 : a.getAttribute('href') === '#' + r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     if (actif) { var el = document.getElementById(actif); if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} } }
+  }
+  // Les pages réunies sous un même onglet (Plan et Carnet, Routine et Suivi) : deux boutons pour passer de l'une à l'autre.
+  function sousOnglets(r) {
+    var p = { plan: ['plan', 'carnet', 'Plan', 'Carnet'], carnet: ['plan', 'carnet', 'Plan', 'Carnet'], routine: ['routine', 'poids', 'Routine', 'Suivi'], poids: ['routine', 'poids', 'Routine', 'Suivi'] }[r];
+    if (!p) return '';
+    return '<nav class="sous-onglets" aria-label="' + p[2] + ' et ' + p[3] + '">' + [0, 1].map(function (k) {
+      return '<a href="#' + p[k] + '"' + (p[k] === r ? ' aria-current="page"' : '') + '>' + p[k + 2] + '</a>'; }).join('') + '</nav>';
   }
   // Animation d'ouverture : sur l'écran bleu du lancement, le dossard tombe et se pose, puis l'écran s'efface.
   // Jouée une seule fois, dès que les données sont là. Si elles tardent, l'écran s'efface sans attendre le dossard.

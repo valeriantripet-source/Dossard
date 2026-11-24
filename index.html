@@ -24,7 +24,7 @@
 <style>
 :root{
   /* Mise en page : une colonne de téléphone (480 px au plus), un bandeau bleu en tête de chaque écran,
-     le dossard comme pièce centrale de l'accueil, une barre de six onglets fixée en bas. Thème clair unique. */
+     le dossard comme pièce centrale de l'accueil, une barre de quatre onglets fixée en bas. Thème clair unique. */
   --fond:#F4F4F1;
   --carte:#FFFFFF;
   --encre:#101418;
@@ -450,8 +450,13 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 
 /* Onglets */
 .onglets{position:fixed;left:50%;bottom:0;z-index:20;transform:translateX(-50%);width:100%;max-width:480px;height:64px;padding:0 6px;background:var(--fond);border-top:2px solid var(--encre);display:flex}
-.onglets a{flex:1 1 auto;min-width:44px;padding:0 2px;display:flex;align-items:center;justify-content:center;color:var(--gris);font:700 13px var(--titre);letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
+.onglets a{flex:1 1 0;min-width:44px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--gris);font:700 13px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
+.onglets a svg{display:block;flex:none}
 .onglets a[aria-current="page"]{color:var(--bleu);box-shadow:inset 0 3px 0 var(--encre)}
+/* Deux pages sous un même onglet : deux boutons en tête de page */
+.sous-onglets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:14px 20px 0}
+.sous-onglets a{min-height:44px;border:2px solid var(--encre);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--encre);font:700 15px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
+.sous-onglets a[aria-current="page"]{background:var(--encre);color:#FFFFFF}
 
 @media (max-width:360px){
   .geant{font-size:46px}
@@ -460,7 +465,7 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
   .dossard-num .num.l{font-size:78px}
   [data-vue="objectif"]{--num-max:108px}
   .onglets{padding:0 2px}
-  .onglets a{font-size:12px;letter-spacing:.02em;padding:0 1px}
+  .onglets a{font-size:12px;letter-spacing:.05em;padding:0 1px}
   .mois-nom{font-size:22px}
 }
 </style>
@@ -477,12 +482,10 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="app" id="app">
 <main id="vue" tabindex="-1"></main>
 <nav class="onglets" id="onglets" aria-label="Navigation" hidden>
-<a href="#objectif">Objectif</a>
-<a href="#plan">Plan</a>
-<a href="#carnet">Carnet</a>
-<a href="#routine">Routine</a>
-<a href="#poids">Suivi</a>
-<a href="#medailles">Médailles</a>
+<a href="#objectif"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13.5" rx="2"></rect><path d="M3.5 9.6h17"></path><path d="M10.4 13l1.9-1v4.6"></path></svg><span>Accueil</span></a>
+<a href="#plan" data-g="plan carnet"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"></rect><path d="M4 10h16M8.2 3.6v3.6M15.8 3.6v3.6"></path><path d="M8 13.6h2M14 13.6h2M8 16.8h2"></path></svg><span>Programme</span></a>
+<a href="#routine" data-g="routine poids"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17.5h19M7.5 21h9"></path><path d="M6.8 17.5a5.2 5.2 0 0 1 10.4 0"></path><path d="M12 6.3v2.7M5 10l1.9 1.9M19 10l-1.9 1.9"></path></svg><span>Matin</span></a>
+<a href="#medailles"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="5.2"></circle><path d="M8.6 3.5l3.4 6.3 3.4-6.3"></path></svg><span>Médailles</span></a>
 </nav>
 </div>
 <div class="feuille" id="feuille" hidden></div>
@@ -2237,14 +2240,24 @@ window.DOSSARD_AUTONOME = true;
     else {
       nav = true;
       h = banniere() + (r === 'plan' ? vuePlan() : r === 'carnet' ? vueCarnet() : r === 'routine' ? vueRoutine() : r === 'poids' ? vuePoids() : r === 'medailles' ? vueMedailles() : vueObjectif());
+      var sn = sousOnglets(r); if (sn) h = h.replace('</section>', '</section>' + sn); // juste sous le bandeau
     }
     vue.innerHTML = h; vue.setAttribute('data-vue', !S.pret ? 'chargement' : (nav ? r : 'depart'));
     if (S.pret) ouverture(true);
     onglets.hidden = !nav;
     Array.prototype.forEach.call(onglets.querySelectorAll('a'), function (a) {
-      if (a.getAttribute('href') === '#' + r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      // Un onglet est actif pour chacune des pages qu'il réunit (data-g), sinon pour la sienne.
+      var g = a.getAttribute('data-g');
+      if (g ? (' ' + g + ' ').indexOf(' ' + r + ' ') >= 0 : a.getAttribute('href') === '#' + r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     if (actif) { var el = document.getElementById(actif); if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} } }
+  }
+  // Les pages réunies sous un même onglet (Plan et Carnet, Routine et Suivi) : deux boutons pour passer de l'une à l'autre.
+  function sousOnglets(r) {
+    var p = { plan: ['plan', 'carnet', 'Plan', 'Carnet'], carnet: ['plan', 'carnet', 'Plan', 'Carnet'], routine: ['routine', 'poids', 'Routine', 'Suivi'], poids: ['routine', 'poids', 'Routine', 'Suivi'] }[r];
+    if (!p) return '';
+    return '<nav class="sous-onglets" aria-label="' + p[2] + ' et ' + p[3] + '">' + [0, 1].map(function (k) {
+      return '<a href="#' + p[k] + '"' + (p[k] === r ? ' aria-current="page"' : '') + '>' + p[k + 2] + '</a>'; }).join('') + '</nav>';
   }
   // Animation d'ouverture : sur l'écran bleu du lancement, le dossard tombe et se pose, puis l'écran s'efface.
   // Jouée une seule fois, dès que les données sont là. Si elles tardent, l'écran s'efface sans attendre le dossard.
