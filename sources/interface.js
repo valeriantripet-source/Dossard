@@ -643,7 +643,7 @@
     return { cle: 'attente', texte: 'À débloquer : il faut d’abord ' + D.manquants(o, med).map(function (x) { return D.objectif(x).nom; }).join(' et ') + '.' };
   }
   function vueMedailles() {
-    // La vitrine : le parcours en une ligne, la suite dans une carte, puis les bonus en grille par thème. Le détail s'ouvre au toucher.
+    // La vitrine : le parcours en une ligne, la prochaine étape dans une carte quand il faut en choisir une, puis les bonus en grille par thème. Le détail s'ouvre au toucher.
     var med = medailles(), nb = nbGagnees(), liste = parcours(), tot = liste.length, bo = bonus(), ctx = ctxBonus();
     var nbBo = D.clesBonus(true).filter(function (k) { return bo[k]; }).length, totBo = D.totalBonus(bo);
     var etats = liste.map(etatObjectif), cours = null, dispo = [];
@@ -655,10 +655,10 @@
       h += '<li><button class="vm" type="button" data-a="fiche" data-obj="' + o.id + '" aria-label="' + esc(o.nom + ' : ' + etats[k].texte) + '">' + medaille(o, classeMed(o)) + '</button></li>';
     });
     h += '</ul></div>';
-    if (cours || dispo.length) {
-      h += '<div class="prochaine">';
-      if (cours) h += '<p class="sur gris">Objectif en cours</p><div class="pr-ligne"><div><h3>' + esc(cours.nom) + '</h3><p>' + esc(cours.critere) + ' ' + esc(D.jMoins(D.position(P().bloc, auj()).reste)) + '.</p></div><a class="btn sec petit" href="#plan">Le plan</a></div>';
-      if (dispo.length) h += '<p class="sur gris">' + (cours ? 'Aussi disponible' : (dispo.length > 1 ? 'Prochaines étapes, au choix' : 'Prochaine étape')) + '</p>';
+    // Pendant un objectif en cours, pas de carte : il se lit déjà sur la ligne du parcours et sur l'accueil.
+    // Sans objectif en cours, la carte propose la ou les prochaines étapes à choisir.
+    if (!cours && dispo.length) {
+      h += '<div class="prochaine"><p class="sur gris">' + (dispo.length > 1 ? 'Prochaines étapes, au choix' : 'Prochaine étape') + '</p>';
       dispo.forEach(function (o) {
         h += '<div class="pr-ligne"><div><h3>' + esc(o.nom) + '</h3><p>' + esc(o.critere) + ' ' + dureeBloc(o) + ' semaines de préparation.</p></div>' +
           '<button class="btn sec petit" type="button" data-a="choisir" data-obj="' + o.id + '" aria-label="' + esc('Choisir l’objectif ' + o.nom) + '">Choisir</button></div>';
