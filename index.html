@@ -24,7 +24,7 @@
 <style>
 :root{
   /* Mise en page : une colonne de téléphone (480 px au plus), un bandeau bleu en tête de chaque écran,
-     le dossard comme pièce centrale de l'accueil, une barre de quatre onglets fixée en bas. Thème clair unique. */
+     le dossard comme pièce centrale de l'accueil, une barre de cinq onglets fixée en bas. Thème clair unique. */
   --fond:#F4F4F1;
   --carte:#FFFFFF;
   --encre:#101418;
@@ -409,6 +409,35 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .regles .vu{display:flex;justify-content:center}
 .regles .vu svg{width:22px;height:22px}
 
+/* Vrais dossards de course : le mur où ils sont épinglés, et la feuille qui les redessine d'après la photo */
+.dossard.vrai{background:var(--d-fond);color:var(--d-encre)}
+.dossard.vrai .dossard-haut{background:var(--d-accent);color:var(--d-sur)}
+.dossard.vrai .dossard-bas{border-top-color:currentColor}
+.dossard.vrai .jmoins{background:var(--d-encre);color:var(--d-fond)}
+.dossard.vrai .trou{background:var(--fond)}
+.dossard.fantome{background:transparent;color:#7C807A;box-shadow:none;border:2px dashed #9A9D98;transform:none}
+.dossard.fantome .dossard-haut{background:transparent;color:inherit;border-bottom:2px dashed #9A9D98}
+.dossard.fantome .dossard-bas{border-top:2px dashed #9A9D98;min-height:36px}
+.dossard.fantome .trou{display:none}
+.btn.photo{position:relative;cursor:pointer}
+.btn.photo:focus-within{outline:3px solid var(--orange);outline-offset:2px}
+.aide.centre{text-align:center;text-wrap:balance}
+.mur{display:flex;flex-direction:column;gap:26px;padding:10px 0 6px}
+.mur li{display:flex;flex-direction:column;align-items:center;gap:14px}
+.mur li:nth-child(even) .dossard{transform:rotate(1.6deg)}
+.epingle{width:100%;padding:0;border:0;background:none;color:inherit;cursor:pointer;display:flex;justify-content:center}
+.epingle .dossard,.apercu .dossard{margin:0}
+.legende{font:600 14px/18px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);text-align:center}
+.scan{display:grid;grid-template-columns:116px minmax(0,1fr);gap:16px;align-items:center}
+.scan img{display:block;width:116px;height:87px;object-fit:cover;border:2px solid var(--encre);border-radius:8px;transform:rotate(-2deg)}
+.apercu{display:flex;justify-content:center;padding:8px 0 12px}
+.pastilles{display:flex;flex-wrap:wrap;gap:4px}
+.pastilles label{position:relative;display:flex;padding:3px;cursor:pointer}
+.pastilles input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.pastilles span{width:38px;height:38px;border-radius:50%;border:2px solid var(--encre)}
+.pastilles input:checked+span{box-shadow:0 0 0 2px var(--fond),0 0 0 5px var(--encre)}
+.pastilles input:focus-visible+span{outline:3px solid var(--orange);outline-offset:2px}
+
 /* Feuille (écran par-dessus) */
 .feuille{position:fixed;inset:0;z-index:30;background:rgba(16,20,24,.5);display:flex;justify-content:center}
 .panneau{width:100%;max-width:480px;height:100%;overflow:auto;background:var(--fond);display:flex;flex-direction:column}
@@ -465,7 +494,7 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 
 /* Onglets */
 .onglets{position:fixed;left:50%;bottom:0;z-index:20;transform:translateX(-50%);width:100%;max-width:480px;height:64px;padding:0 6px;background:var(--fond);border-top:2px solid var(--encre);display:flex}
-.onglets a{flex:1 1 0;min-width:44px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--gris);font:700 13px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
+.onglets a{flex:1 1 0;min-width:44px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--gris);font:700 13px var(--titre);letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
 .onglets a svg{display:block;flex:none}
 .onglets a[aria-current="page"]{color:var(--bleu);box-shadow:inset 0 3px 0 var(--encre)}
 /* Deux pages sous un même onglet : deux boutons en tête de page */
@@ -480,7 +509,7 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
   .dossard-num .num.l{font-size:78px}
   [data-vue="objectif"]{--num-max:108px}
   .onglets{padding:0 2px}
-  .onglets a{font-size:12px;letter-spacing:.05em;padding:0 1px}
+  .onglets a{font-size:12px;letter-spacing:.03em;padding:0}
   .mois-nom{font-size:22px}
 }
 </style>
@@ -501,6 +530,7 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <a href="#plan" data-g="plan carnet"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2"></rect><path d="M4 10h16M8.2 3.6v3.6M15.8 3.6v3.6"></path><path d="M8 13.6h2M14 13.6h2M8 16.8h2"></path></svg><span>Programme</span></a>
 <a href="#routine" data-g="routine poids"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17.5h19M7.5 21h9"></path><path d="M6.8 17.5a5.2 5.2 0 0 1 10.4 0"></path><path d="M12 6.3v2.7M5 10l1.9 1.9M19 10l-1.9 1.9"></path></svg><span>Matin</span></a>
 <a href="#medailles"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="5.2"></circle><path d="M8.6 3.5l3.4 6.3 3.4-6.3"></path></svg><span>Médailles</span></a>
+<a href="#dossards"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.6 5.2h10.9a2 2 0 0 1 2 2v8.2"></path><rect x="3.5" y="8.6" width="13.6" height="10.4" rx="2"></rect><path d="M9.3 13.2l1.9-1v4.5"></path></svg><span>Dossards</span></a>
 </nav>
 </div>
 <div class="feuille" id="feuille" hidden></div>
@@ -1302,6 +1332,133 @@ window.DOSSARD_AUTONOME = true;
     return o;
   }
 
+  // ---------- Vrais dossards de course ----------
+  // Les couleurs d'un dossard photographié. px : les octets RGBA d'une petite image de l × h points.
+  // On ne regarde que le centre de la photo, là où se trouve le dossard. Renvoie le papier (fond), le bandeau
+  // (accent) et les couleurs franches relevées (palette), en « #RRGGBB ».
+  function hexa(c) { return '#' + c.map(function (v) { return ('0' + Math.max(0, Math.min(255, Math.round(v))).toString(16)).slice(-2); }).join('').toUpperCase(); }
+  function couleurValide(h) { return typeof h === 'string' && /^#[0-9A-Fa-f]{6}$/.test(h); }
+  function rvb(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+  function luminance(c) {
+    var f = function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+  }
+  function contraste(a, b) { var x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  // L'encre lisible sur une couleur : l'encre de l'appli, ou le blanc.
+  function encreSur(h) { var c = rvb(couleurValide(h) ? h : '#FFFFFF'); return contraste(c, [16, 20, 24]) >= contraste(c, [255, 255, 255]) ? '#101418' : '#FFFFFF'; }
+  // Écart entre deux couleurs, où l'éclairage (en pleine lumière ou à l'ombre) compte moins que la teinte.
+  function clair(c) { return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255; }
+  function ecart(a, b) {
+    var ya = clair(a) * 255, yb = clair(b) * 255, dy = (ya - yb) * 0.45, du = (a[2] - ya) - (b[2] - yb), dv = (a[0] - ya) - (b[0] - yb);
+    return Math.sqrt(dy * dy + du * du + dv * dv);
+  }
+  function vif(c) { return (Math.max(c[0], c[1], c[2]) - Math.min(c[0], c[1], c[2])) / 255; }
+  // Deux couleurs de même teinte, l'une n'étant que l'autre à l'ombre.
+  function pleine(c) { var m = Math.max(c[0], c[1], c[2], 1); return [c[0] * 255 / m, c[1] * 255 / m, c[2] * 255 / m]; }
+  function memeTeinte(a, b) { return ecart(pleine(a), pleine(b)) < 40; }
+  function couleursProches(a, b) { return couleurValide(a) && couleurValide(b) && ecart(rvb(a), rvb(b)) < 40; }
+  function couleursDossard(px, l, h) {
+    var N = l * h, i, j, x, y, k, c;
+    // 1. Les teintes voisines sont réunies autour de la plus fréquente d'entre elles.
+    var cases = {}, cle = new Array(N);
+    for (i = 0; i < N; i++) {
+      j = i * 4; k = px[j + 3] < 128 ? -1 : (px[j] >> 4) << 8 | (px[j + 1] >> 4) << 4 | (px[j + 2] >> 4); cle[i] = k;
+      if (k < 0) continue;
+      c = cases[k] || (cases[k] = { s: [0, 0, 0], n: 0, g: -1 }); c.s[0] += px[j]; c.s[1] += px[j + 1]; c.s[2] += px[j + 2]; c.n++;
+    }
+    var groupes = [];
+    Object.keys(cases).map(function (k) { var e = cases[k]; e.c = [e.s[0] / e.n, e.s[1] / e.n, e.s[2] / e.n]; return e; })
+      .sort(function (a, b) { return b.n - a.n; })
+      .forEach(function (e) {
+        for (var g = 0; g < groupes.length; g++) if (ecart(groupes[g].c, e.c) < 40) { e.g = g; return; }
+        e.g = groupes.length; groupes.push({ c: e.c, p: 0, bord: 0 });
+      });
+    if (!groupes.length) return { fond: '#FFFFFF', accent: '#101418', palette: [] };
+    var grp = new Array(N); for (i = 0; i < N; i++) grp[i] = cle[i] < 0 ? -1 : cases[cle[i]].g;
+    // 2. Le décor (un maillot, une table) : les couleurs des bords de la photo, suivies de proche en proche.
+    //    Le numéro, même de la couleur du maillot, n'en fait pas partie : le papier l'en sépare.
+    var bx = Math.max(2, Math.round(l * 0.06)), by = Math.max(2, Math.round(h * 0.06)), nbBord = 0;
+    var auBord = function (x, y) { return x < bx || x >= l - bx || y < by || y >= h - by; };
+    for (y = 0; y < h; y++) for (x = 0; x < l; x++) if (auBord(x, y) && grp[y * l + x] >= 0) { groupes[grp[y * l + x]].bord++; nbBord++; }
+    var duBord = function (q) { return grp[q] >= 0 && groupes[grp[q]].bord / nbBord >= 0.05; };
+    var decor = new Uint8Array(N), pile = [];
+    for (y = 0; y < h; y++) for (x = 0; x < l; x++) { i = y * l + x; if (auBord(x, y) && duBord(i)) { decor[i] = 1; pile.push(i); } }
+    var voisin = function (q) { if (!decor[q] && duBord(q)) { decor[q] = 1; pile.push(q); } };
+    while (pile.length) {
+      i = pile.pop(); x = i % l;
+      if (x > 0) voisin(i - 1); if (x < l - 1) voisin(i + 1); if (i >= l) voisin(i - l); if (i < N - l) voisin(i + l);
+    }
+    // Ce qui reste doit former un bloc plein (un dossard), pas des traits épars (un numéro). Sinon la photo est cadrée
+    // sur le dossard seul, et c'est son papier qu'on vient d'écarter : dans ce cas, il n'y a pas de décor.
+    var xs = [], ys = [], plein = false, croissant = function (a, b) { return a - b; };
+    for (y = 0; y < h; y++) for (x = 0; x < l; x++) { i = y * l + x; if (!decor[i] && grp[i] >= 0) { xs.push(x); ys.push(y); } }
+    if (xs.length >= N * 0.03) {
+      xs.sort(croissant); ys.sort(croissant);
+      var q = function (t, f) { return t[Math.min(t.length - 1, Math.floor(t.length * f))]; };
+      var x0 = q(xs, 0.05), x1 = q(xs, 0.95), y0 = q(ys, 0.05), y1 = q(ys, 0.95), dedans = 0;
+      for (y = y0; y <= y1; y++) for (x = x0; x <= x1; x++) { i = y * l + x; if (!decor[i] && grp[i] >= 0) dedans++; }
+      plein = dedans >= (x1 - x0 + 1) * (y1 - y0 + 1) * 0.5;
+    }
+    var avecDecor = plein; if (!plein) decor = new Uint8Array(N);
+    // Le décor déborde un peu sur le dossard : son ombre, et le liseré où les deux couleurs se mêlent. On l'élargit de deux points.
+    for (var tour = 0; avecDecor && tour < 2; tour++) {
+      var large = new Uint8Array(decor);
+      for (y = 0; y < h; y++) for (x = 0; x < l; x++) {
+        i = y * l + x;
+        if (!decor[i] && ((x > 0 && decor[i - 1]) || (x < l - 1 && decor[i + 1]) || (y > 0 && decor[i - l]) || (y < h - 1 && decor[i + l]))) large[i] = 1;
+      }
+      decor = large;
+    }
+    // 3. Le dossard : ce qui reste. Le milieu de la photo compte plus que ses bords.
+    //    Le papier : la couleur la plus présente, avec un avantage aux couleurs claires.
+    var total, papier, poids = function (g) { return g.p * (0.3 + 0.7 * clair(g.c)); };
+    var mesurer = function () {
+      total = 0; groupes.forEach(function (g) { g.p = 0; });
+      for (var y = 0; y < h; y++) for (var x = 0; x < l; x++) {
+        var i = y * l + x; if (decor[i] || grp[i] < 0) continue;
+        var u = (x + 0.5) / l * 2 - 1, v = (y + 0.5) / h * 2 - 1, w = Math.exp(-(u * u + v * v) * 2);
+        groupes[grp[i]].p += w; total += w;
+      }
+      papier = groupes.slice().sort(function (a, b) { return poids(b) - poids(a); })[0];
+    };
+    mesurer();
+    // Un « papier » presque noir : c'est le numéro d'une photo cadrée serré. On reprend sans écarter de décor.
+    if (avecDecor && clair(papier.c) < 0.25) { decor = new Uint8Array(N); mesurer(); }
+    // La couleur du papier en pleine lumière : la moyenne de ses points les plus clairs (les autres sont à l'ombre d'un pli).
+    var ip = groupes.indexOf(papier), pts = [], pc = [0, 0, 0];
+    for (i = 0; i < N; i++) if (grp[i] === ip && !decor[i]) pts.push([px[i * 4], px[i * 4 + 1], px[i * 4 + 2]]);
+    pts.sort(function (a, b) { return clair(b) - clair(a); });
+    var nbHaut = Math.max(1, Math.round(pts.length * 0.3));
+    for (i = 0; i < nbHaut; i++) for (j = 0; j < 3; j++) pc[j] += pts[i][j] / nbHaut;
+    var m = Math.max(pc[0], pc[1], pc[2], 1);
+    // Un papier photographié est toujours un peu à l'ombre, ou sous une lumière jaune ou bleutée. Presque sans teinte,
+    // ou teinté comme le fait un éclairage (du rouge au bleu, dans l'ordre), c'est du blanc : on en tire l'éclairage,
+    // couleur par couleur. Coloré, on le ravive seulement. Les autres couleurs suivent la même correction.
+    var teinte = (m - Math.min(pc[0], pc[1], pc[2])) / m, eclairage = (pc[0] >= pc[1] && pc[1] >= pc[2]) || (pc[2] >= pc[1] && pc[1] >= pc[0]);
+    var blanc = clair(pc) > 0.3 && (teinte < 0.12 || (teinte < 0.22 && eclairage)), kc = Math.min(1.8, Math.max(1, 240 / m));
+    var gains = blanc ? pc.map(function (t) { return Math.min(1.8, Math.max(1, 240 / Math.max(t, 1))); }) : [kc, kc, kc];
+    var corrige = function (t) { return hexa([t[0] * gains[0], t[1] * gains[1], t[2] * gains[2]]); };
+    var fond = blanc ? '#FFFFFF' : corrige(pc);
+    // Les couleurs franches du dossard, de la plus marquante à la moins marquante. La première sert de bandeau.
+    // Le bord d'un chiffre mêle le papier et l'encre : ce mélange n'est pas une couleur du dossard.
+    var encre = null;
+    groupes.forEach(function (g) { if (g !== papier && g.p / total >= 0.03 && (!encre || clair(g.c) < clair(encre.c))) encre = g; });
+    var melange = function (t) {
+      if (!encre || clair(encre.c) > 0.3) return false;
+      var a = papier.c, b = encre.c, ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], n2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
+      var k = n2 ? ((t[0] - a[0]) * ab[0] + (t[1] - a[1]) * ab[1] + (t[2] - a[2]) * ab[2]) / n2 : 0;
+      if (k < 0.1 || k > 0.9) return false;
+      var d0 = t[0] - a[0] - k * ab[0], d1 = t[1] - a[1] - k * ab[1], d2 = t[2] - a[2] - k * ab[2];
+      return Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2) < 30;
+    };
+    var franches = [];
+    groupes.filter(function (g) { return g !== papier && g.p / total >= 0.01 && vif(g.c) >= 0.25 && ecart(g.c, papier.c) >= 40 && !memeTeinte(g.c, papier.c) && !melange(g.c); })
+      .sort(function (a, b) { return vif(b.c) * Math.sqrt(b.p) - vif(a.c) * Math.sqrt(a.p); })
+      .forEach(function (g) { if (franches.length < 4 && franches.every(function (f) { return ecart(f, g.c) >= 60 && !memeTeinte(f, g.c); })) franches.push(g.c); });
+    var palette = franches.map(corrige);
+    return { fond: fond, accent: palette[0] || encreSur(fond), palette: palette };
+  }
+
   root.DT = {
     lundiDe: lundiDe, plusMois: plusMois, grilleMois: grilleMois, parJour: parJour, duMois: duMois, totaux: totaux,
     resumeJour: resumeJour, seanceAFaire: seanceAFaire,
@@ -1317,7 +1474,8 @@ window.DOSSARD_AUTONOME = true;
     refaire: refaire, refairePrecedente: refairePrecedente, decaler: decaler, retirer: retirer, jMoins: jMoins, court: court,
     routineDefaut: routineDefaut, cochesDuJour: cochesDuJour, jourComplet: jourComplet, basculer: basculer, serie: serie,
     mesures: mesures, moyenne7: moyenne7, statsPoids: statsPoids, courbe: courbe,
-    nuits: nuits, seriesNuits: seriesNuits, statsNuits: statsNuits, pertePoids: pertePoids, SEUIL_NUIT: SEUIL_NUIT
+    nuits: nuits, seriesNuits: seriesNuits, statsNuits: statsNuits, pertePoids: pertePoids, SEUIL_NUIT: SEUIL_NUIT,
+    couleursDossard: couleursDossard, encreSur: encreSur, couleurValide: couleurValide, couleursProches: couleursProches
   };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
@@ -1382,7 +1540,7 @@ window.DOSSARD_AUTONOME = true;
   var D = window.DT;
   var vue = document.getElementById('vue'), feuille = document.getElementById('feuille'),
       annonce = document.getElementById('annonce'), onglets = document.getElementById('onglets');
-  var ROUTES = ['objectif', 'plan', 'carnet', 'routine', 'poids', 'medailles'];
+  var ROUTES = ['objectif', 'plan', 'carnet', 'routine', 'poids', 'medailles', 'dossards'];
   var NOMS = ['profil', 'journal', 'routine', 'poids'];
   var S = { pret: false, lent: false, mode: 'attente', sync: 'ok',
             docs: { profil: null, journal: null, routine: null, poids: null },
@@ -1534,7 +1692,8 @@ window.DOSSARD_AUTONOME = true;
       coche: '<path d="M5 12.5l4.5 4.5L19 7.5"></path>',
       gauche: '<path d="M15 5l-7 7 7 7"></path>',
       droite: '<path d="M9 5l7 7-7 7"></path>',
-      info: '<circle cx="12" cy="12" r="8.8"></circle><path d="M12 11.2v5.3M12 7.6v.01"></path>'
+      info: '<circle cx="12" cy="12" r="8.8"></circle><path d="M12 11.2v5.3M12 7.6v.01"></path>',
+      photo: '<path d="M3.5 8.5h3.3l1.6-2.5h7.2l1.6 2.5h3.3V19h-17z"></path><circle cx="12" cy="13.4" r="3.4"></circle>'
     }[nom];
     return '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
   }
@@ -1598,6 +1757,110 @@ window.DOSSARD_AUTONOME = true;
       '<div class="dossard-num"><span class="num' + t + '">' + o.gros + '</span><span class="unite' + (o.deniv ? ' d' : '') + '">' + o.unite + '</span></div>' +
       '<div class="dossard-bas"><span class="nom">' + esc(prenom) + '</span><span class="jmoins">' + esc(droite) + '</span></div>' +
       '<i class="trou a" aria-hidden="true"></i><i class="trou b" aria-hidden="true"></i><i class="trou c" aria-hidden="true"></i><i class="trou e" aria-hidden="true"></i></div>';
+  }
+  // ---------- Vrais dossards de course ----------
+  var COULEURS = ['#FFFFFF', '#101418', '#F26B1D', '#3B6CB0', '#C8102E', '#2E8B57', '#F2C230'];
+  var NOMS_COULEURS = { '#FFFFFF': 'Blanc', '#101418': 'Noir', '#F26B1D': 'Orange', '#3B6CB0': 'Bleu', '#C8102E': 'Rouge', '#2E8B57': 'Vert', '#F2C230': 'Jaune' };
+  // Les dossards gardés, dans le carnet. On ne retient que ceux qui tiennent debout : un numéro, une course, une vraie date.
+  function Ds() {
+    var j = Jn(), l = Array.isArray(j.dossards) ? j.dossards : [];
+    return l.filter(function (x) { return x && typeof x.id === 'string' && typeof x.num === 'string' && typeof x.course === 'string' && D.dateValide(x.d); });
+  }
+  function dossardParId(id) { var l = Ds(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
+  function hMin(min) { var h = Math.floor(min / 60), m = min % 60; return h ? h + ' h ' + (m < 10 ? '0' : '') + m : m + ' min'; }
+  function coul(h, defaut) { return D.couleurValide(h) ? h.toUpperCase() : defaut; }
+  // Le dossard d'une vraie course, redessiné à la façon de l'appli : le bandeau à la couleur de la course, le numéro en grand.
+  function vraiDossard(x, cls) {
+    var fond = coul(x.fond, '#FFFFFF'), accent = coul(x.accent, '#101418');
+    var num = String(x.num || '').trim() || '?', n = num.length, t = n >= 6 ? ' l' : (n === 5 ? ' m' : '');
+    var an = D.dateValide(x.d) ? x.d.slice(0, 4) : '';
+    var km = x.km > 0 ? x.km : 0, dp = x.dp > 0 ? x.dp : 0;
+    var g = km ? D.fx(km) + ' km' : an, dr = dp ? D.mil(dp) + ' m D+' : (km ? an : '');
+    return '<div class="dossard vrai' + (cls ? ' ' + cls : '') + '" style="--d-fond:' + fond + ';--d-encre:' + D.encreSur(fond) + ';--d-accent:' + accent + ';--d-sur:' + D.encreSur(accent) + '">' +
+      '<div class="dossard-haut">' + esc(String(x.course || '').trim() || 'Ta course') + '</div>' +
+      '<div class="dossard-num"><span class="num' + t + '">' + esc(num) + '</span></div>' +
+      '<div class="dossard-bas"><span class="nom">' + esc(g) + '</span>' + (dr ? '<span class="jmoins">' + esc(dr) + '</span>' : '') + '</div>' +
+      '<i class="trou a" aria-hidden="true"></i><i class="trou b" aria-hidden="true"></i><i class="trou c" aria-hidden="true"></i><i class="trou e" aria-hidden="true"></i></div>';
+  }
+  function vueDossards() {
+    var l = Ds().slice().sort(function (a, b) { return a.d < b.d ? 1 : (a.d > b.d ? -1 : 0); }), n = l.length, km = 0, dp = 0;
+    l.forEach(function (x) { km += x.km > 0 ? x.km : 0; dp += x.dp > 0 ? x.dp : 0; });
+    var h = '<section class="bandeau"><div class="sur">Dossards</div><h1 class="geant">' + n + (n > 1 ? ' dossards' : ' dossard') + '</h1><p>' +
+      (n ? (km ? D.fx(km) + ' km en course' + (dp ? ' et ' + D.mil(dp) + ' m de dénivelé.' : '.') : 'Tes vrais dossards de course, redessinés.')
+         : 'Garde ici les dossards de tes vraies courses.') + '</p></section><div class="bloc">';
+    h += '<label class="btn photo">' + icone('photo') + '<span>Scanner un dossard</span><input class="cache" type="file" accept="image/*" data-c="photo-dossard"></label>';
+    if (!n) {
+      h += '<div aria-hidden="true" class="apercu">' + vraiDossard({ num: '?', course: 'Ta prochaine course' }, 'fantome') + '</div>' +
+        '<p class="aide centre">Prends ton dossard en photo. L’appli relève ses couleurs, tu notes le numéro et la course, et elle le redessine ici.</p>';
+    } else {
+      h += '<ul class="mur">' + l.map(function (x) {
+        var leg = dAn(x.d) + (x.min > 0 ? ' · ' + hMin(Math.round(x.min)) : '');
+        return '<li><button class="epingle" type="button" data-a="dossard" data-id="' + esc(x.id) + '" aria-label="' + esc('Dossard ' + x.num + ', ' + x.course + ', ' + leg + '. Corriger.') + '">' +
+          vraiDossard(x) + '</button><p class="legende">' + esc(leg) + '</p></li>';
+      }).join('') + '</ul>';
+    }
+    return h + '<button class="lien" type="button" data-a="dossard-sans-photo">Ajouter sans photo</button></div>';
+  }
+  // Les couleurs proposées : celles de la photo d'abord, puis les couleurs de base.
+  function paletteDossard(f, x) {
+    var r = [];
+    (f.palette || []).concat(x ? [x.fond, x.accent] : [], f.fond ? [f.fond] : [], COULEURS).forEach(function (c) {
+      c = coul(c, null); // sans doublon : ni la même couleur, ni une couleur presque pareille
+      if (c && r.every(function (d) { return !D.couleursProches(c, d); })) r.push(c);
+    });
+    return r.slice(0, 7);
+  }
+  function pastilles(nom, titre, liste, choisie) {
+    var h = '<fieldset class="champ"><legend>' + titre + '</legend><div class="pastilles">', k = 0;
+    liste.forEach(function (c) {
+      var dit = NOMS_COULEURS[c] || 'Couleur relevée n° ' + (++k);
+      h += '<label><input type="radio" name="' + nom + '" value="' + c + '" aria-label="' + esc(dit) + '"' + (c === choisie ? ' checked' : '') + '><span style="background:' + c + '"></span></label>';
+    });
+    return h + '</div></fieldset>';
+  }
+  function fDossard() {
+    var f = S.f, x = f.id ? dossardParId(f.id) : null, pal = paletteDossard(f, x);
+    var v = x || { num: '', course: '', d: auj(), km: null, dp: null, min: null, fond: f.fond || '#FFFFFF', accent: f.accent || '#F26B1D' };
+    var h = tete(x ? 'Corriger le dossard' : 'Nouveau dossard') + '<form class="bloc" data-f="dossard" novalidate>';
+    if (f.photo) h += '<div class="scan"><img src="' + esc(f.photo) + '" alt="Ta photo du dossard"><p class="resume"><b>Couleurs relevées sur ta photo.</b> Note le numéro et la course : le dossard se redessine au fur et à mesure.</p></div>';
+    else h += '<p class="resume">' + (x ? 'Corrige ce qu’il faut : le dossard se redessine au fur et à mesure.' : 'Note le numéro et la course : le dossard se dessine au fur et à mesure.') + '</p>';
+    h += '<div class="apercu" id="ds-apercu" aria-hidden="true">' + vraiDossard(v) + '</div>' +
+      '<div class="duo"><div class="champ"><label for="ds-num">Numéro</label><input class="grand" id="ds-num" name="num" type="text" inputmode="numeric" autocomplete="off" maxlength="6" value="' + esc(v.num) + '"' + (x ? '' : ' data-focus') + '></div>' +
+      '<div class="champ"><label for="ds-date">Date de la course</label><input id="ds-date" name="date" type="date" value="' + esc(v.d) + '"></div></div>' +
+      '<div class="champ"><label for="ds-course">Nom de la course</label><input id="ds-course" name="course" type="text" maxlength="40" autocomplete="off" value="' + esc(v.course) + '"></div>' +
+      '<div class="duo"><div class="champ"><label for="ds-km">Distance, en km</label><input id="ds-km" name="km" type="text" inputmode="decimal" autocomplete="off" value="' + (v.km > 0 ? esc(D.fx(v.km)) : '') + '"></div>' +
+      '<div class="champ"><label for="ds-dp">Dénivelé, en mètres</label><input id="ds-dp" name="dp" type="text" inputmode="numeric" autocomplete="off" value="' + (v.dp > 0 ? Math.round(v.dp) : '') + '"></div></div>' +
+      '<div class="champ"><label for="ds-min">Ton temps, en minutes (facultatif)</label><input id="ds-min" name="min" type="text" inputmode="numeric" autocomplete="off" value="' + (v.min > 0 ? Math.round(v.min) : '') + '"></div>' +
+      pastilles('fond', 'Couleur du papier', pal, coul(v.fond, '#FFFFFF')) + pastilles('accent', 'Couleur du bandeau', pal, coul(v.accent, '#101418')) +
+      '<p class="erreur" id="ds-erreur" role="alert" hidden></p><button class="btn" type="submit">' + (x ? 'Enregistrer' : 'Garder ce dossard') + '</button>';
+    if (x) h += boutonSuppr('dossard', x.id);
+    if (f.photo) h += '<p class="aide">Ta photo ne quitte pas ton téléphone, et l’appli ne la garde pas : elle n’en retient que les couleurs.</p>';
+    return h + '</form>';
+  }
+  // Le dossard de la feuille, redessiné à chaque frappe sans toucher aux champs.
+  function apercuDossard(form) {
+    var el = document.getElementById('ds-apercu'); if (!el) return;
+    el.innerHTML = vraiDossard({ num: form.num.value, course: form.course.value, d: form.date.value, km: D.nombre(form.km.value), dp: D.nombre(form.dp.value), fond: form.fond.value, accent: form.accent.value });
+  }
+  // Lit une photo choisie sur le téléphone : ses couleurs, et une vignette montrée le temps de la saisie (jamais enregistrée).
+  function lirePhoto(fichier, suite) {
+    var url = URL.createObjectURL(fichier), img = new Image();
+    var reduit = function (max) {
+      var k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      var x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, c.width, c.height); return c;
+    };
+    img.onload = function () {
+      var r = null;
+      try {
+        var petit = reduit(96);
+        r = D.couleursDossard(petit.getContext('2d').getImageData(0, 0, petit.width, petit.height).data, petit.width, petit.height);
+        r.vignette = reduit(360).toDataURL('image/jpeg', 0.8);
+      } catch (e) { r = null; }
+      URL.revokeObjectURL(url); suite(r);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); suite(null); };
+    img.src = url;
   }
   function segments(pos) {
     var h = '<div class="segments" aria-hidden="true" style="grid-template-columns:repeat(' + pos.n + ',minmax(0,1fr))">';
@@ -2255,6 +2518,7 @@ window.DOSSARD_AUTONOME = true;
     else if (f.type === 'choisir') h = fChoisir();
     else if (f.type === 'fiche') h = fFiche();
     else if (f.type === 'info') h = fInfoMedailles();
+    else if (f.type === 'dossard') h = fDossard();
     else h = fReglages();
     feuille.innerHTML = '<div class="panneau" role="dialog" aria-modal="true" aria-labelledby="f-titre">' + h + '</div>';
     feuille.hidden = false; document.body.classList.add('fige'); fond.inert = true;
@@ -2279,7 +2543,7 @@ window.DOSSARD_AUTONOME = true;
     else if (!P()) h = banniere() + vueDepart();
     else {
       nav = true;
-      h = banniere() + (r === 'plan' ? vuePlan() : r === 'carnet' ? vueCarnet() : r === 'routine' ? vueRoutine() : r === 'poids' ? vuePoids() : r === 'medailles' ? vueMedailles() : vueObjectif());
+      h = banniere() + (r === 'plan' ? vuePlan() : r === 'carnet' ? vueCarnet() : r === 'routine' ? vueRoutine() : r === 'poids' ? vuePoids() : r === 'medailles' ? vueMedailles() : r === 'dossards' ? vueDossards() : vueObjectif());
       var sn = sousOnglets(r); if (sn) h = h.replace('</section>', '</section>' + sn); // juste sous le bandeau
     }
     vue.innerHTML = h; vue.setAttribute('data-vue', !S.pret ? 'chargement' : (nav ? r : 'depart'));
@@ -2364,6 +2628,8 @@ window.DOSSARD_AUTONOME = true;
   var ACTIONS = {
     'reglages': function () { ouvrirFeuille({ type: 'reglages' }); },
     'info-medailles': function () { ouvrirFeuille({ type: 'info' }); },
+    'dossard-sans-photo': function () { ouvrirFeuille({ type: 'dossard' }); },
+    'dossard': function (el) { ouvrirFeuille({ type: 'dossard', id: el.getAttribute('data-id') }); },
     'fermer': function () { fermerFeuille(); },
     'fiche': function (el) { ouvrirFeuille({ type: 'fiche', obj: el.getAttribute('data-obj'), bonus: el.getAttribute('data-bonus') }); },
     'aller-plan': function () { fermerFeuille(true); allerA('plan'); },
@@ -2399,6 +2665,7 @@ window.DOSSARD_AUTONOME = true;
     'suppr-oui': function (el) {
       var genre = el.getAttribute('data-genre'), id = el.getAttribute('data-id');
       S.ui.suppr = null;
+      if (genre === 'dossard') { var jd = Jn(); jd.dossards = Ds().filter(function (x) { return x.id !== id; }); garder('journal'); fermerFeuille(); dire('Dossard retiré.'); return; }
       if (genre === 'sortie') {
         var jn = Jn(); jn.sorties = jn.sorties.filter(function (x) { return x.id !== id; }); garder('journal'); dire('Sortie effacée.');
         if (S.f && S.f.mode === 'saisie') { fermerFeuille(); return; } // la sortie qu'on corrigeait n'existe plus
@@ -2436,6 +2703,23 @@ window.DOSSARD_AUTONOME = true;
     return v;
   }
   var FORMS = {
+    'dossard': function (f) {
+      var anc = S.f.id ? dossardParId(S.f.id) : null;
+      var num = f.num.value.trim().toUpperCase().replace(/\s+/g, ''), course = f.course.value.trim().replace(/\s+/g, ' ').slice(0, 40);
+      if (!/^[0-9A-Z-]{1,6}$/.test(num)) { erreur('ds-erreur', 'Note le numéro du dossard : 6 chiffres ou lettres au plus.'); f.num.focus(); return; }
+      if (!course) { erreur('ds-erreur', 'Note le nom de la course.'); f.course.focus(); return; }
+      var d = lireDate(f.date.value, 'ds-erreur', true); if (!d) { f.date.focus(); return; }
+      var tKm = f.km.value.trim(), tDp = f.dp.value.trim(), tMin = f.min.value.trim();
+      var km = tKm ? D.nombre(tKm) : null, dp = tDp ? D.nombre(tDp) : null, min = tMin ? D.nombre(tMin) : null;
+      if (tKm && (km == null || km > 300)) { erreur('ds-erreur', 'La distance se note en kilomètres. Exemple : 12,5.'); f.km.focus(); return; }
+      if (tDp && (dp == null || dp > 15000)) { erreur('ds-erreur', 'Le dénivelé se note en mètres, sans décimale. Exemple : 650.'); f.dp.focus(); return; }
+      if (tMin && (min == null || min < 1 || min > 2880)) { erreur('ds-erreur', 'Le temps se note en minutes. Exemple : 95 pour 1 h 35.'); f.min.focus(); return; }
+      var x = { id: anc ? anc.id : 'd' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), num: num, course: course, d: d,
+        km: km ? Math.round(km * 100) / 100 : null, dp: dp ? Math.round(dp) : null, min: min ? Math.round(min) : null,
+        fond: coul(f.fond.value, '#FFFFFF'), accent: coul(f.accent.value, '#101418') };
+      var jn = Jn(); jn.dossards = Ds().filter(function (y) { return y.id !== x.id; }); jn.dossards.push(x);
+      garder('journal'); fermerFeuille(); dire(anc ? 'Dossard corrigé.' : 'Dossard ' + num + ' épinglé.');
+    },
     'demarrer': function (f) {
       var prenom = f.prenom.value.trim(), niv = f.niveau.value, debut = f.debut.value, dep = 0;
       if (!prenom) { erreur('ob-erreur', 'Écris ton prénom : il s’affiche sur le dossard.'); f.prenom.focus(); return; }
@@ -2565,6 +2849,14 @@ window.DOSSARD_AUTONOME = true;
     }
   };
   var CHANGES = {
+    'photo-dossard': function (el) {
+      var fic = el.files && el.files[0]; if (!fic) return;
+      lirePhoto(fic, function (r) {
+        el.value = '';
+        if (!r) { dire('Photo illisible. Réessaie, ou ajoute le dossard sans photo.'); return; }
+        ouvrirFeuille({ type: 'dossard', photo: r.vignette, palette: r.palette, fond: r.fond, accent: r.accent });
+      });
+    },
     'creation': function (el) { majCreation(el); },
     'exo': function (el) {
       var rt = Rt(), tout = D.basculer(rt, auj(), el.getAttribute('data-id'), el.checked);
@@ -2600,6 +2892,7 @@ window.DOSSARD_AUTONOME = true;
   document.addEventListener('input', function (ev) {
     var f = ev.target.closest && ev.target.closest('form[data-f]'), e = f && f.querySelector('.erreur');
     if (e && !e.hidden) { e.hidden = true; e.textContent = ''; }
+    if (f && f.getAttribute('data-f') === 'dossard') apercuDossard(f);
   });
   document.addEventListener('focusout', function () { if (S.aRendre) setTimeout(function () { if (S.aRendre) rendreFond(); }, 0); });
   document.addEventListener('toggle', function (ev) {

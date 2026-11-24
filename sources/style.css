@@ -1,6 +1,6 @@
 :root{
   /* Mise en page : une colonne de téléphone (480 px au plus), un bandeau bleu en tête de chaque écran,
-     le dossard comme pièce centrale de l'accueil, une barre de quatre onglets fixée en bas. Thème clair unique. */
+     le dossard comme pièce centrale de l'accueil, une barre de cinq onglets fixée en bas. Thème clair unique. */
   --fond:#F4F4F1;
   --carte:#FFFFFF;
   --encre:#101418;
@@ -385,6 +385,35 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .regles .vu{display:flex;justify-content:center}
 .regles .vu svg{width:22px;height:22px}
 
+/* Vrais dossards de course : le mur où ils sont épinglés, et la feuille qui les redessine d'après la photo */
+.dossard.vrai{background:var(--d-fond);color:var(--d-encre)}
+.dossard.vrai .dossard-haut{background:var(--d-accent);color:var(--d-sur)}
+.dossard.vrai .dossard-bas{border-top-color:currentColor}
+.dossard.vrai .jmoins{background:var(--d-encre);color:var(--d-fond)}
+.dossard.vrai .trou{background:var(--fond)}
+.dossard.fantome{background:transparent;color:#7C807A;box-shadow:none;border:2px dashed #9A9D98;transform:none}
+.dossard.fantome .dossard-haut{background:transparent;color:inherit;border-bottom:2px dashed #9A9D98}
+.dossard.fantome .dossard-bas{border-top:2px dashed #9A9D98;min-height:36px}
+.dossard.fantome .trou{display:none}
+.btn.photo{position:relative;cursor:pointer}
+.btn.photo:focus-within{outline:3px solid var(--orange);outline-offset:2px}
+.aide.centre{text-align:center;text-wrap:balance}
+.mur{display:flex;flex-direction:column;gap:26px;padding:10px 0 6px}
+.mur li{display:flex;flex-direction:column;align-items:center;gap:14px}
+.mur li:nth-child(even) .dossard{transform:rotate(1.6deg)}
+.epingle{width:100%;padding:0;border:0;background:none;color:inherit;cursor:pointer;display:flex;justify-content:center}
+.epingle .dossard,.apercu .dossard{margin:0}
+.legende{font:600 14px/18px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);text-align:center}
+.scan{display:grid;grid-template-columns:116px minmax(0,1fr);gap:16px;align-items:center}
+.scan img{display:block;width:116px;height:87px;object-fit:cover;border:2px solid var(--encre);border-radius:8px;transform:rotate(-2deg)}
+.apercu{display:flex;justify-content:center;padding:8px 0 12px}
+.pastilles{display:flex;flex-wrap:wrap;gap:4px}
+.pastilles label{position:relative;display:flex;padding:3px;cursor:pointer}
+.pastilles input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.pastilles span{width:38px;height:38px;border-radius:50%;border:2px solid var(--encre)}
+.pastilles input:checked+span{box-shadow:0 0 0 2px var(--fond),0 0 0 5px var(--encre)}
+.pastilles input:focus-visible+span{outline:3px solid var(--orange);outline-offset:2px}
+
 /* Feuille (écran par-dessus) */
 .feuille{position:fixed;inset:0;z-index:30;background:rgba(16,20,24,.5);display:flex;justify-content:center}
 .panneau{width:100%;max-width:480px;height:100%;overflow:auto;background:var(--fond);display:flex;flex-direction:column}
@@ -441,7 +470,7 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 
 /* Onglets */
 .onglets{position:fixed;left:50%;bottom:0;z-index:20;transform:translateX(-50%);width:100%;max-width:480px;height:64px;padding:0 6px;background:var(--fond);border-top:2px solid var(--encre);display:flex}
-.onglets a{flex:1 1 0;min-width:44px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--gris);font:700 13px var(--titre);letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
+.onglets a{flex:1 1 0;min-width:44px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--gris);font:700 13px var(--titre);letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
 .onglets a svg{display:block;flex:none}
 .onglets a[aria-current="page"]{color:var(--bleu);box-shadow:inset 0 3px 0 var(--encre)}
 /* Deux pages sous un même onglet : deux boutons en tête de page */
@@ -456,6 +485,6 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
   .dossard-num .num.l{font-size:78px}
   [data-vue="objectif"]{--num-max:108px}
   .onglets{padding:0 2px}
-  .onglets a{font-size:12px;letter-spacing:.05em;padding:0 1px}
+  .onglets a{font-size:12px;letter-spacing:.03em;padding:0}
   .mois-nom{font-size:22px}
 }

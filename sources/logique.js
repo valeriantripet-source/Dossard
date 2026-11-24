@@ -789,6 +789,133 @@
     return o;
   }
 
+  // ---------- Vrais dossards de course ----------
+  // Les couleurs d'un dossard photographié. px : les octets RGBA d'une petite image de l × h points.
+  // On ne regarde que le centre de la photo, là où se trouve le dossard. Renvoie le papier (fond), le bandeau
+  // (accent) et les couleurs franches relevées (palette), en « #RRGGBB ».
+  function hexa(c) { return '#' + c.map(function (v) { return ('0' + Math.max(0, Math.min(255, Math.round(v))).toString(16)).slice(-2); }).join('').toUpperCase(); }
+  function couleurValide(h) { return typeof h === 'string' && /^#[0-9A-Fa-f]{6}$/.test(h); }
+  function rvb(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+  function luminance(c) {
+    var f = function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+  }
+  function contraste(a, b) { var x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  // L'encre lisible sur une couleur : l'encre de l'appli, ou le blanc.
+  function encreSur(h) { var c = rvb(couleurValide(h) ? h : '#FFFFFF'); return contraste(c, [16, 20, 24]) >= contraste(c, [255, 255, 255]) ? '#101418' : '#FFFFFF'; }
+  // Écart entre deux couleurs, où l'éclairage (en pleine lumière ou à l'ombre) compte moins que la teinte.
+  function clair(c) { return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255; }
+  function ecart(a, b) {
+    var ya = clair(a) * 255, yb = clair(b) * 255, dy = (ya - yb) * 0.45, du = (a[2] - ya) - (b[2] - yb), dv = (a[0] - ya) - (b[0] - yb);
+    return Math.sqrt(dy * dy + du * du + dv * dv);
+  }
+  function vif(c) { return (Math.max(c[0], c[1], c[2]) - Math.min(c[0], c[1], c[2])) / 255; }
+  // Deux couleurs de même teinte, l'une n'étant que l'autre à l'ombre.
+  function pleine(c) { var m = Math.max(c[0], c[1], c[2], 1); return [c[0] * 255 / m, c[1] * 255 / m, c[2] * 255 / m]; }
+  function memeTeinte(a, b) { return ecart(pleine(a), pleine(b)) < 40; }
+  function couleursProches(a, b) { return couleurValide(a) && couleurValide(b) && ecart(rvb(a), rvb(b)) < 40; }
+  function couleursDossard(px, l, h) {
+    var N = l * h, i, j, x, y, k, c;
+    // 1. Les teintes voisines sont réunies autour de la plus fréquente d'entre elles.
+    var cases = {}, cle = new Array(N);
+    for (i = 0; i < N; i++) {
+      j = i * 4; k = px[j + 3] < 128 ? -1 : (px[j] >> 4) << 8 | (px[j + 1] >> 4) << 4 | (px[j + 2] >> 4); cle[i] = k;
+      if (k < 0) continue;
+      c = cases[k] || (cases[k] = { s: [0, 0, 0], n: 0, g: -1 }); c.s[0] += px[j]; c.s[1] += px[j + 1]; c.s[2] += px[j + 2]; c.n++;
+    }
+    var groupes = [];
+    Object.keys(cases).map(function (k) { var e = cases[k]; e.c = [e.s[0] / e.n, e.s[1] / e.n, e.s[2] / e.n]; return e; })
+      .sort(function (a, b) { return b.n - a.n; })
+      .forEach(function (e) {
+        for (var g = 0; g < groupes.length; g++) if (ecart(groupes[g].c, e.c) < 40) { e.g = g; return; }
+        e.g = groupes.length; groupes.push({ c: e.c, p: 0, bord: 0 });
+      });
+    if (!groupes.length) return { fond: '#FFFFFF', accent: '#101418', palette: [] };
+    var grp = new Array(N); for (i = 0; i < N; i++) grp[i] = cle[i] < 0 ? -1 : cases[cle[i]].g;
+    // 2. Le décor (un maillot, une table) : les couleurs des bords de la photo, suivies de proche en proche.
+    //    Le numéro, même de la couleur du maillot, n'en fait pas partie : le papier l'en sépare.
+    var bx = Math.max(2, Math.round(l * 0.06)), by = Math.max(2, Math.round(h * 0.06)), nbBord = 0;
+    var auBord = function (x, y) { return x < bx || x >= l - bx || y < by || y >= h - by; };
+    for (y = 0; y < h; y++) for (x = 0; x < l; x++) if (auBord(x, y) && grp[y * l + x] >= 0) { groupes[grp[y * l + x]].bord++; nbBord++; }
+    var duBord = function (q) { return grp[q] >= 0 && groupes[grp[q]].bord / nbBord >= 0.05; };
+    var decor = new Uint8Array(N), pile = [];
+    for (y = 0; y < h; y++) for (x = 0; x < l; x++) { i = y * l + x; if (auBord(x, y) && duBord(i)) { decor[i] = 1; pile.push(i); } }
+    var voisin = function (q) { if (!decor[q] && duBord(q)) { decor[q] = 1; pile.push(q); } };
+    while (pile.length) {
+      i = pile.pop(); x = i % l;
+      if (x > 0) voisin(i - 1); if (x < l - 1) voisin(i + 1); if (i >= l) voisin(i - l); if (i < N - l) voisin(i + l);
+    }
+    // Ce qui reste doit former un bloc plein (un dossard), pas des traits épars (un numéro). Sinon la photo est cadrée
+    // sur le dossard seul, et c'est son papier qu'on vient d'écarter : dans ce cas, il n'y a pas de décor.
+    var xs = [], ys = [], plein = false, croissant = function (a, b) { return a - b; };
+    for (y = 0; y < h; y++) for (x = 0; x < l; x++) { i = y * l + x; if (!decor[i] && grp[i] >= 0) { xs.push(x); ys.push(y); } }
+    if (xs.length >= N * 0.03) {
+      xs.sort(croissant); ys.sort(croissant);
+      var q = function (t, f) { return t[Math.min(t.length - 1, Math.floor(t.length * f))]; };
+      var x0 = q(xs, 0.05), x1 = q(xs, 0.95), y0 = q(ys, 0.05), y1 = q(ys, 0.95), dedans = 0;
+      for (y = y0; y <= y1; y++) for (x = x0; x <= x1; x++) { i = y * l + x; if (!decor[i] && grp[i] >= 0) dedans++; }
+      plein = dedans >= (x1 - x0 + 1) * (y1 - y0 + 1) * 0.5;
+    }
+    var avecDecor = plein; if (!plein) decor = new Uint8Array(N);
+    // Le décor déborde un peu sur le dossard : son ombre, et le liseré où les deux couleurs se mêlent. On l'élargit de deux points.
+    for (var tour = 0; avecDecor && tour < 2; tour++) {
+      var large = new Uint8Array(decor);
+      for (y = 0; y < h; y++) for (x = 0; x < l; x++) {
+        i = y * l + x;
+        if (!decor[i] && ((x > 0 && decor[i - 1]) || (x < l - 1 && decor[i + 1]) || (y > 0 && decor[i - l]) || (y < h - 1 && decor[i + l]))) large[i] = 1;
+      }
+      decor = large;
+    }
+    // 3. Le dossard : ce qui reste. Le milieu de la photo compte plus que ses bords.
+    //    Le papier : la couleur la plus présente, avec un avantage aux couleurs claires.
+    var total, papier, poids = function (g) { return g.p * (0.3 + 0.7 * clair(g.c)); };
+    var mesurer = function () {
+      total = 0; groupes.forEach(function (g) { g.p = 0; });
+      for (var y = 0; y < h; y++) for (var x = 0; x < l; x++) {
+        var i = y * l + x; if (decor[i] || grp[i] < 0) continue;
+        var u = (x + 0.5) / l * 2 - 1, v = (y + 0.5) / h * 2 - 1, w = Math.exp(-(u * u + v * v) * 2);
+        groupes[grp[i]].p += w; total += w;
+      }
+      papier = groupes.slice().sort(function (a, b) { return poids(b) - poids(a); })[0];
+    };
+    mesurer();
+    // Un « papier » presque noir : c'est le numéro d'une photo cadrée serré. On reprend sans écarter de décor.
+    if (avecDecor && clair(papier.c) < 0.25) { decor = new Uint8Array(N); mesurer(); }
+    // La couleur du papier en pleine lumière : la moyenne de ses points les plus clairs (les autres sont à l'ombre d'un pli).
+    var ip = groupes.indexOf(papier), pts = [], pc = [0, 0, 0];
+    for (i = 0; i < N; i++) if (grp[i] === ip && !decor[i]) pts.push([px[i * 4], px[i * 4 + 1], px[i * 4 + 2]]);
+    pts.sort(function (a, b) { return clair(b) - clair(a); });
+    var nbHaut = Math.max(1, Math.round(pts.length * 0.3));
+    for (i = 0; i < nbHaut; i++) for (j = 0; j < 3; j++) pc[j] += pts[i][j] / nbHaut;
+    var m = Math.max(pc[0], pc[1], pc[2], 1);
+    // Un papier photographié est toujours un peu à l'ombre, ou sous une lumière jaune ou bleutée. Presque sans teinte,
+    // ou teinté comme le fait un éclairage (du rouge au bleu, dans l'ordre), c'est du blanc : on en tire l'éclairage,
+    // couleur par couleur. Coloré, on le ravive seulement. Les autres couleurs suivent la même correction.
+    var teinte = (m - Math.min(pc[0], pc[1], pc[2])) / m, eclairage = (pc[0] >= pc[1] && pc[1] >= pc[2]) || (pc[2] >= pc[1] && pc[1] >= pc[0]);
+    var blanc = clair(pc) > 0.3 && (teinte < 0.12 || (teinte < 0.22 && eclairage)), kc = Math.min(1.8, Math.max(1, 240 / m));
+    var gains = blanc ? pc.map(function (t) { return Math.min(1.8, Math.max(1, 240 / Math.max(t, 1))); }) : [kc, kc, kc];
+    var corrige = function (t) { return hexa([t[0] * gains[0], t[1] * gains[1], t[2] * gains[2]]); };
+    var fond = blanc ? '#FFFFFF' : corrige(pc);
+    // Les couleurs franches du dossard, de la plus marquante à la moins marquante. La première sert de bandeau.
+    // Le bord d'un chiffre mêle le papier et l'encre : ce mélange n'est pas une couleur du dossard.
+    var encre = null;
+    groupes.forEach(function (g) { if (g !== papier && g.p / total >= 0.03 && (!encre || clair(g.c) < clair(encre.c))) encre = g; });
+    var melange = function (t) {
+      if (!encre || clair(encre.c) > 0.3) return false;
+      var a = papier.c, b = encre.c, ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], n2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
+      var k = n2 ? ((t[0] - a[0]) * ab[0] + (t[1] - a[1]) * ab[1] + (t[2] - a[2]) * ab[2]) / n2 : 0;
+      if (k < 0.1 || k > 0.9) return false;
+      var d0 = t[0] - a[0] - k * ab[0], d1 = t[1] - a[1] - k * ab[1], d2 = t[2] - a[2] - k * ab[2];
+      return Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2) < 30;
+    };
+    var franches = [];
+    groupes.filter(function (g) { return g !== papier && g.p / total >= 0.01 && vif(g.c) >= 0.25 && ecart(g.c, papier.c) >= 40 && !memeTeinte(g.c, papier.c) && !melange(g.c); })
+      .sort(function (a, b) { return vif(b.c) * Math.sqrt(b.p) - vif(a.c) * Math.sqrt(a.p); })
+      .forEach(function (g) { if (franches.length < 4 && franches.every(function (f) { return ecart(f, g.c) >= 60 && !memeTeinte(f, g.c); })) franches.push(g.c); });
+    var palette = franches.map(corrige);
+    return { fond: fond, accent: palette[0] || encreSur(fond), palette: palette };
+  }
+
   root.DT = {
     lundiDe: lundiDe, plusMois: plusMois, grilleMois: grilleMois, parJour: parJour, duMois: duMois, totaux: totaux,
     resumeJour: resumeJour, seanceAFaire: seanceAFaire,
@@ -804,6 +931,7 @@
     refaire: refaire, refairePrecedente: refairePrecedente, decaler: decaler, retirer: retirer, jMoins: jMoins, court: court,
     routineDefaut: routineDefaut, cochesDuJour: cochesDuJour, jourComplet: jourComplet, basculer: basculer, serie: serie,
     mesures: mesures, moyenne7: moyenne7, statsPoids: statsPoids, courbe: courbe,
-    nuits: nuits, seriesNuits: seriesNuits, statsNuits: statsNuits, pertePoids: pertePoids, SEUIL_NUIT: SEUIL_NUIT
+    nuits: nuits, seriesNuits: seriesNuits, statsNuits: statsNuits, pertePoids: pertePoids, SEUIL_NUIT: SEUIL_NUIT,
+    couleursDossard: couleursDossard, encreSur: encreSur, couleurValide: couleurValide, couleursProches: couleursProches
   };
 })(typeof window !== 'undefined' ? window : globalThis);
