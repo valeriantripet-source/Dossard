@@ -155,7 +155,8 @@
       fermer: '<path d="M6 6l12 12M18 6L6 18"></path>',
       coche: '<path d="M5 12.5l4.5 4.5L19 7.5"></path>',
       gauche: '<path d="M15 5l-7 7 7 7"></path>',
-      droite: '<path d="M9 5l7 7-7 7"></path>'
+      droite: '<path d="M9 5l7 7-7 7"></path>',
+      info: '<circle cx="12" cy="12" r="8.8"></circle><path d="M12 11.2v5.3M12 7.6v.01"></path>'
     }[nom];
     return '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
   }
@@ -650,7 +651,8 @@
     // Le bandeau : les deux compteurs côte à côte, comme sur la page Suivi. Chaque chiffre n'apparaît qu'une fois ;
     // le titre, lu par les lecteurs d'écran, les dit en toutes lettres.
     var h = '<section class="bandeau"><h1 class="cache">Médailles. Ton parcours : ' + nb + ' sur ' + tot + '. Bonus : ' + nbBo + ' sur ' + totBo + '.</h1>' +
-      '<div class="sur" aria-hidden="true">Médailles</div><div class="deux-gros" aria-hidden="true">' +
+      '<div class="rang"><span class="sur" aria-hidden="true">Médailles</span><button class="rond" type="button" data-a="info-medailles" aria-label="Comment marchent les médailles">' + icone('info') + '</button></div>' +
+      '<div class="deux-gros" aria-hidden="true">' +
       '<div><div class="gros-poids"><span class="num">' + nb + '</span><span class="unite">/' + tot + '</span></div><p>Ton parcours</p></div>' +
       '<div><div class="gros-poids"><span class="num">' + nbBo + '</span><span class="unite">/' + totBo + '</span></div><p>Médailles bonus</p></div></div>' +
       '<p>' + (nb >= tot ? 'Objectif atteint : ' : 'Objectif : ') + esc(D.nomBut(butCourant())) + '.</p></section><div class="bloc serre">' +
@@ -814,6 +816,23 @@
   function exportTexte() {
     return JSON.stringify({ app: 'le-dossard', v: 1, exporte: auj(), profil: P(), journal: Jn(), routine: Rt(), poids: Pd() });
   }
+  // « Comment ça marche » : une médaille éteinte, puis en bronze, en argent et en or, avec les seuils d'un vrai exemple.
+  function fInfoMedailles() {
+    var ex = D.bonus('bornes'), un = D.bonus('joursans');
+    var etat = function (niv, nom, seuil) { return '<li>' + medailleBonus(ex.icone, niv) + '<b>' + nom + '</b><span>' + esc(seuil) + '</span></li>'; };
+    var pts = function (n) { var h = '<span class="pts" aria-hidden="true">'; D.NIVEAUX.forEach(function (c, k) { h += '<i' + (k < n ? ' class="' + c + '"' : '') + '></i>'; }); return h + '</span>'; };
+    return tete('Comment ça marche', true) + '<div class="bloc info-med">' +
+      '<p class="resume" style="font-size:16px;line-height:22px">Une médaille bonus s’allume palier par palier\u00a0: en bronze, puis en argent, puis en or.</p>' +
+      '<h2 class="sur gris">Exemple\u00a0: ' + esc(ex.nom) + ', kilomètres cumulés</h2>' +
+      '<ul class="etats demo">' + etat('', 'Éteinte', 'pas encore') + etat('bronze', 'Bronze', ex.paliers[0].t) + etat('argent', 'Argent', ex.paliers[1].t) + etat('or', 'Or', ex.paliers[2].t) + '</ul>' +
+      '<ul class="regles">' +
+      '<li>' + pts(2) + '<span><b>Trois points sous la médaille.</b> Un par palier\u00a0: ils se remplissent au fur et à mesure. Ici, bronze et argent sont décrochés.</span></li>' +
+      '<li><span class="pts" aria-hidden="true"><i class="or"></i></span><span><b>Un seul point.</b> Une médaille unique, comme «\u00a0' + esc(un.nom) + '\u00a0»\u00a0: elle est en or d’emblée.</span></li>' +
+      '<li><span class="vu" aria-hidden="true">' + icone('coche') + '</span><span><b>Acquise pour de bon.</b> Une médaille décrochée reste, même si une série retombe ensuite.</span></li>' +
+      '</ul>' +
+      '<div class="encadre"><strong>Et après l’or\u00a0?</strong><span>Un dernier palier s’ouvre. Il est secret, et il est loin.</span></div>' +
+      '<p class="aide">Touche une médaille pour voir où tu en es et ce qui manque pour le palier suivant.</p></div>';
+  }
   function fReglages() {
     var p = P(), h = tete('Réglages') + '<div class="bloc">';
     h += '<form class="carte" data-f="prenom" novalidate><div class="champ"><label for="rg-prenom">Prénom sur le dossard</label><div class="en-ligne"><input id="rg-prenom" name="prenom" type="text" maxlength="20" value="' + esc(p.prenom) + '"><button class="btn petit" type="submit">Changer</button></div></div></form>';
@@ -857,6 +876,7 @@
     if (f.type === 'seance') h = f.mode === 'saisie' ? fSaisie() : f.mode === 'bravo' ? fBravo() : fSeance();
     else if (f.type === 'choisir') h = fChoisir();
     else if (f.type === 'fiche') h = fFiche();
+    else if (f.type === 'info') h = fInfoMedailles();
     else h = fReglages();
     feuille.innerHTML = '<div class="panneau" role="dialog" aria-modal="true" aria-labelledby="f-titre">' + h + '</div>';
     feuille.hidden = false; document.body.classList.add('fige'); fond.inert = true;
@@ -965,6 +985,7 @@
   }
   var ACTIONS = {
     'reglages': function () { ouvrirFeuille({ type: 'reglages' }); },
+    'info-medailles': function () { ouvrirFeuille({ type: 'info' }); },
     'fermer': function () { fermerFeuille(); },
     'fiche': function (el) { ouvrirFeuille({ type: 'fiche', obj: el.getAttribute('data-obj'), bonus: el.getAttribute('data-bonus') }); },
     'aller-plan': function () { fermerFeuille(true); allerA('plan'); },
