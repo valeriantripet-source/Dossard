@@ -879,12 +879,50 @@
       h = banniere() + (r === 'plan' ? vuePlan() : r === 'carnet' ? vueCarnet() : r === 'routine' ? vueRoutine() : r === 'poids' ? vuePoids() : r === 'medailles' ? vueMedailles() : vueObjectif());
     }
     vue.innerHTML = h; vue.setAttribute('data-vue', !S.pret ? 'chargement' : (nav ? r : 'depart'));
+    if (S.pret) ouverture(true);
     onglets.hidden = !nav;
     Array.prototype.forEach.call(onglets.querySelectorAll('a'), function (a) {
       if (a.getAttribute('href') === '#' + r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     if (actif) { var el = document.getElementById(actif); if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} } }
   }
+  // Animation d'ouverture : sur l'écran bleu du lancement, le dossard tombe et se pose, puis l'écran s'efface.
+  // Jouée une seule fois, dès que les données sont là. Si elles tardent, l'écran s'efface sans attendre le dossard.
+  var ouvert = false;
+  function ouverture(pret) {
+    var el = document.getElementById('ouverture');
+    if (ouvert || !el) return;
+    ouvert = true;
+    // Animations réduites, ou écran d'ouverture masqué : rien à jouer.
+    if ((window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || getComputedStyle(el).display === 'none') { el.parentNode.removeChild(el); return; }
+    var range = false;
+    if (pret) {
+      var p = P(), bloc = p && p.bloc, cont = document.getElementById('ouverture-dossard');
+      cont.setAttribute('data-vue', 'objectif'); // le dossard de l'ouverture prend exactement la taille de celui de l'accueil
+      cont.innerHTML = bloc ? dossard(D.objectif(bloc.obj), p.prenom, D.jMoins(D.position(bloc, auj()).reste))
+        : '<div class="dossard"><div class="dossard-haut">Le Dossard</div><div class="dossard-num"><span class="num">?</span></div>' +
+          '<div class="dossard-bas"><span class="nom">' + esc(p && p.prenom ? p.prenom : '') + '</span><span class="jmoins">Prêt ?</span></div>' +
+          '<i class="trou a"></i><i class="trou b"></i><i class="trou c"></i><i class="trou e"></i></div>';
+      // Sur l'accueil, le dossard glisse ensuite jusqu'à sa place pendant que le fond bleu s'efface : celui de l'accueil reste caché jusque-là.
+      var faux = cont.querySelector('.dossard');
+      // La place à viser se remesure quand les polices arrivent et juste avant le glissement : la page a pu bouger entre-temps.
+      var viser = function () {
+        var vrai = vue.querySelector('.dossard'); if (!vrai || !faux.parentNode) return;
+        var a = boite(vrai), b = boite(faux);
+        faux.style.setProperty('--dx', (a.x - b.x) + 'px'); faux.style.setProperty('--dy', (a.y - window.pageYOffset - b.y) + 'px');
+      };
+      if (bloc && route() === 'objectif' && vue.querySelector('.dossard')) {
+        viser(); vue.classList.add('ouv'); range = true;
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(viser);
+        setTimeout(viser, 900);
+      }
+    }
+    el.classList.add(!pret ? 'file' : (range ? 'range' : 'joue'));
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); vue.classList.remove('ouv'); }, pret ? (range ? 1450 : 1550) : 450);
+  }
+  // Position d'un élément dans la page, sans tenir compte des rotations ni des animations en cours
+  function boite(e) { var x = 0, y = 0; while (e) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x: x, y: y }; }
+  setTimeout(function () { ouverture(false); }, 3000);
   // Rendu demandé par l'arrière-plan (données reçues, état de l'enregistrement) : on n'interrompt pas une saisie en cours.
   function rendreFond() {
     var el = document.activeElement;
