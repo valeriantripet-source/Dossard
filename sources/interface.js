@@ -914,11 +914,11 @@
       if (bloc && route() === 'objectif' && vue.querySelector('.dossard')) {
         viser(); vue.classList.add('ouv'); range = true;
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(viser);
-        setTimeout(viser, 1500);
+        setTimeout(viser, 1900);
       }
     }
     el.classList.add(!pret ? 'file' : (range ? 'range' : 'joue'));
-    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); vue.classList.remove('ouv'); }, pret ? 2200 : 450);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); vue.classList.remove('ouv'); }, pret ? 2600 : 450);
   }
   // Position d'un élément dans la page, sans tenir compte des rotations ni des animations en cours
   function boite(e) { var x = 0, y = 0; while (e) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x: x, y: y }; }

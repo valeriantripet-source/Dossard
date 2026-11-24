@@ -430,15 +430,18 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .ouverture>.sur{font-size:16px;line-height:20px;letter-spacing:.24em}
 #ouverture-dossard{width:100%;min-height:210px;display:flex;justify-content:center;align-items:flex-start}
 .ouverture .dossard{margin:0}
-.ouverture.joue{animation:ouv-fin .4s 1.7s both}
+.ouverture .credit{margin:0;color:#FFFFFF;opacity:0;font-size:13px;line-height:18px;letter-spacing:.16em}
+.ouverture.joue{animation:ouv-fin .4s 2.05s both}
+.ouverture.joue .credit,.ouverture.range .credit{animation:ouv-credit .4s 1.1s both,ouv-fin .3s 1.95s forwards}
 .ouverture.joue .dossard{animation:ouv-dossard .85s cubic-bezier(.2,.9,.3,1.2) .25s both}
 .ouverture.file{animation:ouv-fin .35s both}
 /* Sur l'accueil : le fond bleu s'efface pendant que le dossard glisse à sa place, où l'attend celui de l'écran */
-.ouverture.range{animation:ouv-voile .5s 1.6s both}
-.ouverture.range>.sur{animation:ouv-fin .3s 1.55s both}
-.ouverture.range .dossard{animation:ouv-dossard .85s cubic-bezier(.2,.9,.3,1.2) .25s both,ouv-range .5s cubic-bezier(.5,0,.2,1) 1.6s forwards}
+.ouverture.range{animation:ouv-voile .5s 2s both}
+.ouverture.range>.sur{animation:ouv-fin .3s 1.95s both}
+.ouverture.range .dossard{animation:ouv-dossard .85s cubic-bezier(.2,.9,.3,1.2) .25s both,ouv-range .5s cubic-bezier(.5,0,.2,1) 2s forwards}
 #vue.ouv .dossard{visibility:hidden}
 @keyframes ouv-dossard{from{opacity:0;transform:translateY(-60vh) rotate(-16deg)}40%{opacity:1}to{opacity:1;transform:translateY(0) rotate(-2deg)}}
+@keyframes ouv-credit{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes ouv-fin{to{opacity:0;visibility:hidden}}
 @keyframes ouv-secours{to{opacity:0;visibility:hidden}}
 @keyframes ouv-voile{to{background-color:rgba(59,108,176,0)}}
@@ -484,7 +487,7 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 </div>
 <div class="feuille" id="feuille" hidden></div>
 <div class="annonce" id="annonce" role="status" aria-live="polite"></div>
-<div class="ouverture" id="ouverture" aria-hidden="true"><p class="sur">Le Dossard</p><div id="ouverture-dossard"></div></div>
+<div class="ouverture" id="ouverture" aria-hidden="true"><p class="sur">Le Dossard</p><div id="ouverture-dossard"></div><p class="credit">Créé par Valérian Tripet</p></div>
 <script>
 // Version autonome : l'appli enregistre les données dans le navigateur de l'appareil.
 window.DOSSARD_AUTONOME = true;
@@ -2271,11 +2274,11 @@ window.DOSSARD_AUTONOME = true;
       if (bloc && route() === 'objectif' && vue.querySelector('.dossard')) {
         viser(); vue.classList.add('ouv'); range = true;
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(viser);
-        setTimeout(viser, 1500);
+        setTimeout(viser, 1900);
       }
     }
     el.classList.add(!pret ? 'file' : (range ? 'range' : 'joue'));
-    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); vue.classList.remove('ouv'); }, pret ? 2200 : 450);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); vue.classList.remove('ouv'); }, pret ? 2600 : 450);
   }
   // Position d'un élément dans la page, sans tenir compte des rotations ni des animations en cours
   function boite(e) { var x = 0, y = 0; while (e) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x: x, y: y }; }
