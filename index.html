@@ -2723,7 +2723,8 @@ window.DOSSARD_AUTONOME = true;
   // Un seul champ, posé une fois pour toutes hors des zones réécrites. Les boutons « Scanner un dossard » et
   // « Changer la photo » l'ouvrent : si la page se réécrit pendant que l'appareil photo est ouvert, la photo arrive quand même.
   var entreePhoto = document.createElement('input'), photoPour = 'page';
-  entreePhoto.type = 'file'; entreePhoto.accept = 'image/*'; entreePhoto.id = 'entree-photo'; entreePhoto.className = 'cache'; entreePhoto.tabIndex = -1; entreePhoto.setAttribute('aria-hidden', 'true');
+  entreePhoto.type = 'file'; entreePhoto.accept = 'image/*'; entreePhoto.id = 'entree-photo'; entreePhoto.tabIndex = -1; entreePhoto.setAttribute('aria-hidden', 'true');
+  entreePhoto.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none'; // hors du fil de la page : il ne doit pas l'allonger
   document.body.appendChild(entreePhoto);
   entreePhoto.addEventListener('change', function () {
     var fic = entreePhoto.files && entreePhoto.files[0], pour = photoPour; if (!fic) return;
