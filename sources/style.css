@@ -396,7 +396,6 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .dossard.fantome .dossard-bas{border-top:2px dashed #9A9D98;min-height:36px}
 .dossard.fantome .trou{display:none}
 .btn.photo{position:relative;cursor:pointer}
-.btn.photo:focus-within{outline:3px solid var(--orange);outline-offset:2px}
 .aide.centre{text-align:center;text-wrap:balance}
 .mur{display:flex;flex-direction:column;gap:26px;padding:10px 0 6px}
 .mur li{display:flex;flex-direction:column;align-items:center;gap:14px}
@@ -412,8 +411,6 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .photo-gardee img{display:block;width:100%;max-height:300px;object-fit:contain}
 .liens{display:flex;flex-wrap:wrap;gap:0 22px;margin-top:-8px}
 .lien[hidden]{display:none}
-label.lien{position:relative;cursor:pointer}
-label.lien:focus-within{outline:3px solid var(--orange);outline-offset:2px}
 .scan{display:grid;grid-template-columns:116px minmax(0,1fr);gap:16px;align-items:center}
 .scan img{display:block;width:116px;height:87px;object-fit:cover;border:2px solid var(--encre);border-radius:8px;transform:rotate(-2deg)}
 .apercu{display:flex;justify-content:center;padding:8px 0 12px}
