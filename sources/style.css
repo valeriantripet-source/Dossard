@@ -403,7 +403,17 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .mur li:nth-child(even) .dossard{transform:rotate(1.6deg)}
 .epingle{width:100%;padding:0;border:0;background:none;color:inherit;cursor:pointer;display:flex;justify-content:center}
 .epingle .dossard,.apercu .dossard{margin:0}
-.legende{font:600 14px/18px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);text-align:center}
+.sous-dossard{display:flex;align-items:center;justify-content:center;gap:12px;font:600 14px/18px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);text-align:center}
+/* La photo gardée : en vignette sous le dossard, en grand dans sa feuille */
+.vignette{flex:none;width:60px;height:45px;border:2px solid var(--encre);border-radius:6px;background:var(--trait);overflow:hidden;transform:rotate(-3deg)}
+.vignette img{display:block;width:100%;height:100%;object-fit:cover}
+.vignette img:not([src]),.photo-gardee img:not([src]){visibility:hidden}
+.photo-gardee{margin:0;border:2px solid var(--encre);border-radius:8px;overflow:hidden;background:#1B1F24;min-height:120px;display:flex;align-items:center;justify-content:center}
+.photo-gardee img{display:block;width:100%;max-height:300px;object-fit:contain}
+.liens{display:flex;flex-wrap:wrap;gap:0 22px;margin-top:-8px}
+.lien[hidden]{display:none}
+label.lien{position:relative;cursor:pointer}
+label.lien:focus-within{outline:3px solid var(--orange);outline-offset:2px}
 .scan{display:grid;grid-template-columns:116px minmax(0,1fr);gap:16px;align-items:center}
 .scan img{display:block;width:116px;height:87px;object-fit:cover;border:2px solid var(--encre);border-radius:8px;transform:rotate(-2deg)}
 .apercu{display:flex;justify-content:center;padding:8px 0 12px}

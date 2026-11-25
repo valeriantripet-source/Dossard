@@ -427,7 +427,17 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .mur li:nth-child(even) .dossard{transform:rotate(1.6deg)}
 .epingle{width:100%;padding:0;border:0;background:none;color:inherit;cursor:pointer;display:flex;justify-content:center}
 .epingle .dossard,.apercu .dossard{margin:0}
-.legende{font:600 14px/18px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);text-align:center}
+.sous-dossard{display:flex;align-items:center;justify-content:center;gap:12px;font:600 14px/18px var(--titre);letter-spacing:.08em;text-transform:uppercase;color:var(--gris);text-align:center}
+/* La photo gardée : en vignette sous le dossard, en grand dans sa feuille */
+.vignette{flex:none;width:60px;height:45px;border:2px solid var(--encre);border-radius:6px;background:var(--trait);overflow:hidden;transform:rotate(-3deg)}
+.vignette img{display:block;width:100%;height:100%;object-fit:cover}
+.vignette img:not([src]),.photo-gardee img:not([src]){visibility:hidden}
+.photo-gardee{margin:0;border:2px solid var(--encre);border-radius:8px;overflow:hidden;background:#1B1F24;min-height:120px;display:flex;align-items:center;justify-content:center}
+.photo-gardee img{display:block;width:100%;max-height:300px;object-fit:contain}
+.liens{display:flex;flex-wrap:wrap;gap:0 22px;margin-top:-8px}
+.lien[hidden]{display:none}
+label.lien{position:relative;cursor:pointer}
+label.lien:focus-within{outline:3px solid var(--orange);outline-offset:2px}
 .scan{display:grid;grid-template-columns:116px minmax(0,1fr);gap:16px;align-items:center}
 .scan img{display:block;width:116px;height:87px;object-fit:cover;border:2px solid var(--encre);border-radius:8px;transform:rotate(-2deg)}
 .apercu{display:flex;justify-content:center;padding:8px 0 12px}
@@ -1758,6 +1768,75 @@ window.DOSSARD_AUTONOME = true;
       '<div class="dossard-bas"><span class="nom">' + esc(prenom) + '</span><span class="jmoins">' + esc(droite) + '</span></div>' +
       '<i class="trou a" aria-hidden="true"></i><i class="trou b" aria-hidden="true"></i><i class="trou c" aria-hidden="true"></i><i class="trou e" aria-hidden="true"></i></div>';
   }
+  // ---------- Photos des dossards ----------
+  // Gardées sur l'appareil, à part des données de l'appli : elles sont trop lourdes pour la copie de sauvegarde.
+  // Si l'appareil refuse (navigation privée, page encadrée, place manquante), l'appli continue sans elles.
+  var Photos = (function () {
+    var base = null, pret = false, connues = {}, urls = {};
+    function demande(req) { return new Promise(function (ok, non) { req.onsuccess = function () { ok(req.result); }; req.onerror = function () { non(req.error); }; }); }
+    function ecriture(action) {
+      if (!pret) return Promise.resolve(false);
+      return new Promise(function (ok) {
+        try {
+          var t = base.transaction('photos', 'readwrite'); action(t.objectStore('photos'));
+          t.oncomplete = function () { ok(true); }; t.onerror = t.onabort = function () { ok(false); };
+        } catch (e) { ok(false); }
+      });
+    }
+    function oublier(id) { if (urls[id]) { try { URL.revokeObjectURL(urls[id]); } catch (e) {} delete urls[id]; } }
+    function charger() {
+      return new Promise(function (ok) {
+        var r;
+        try { r = window.indexedDB.open('le-dossard', 1); } catch (e) { ok(false); return; }
+        r.onupgradeneeded = function () { r.result.createObjectStore('photos'); };
+        r.onerror = r.onblocked = function () { ok(false); };
+        r.onsuccess = function () {
+          base = r.result;
+          try {
+            demande(base.transaction('photos', 'readonly').objectStore('photos').getAllKeys()).then(function (cles) {
+              cles.forEach(function (k) { connues[k] = true; }); pret = true; ok(true);
+            }, function () { ok(false); });
+          } catch (e) { ok(false); }
+        };
+      });
+    }
+    function garder(id, blob) {
+      return ecriture(function (m) { m.put(blob, id); }).then(function (fait) {
+        if (fait) { connues[id] = true; oublier(id); try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {} }
+        return fait;
+      });
+    }
+    function retirer(id) { return ecriture(function (m) { m.delete(id); }).then(function (fait) { if (fait) { delete connues[id]; oublier(id); } return fait; }); }
+    // Ne garde que les photos des dossards cités (après une restauration de copie, ou tout effacer avec une liste vide).
+    function menage(ids) {
+      var en_trop = Object.keys(connues).filter(function (k) { return ids.indexOf(k) < 0; });
+      if (!en_trop.length) return Promise.resolve(true);
+      return ecriture(function (m) { en_trop.forEach(function (k) { m.delete(k); }); }).then(function (fait) { if (fait) en_trop.forEach(function (k) { delete connues[k]; oublier(k); }); return fait; });
+    }
+    function adresse(id) {
+      if (!pret || !connues[id]) return Promise.resolve(null);
+      if (urls[id]) return Promise.resolve(urls[id]);
+      try {
+        return demande(base.transaction('photos', 'readonly').objectStore('photos').get(id)).then(function (b) {
+          if (!b) { delete connues[id]; return null; }
+          return urls[id] || (urls[id] = URL.createObjectURL(b));
+        }, function () { return null; });
+      } catch (e) { return Promise.resolve(null); }
+    }
+    // Une fois la page écrite : met chaque photo dans l'image qui l'attend (data-photo) et dans son lien de téléchargement.
+    function poser(racine) {
+      Array.prototype.forEach.call(racine.querySelectorAll('img[data-photo],a[data-photo-lien]'), function (el) {
+        var lien = el.tagName === 'A';
+        adresse(el.getAttribute(lien ? 'data-photo-lien' : 'data-photo')).then(function (u) {
+          if (!u || !el.isConnected) return;
+          if (lien) { el.href = u; el.hidden = false; } else el.src = u;
+        });
+      });
+    }
+    return { charger: charger, garder: garder, retirer: retirer, menage: menage, poser: poser,
+             a: function (id) { return pret && !!connues[id]; }, dispo: function () { return pret; } };
+  })();
+
   // ---------- Vrais dossards de course ----------
   var COULEURS = ['#FFFFFF', '#101418', '#F26B1D', '#3B6CB0', '#C8102E', '#2E8B57', '#F2C230'];
   var NOMS_COULEURS = { '#FFFFFF': 'Blanc', '#101418': 'Noir', '#F26B1D': 'Orange', '#3B6CB0': 'Bleu', '#C8102E': 'Rouge', '#2E8B57': 'Vert', '#F2C230': 'Jaune' };
@@ -1791,24 +1870,29 @@ window.DOSSARD_AUTONOME = true;
     h += '<label class="btn photo">' + icone('photo') + '<span>Scanner un dossard</span><input class="cache" type="file" accept="image/*" data-c="photo-dossard"></label>';
     if (!n) {
       h += '<div aria-hidden="true" class="apercu">' + vraiDossard({ num: '?', course: 'Ta prochaine course' }, 'fantome') + '</div>' +
-        '<p class="aide centre">Prends ton dossard en photo. L’appli relève ses couleurs, tu notes le numéro et la course, et elle le redessine ici.</p>';
+        '<p class="aide centre">Prends ton dossard en photo. L’appli relève ses couleurs, tu notes le numéro et la course, et elle le redessine ici' + (Photos.dispo() ? ', à côté de ta photo' : '') + '.</p>';
     } else {
       h += '<ul class="mur">' + l.map(function (x) {
         var leg = dAn(x.d) + (x.min > 0 ? ' · ' + hMin(Math.round(x.min)) : '');
-        return '<li><button class="epingle" type="button" data-a="dossard" data-id="' + esc(x.id) + '" aria-label="' + esc('Dossard ' + x.num + ', ' + x.course + ', ' + leg + '. Corriger.') + '">' +
-          vraiDossard(x) + '</button><p class="legende">' + esc(leg) + '</p></li>';
+        return '<li><button class="epingle" type="button" data-a="dossard" data-id="' + esc(x.id) + '" aria-label="' + esc('Dossard ' + x.num + ', ' + x.course + ', ' + leg + (Photos.a(x.id) ? ', avec sa photo' : '') + '. Ouvrir.') + '">' +
+          vraiDossard(x) + '</button><p class="sous-dossard">' + (Photos.a(x.id) ? '<span class="vignette"><img data-photo="' + esc(x.id) + '" alt=""></span>' : '') + '<span>' + esc(leg) + '</span></p></li>';
       }).join('') + '</ul>';
     }
     return h + '<button class="lien" type="button" data-a="dossard-sans-photo">Ajouter sans photo</button></div>';
   }
-  // Les couleurs proposées : celles de la photo d'abord, puis les couleurs de base.
-  function paletteDossard(f, x) {
-    var r = [];
+  // Les couleurs proposées : celles de la photo d'abord, puis les couleurs de base. Les deux couleurs en cours y sont toujours.
+  function paletteDossard(f, x, v) {
+    var r = [], n = (f.palette || []).length;
     (f.palette || []).concat(x ? [x.fond, x.accent] : [], f.fond ? [f.fond] : [], COULEURS).forEach(function (c) {
       c = coul(c, null); // sans doublon : ni la même couleur, ni une couleur presque pareille
       if (c && r.every(function (d) { return !D.couleursProches(c, d); })) r.push(c);
     });
-    return r.slice(0, 7);
+    r = r.slice(0, 7);
+    [v.fond, v.accent].forEach(function (c) {
+      c = coul(c, null);
+      if (c && r.indexOf(c) < 0) { if (r.length >= 7) r.pop(); r.splice(Math.min(n, r.length), 0, c); }
+    });
+    return r;
   }
   function pastilles(nom, titre, liste, choisie) {
     var h = '<fieldset class="champ"><legend>' + titre + '</legend><div class="pastilles">', k = 0;
@@ -1818,23 +1902,41 @@ window.DOSSARD_AUTONOME = true;
     });
     return h + '</div></fieldset>';
   }
+  function champsDossard(form) {
+    return { num: form.num.value, course: form.course.value, d: form.date.value, km: form.km.value, dp: form.dp.value, min: form.min.value, fond: form.fond.value, accent: form.accent.value };
+  }
   function fDossard() {
-    var f = S.f, x = f.id ? dossardParId(f.id) : null, pal = paletteDossard(f, x);
-    var v = x || { num: '', course: '', d: auj(), km: null, dp: null, min: null, fond: f.fond || '#FFFFFF', accent: f.accent || '#F26B1D' };
-    var h = tete(x ? 'Corriger le dossard' : 'Nouveau dossard') + '<form class="bloc" data-f="dossard" novalidate>';
-    if (f.photo) h += '<div class="scan"><img src="' + esc(f.photo) + '" alt="Ta photo du dossard"><p class="resume"><b>Couleurs relevées sur ta photo.</b> Note le numéro et la course : le dossard se redessine au fur et à mesure.</p></div>';
-    else h += '<p class="resume">' + (x ? 'Corrige ce qu’il faut : le dossard se redessine au fur et à mesure.' : 'Note le numéro et la course : le dossard se dessine au fur et à mesure.') + '</p>';
-    h += '<div class="apercu" id="ds-apercu" aria-hidden="true">' + vraiDossard(v) + '</div>' +
-      '<div class="duo"><div class="champ"><label for="ds-num">Numéro</label><input class="grand" id="ds-num" name="num" type="text" inputmode="numeric" autocomplete="off" maxlength="6" value="' + esc(v.num) + '"' + (x ? '' : ' data-focus') + '></div>' +
+    var f = S.f, x = f.id ? dossardParId(f.id) : null;
+    // Dans les champs : la saisie en cours si la feuille vient d'être réécrite (photo changée), sinon le dossard gardé, sinon du neuf.
+    var v = f.v || (x ? { num: x.num, course: x.course, d: x.d, km: x.km > 0 ? D.fx(x.km) : '', dp: x.dp > 0 ? String(Math.round(x.dp)) : '', min: x.min > 0 ? String(Math.round(x.min)) : '',
+                          fond: coul(x.fond, '#FFFFFF'), accent: coul(x.accent, '#101418') }
+                      : { num: '', course: '', d: auj(), km: '', dp: '', min: '', fond: f.fond || '#FFFFFF', accent: f.accent || '#F26B1D' });
+    var pal = paletteDossard(f, x, v), gardee = !!x && !f.photo && !f.sansPhoto && Photos.a(x.id), aPhoto = !!f.photo || gardee;
+    var choisir = '<label class="lien">' + (aPhoto ? 'Changer la photo' : 'Ajouter une photo') + '<input class="cache" type="file" accept="image/*" data-c="photo-feuille"></label>';
+    var h = tete(x ? 'Dossard ' + x.num : 'Nouveau dossard') + '<form class="bloc" data-f="dossard" novalidate>';
+    if (x && aPhoto) {
+      // Un dossard gardé : sa photo en grand
+      h += '<figure class="photo-gardee"><img ' + (f.photo ? 'src="' + esc(f.photo) + '"' : 'data-photo="' + esc(x.id) + '"') + ' alt="Ta photo du dossard ' + esc(x.num) + '"></figure><div class="liens">' + choisir +
+        (gardee ? '<a class="lien" data-photo-lien="' + esc(x.id) + '" download="dossard-' + esc(x.num) + '.jpg" aria-label="Télécharger la photo" hidden>Télécharger</a>' : '') +
+        '<button class="lien" type="button" data-a="photo-retirer" aria-label="Retirer la photo">Retirer</button></div>';
+    } else if (f.photo) {
+      h += '<div class="scan"><img src="' + esc(f.photo) + '" alt="Ta photo du dossard"><p class="resume"><b>Couleurs relevées sur ta photo.</b> Note le numéro et la course : le dossard se redessine au fur et à mesure.</p></div>';
+    }
+    if (x || !f.photo) h += '<p class="resume">' + (x ? 'Corrige ce qu’il faut : le dossard se redessine au fur et à mesure.' : 'Note le numéro et la course : le dossard se dessine au fur et à mesure.') + '</p>';
+    if (!aPhoto) h += '<div class="liens">' + choisir + '</div>';
+    h += '<div class="apercu" id="ds-apercu" aria-hidden="true">' + vraiDossard({ num: v.num, course: v.course, d: v.d, km: D.nombre(v.km), dp: D.nombre(v.dp), fond: v.fond, accent: v.accent }) + '</div>' +
+      '<div class="duo"><div class="champ"><label for="ds-num">Numéro</label><input class="grand" id="ds-num" name="num" type="text" inputmode="numeric" autocomplete="off" maxlength="6" value="' + esc(v.num) + '"' + (x || f.v ? '' : ' data-focus') + '></div>' +
       '<div class="champ"><label for="ds-date">Date de la course</label><input id="ds-date" name="date" type="date" value="' + esc(v.d) + '"></div></div>' +
       '<div class="champ"><label for="ds-course">Nom de la course</label><input id="ds-course" name="course" type="text" maxlength="40" autocomplete="off" value="' + esc(v.course) + '"></div>' +
-      '<div class="duo"><div class="champ"><label for="ds-km">Distance, en km</label><input id="ds-km" name="km" type="text" inputmode="decimal" autocomplete="off" value="' + (v.km > 0 ? esc(D.fx(v.km)) : '') + '"></div>' +
-      '<div class="champ"><label for="ds-dp">Dénivelé, en mètres</label><input id="ds-dp" name="dp" type="text" inputmode="numeric" autocomplete="off" value="' + (v.dp > 0 ? Math.round(v.dp) : '') + '"></div></div>' +
-      '<div class="champ"><label for="ds-min">Ton temps, en minutes (facultatif)</label><input id="ds-min" name="min" type="text" inputmode="numeric" autocomplete="off" value="' + (v.min > 0 ? Math.round(v.min) : '') + '"></div>' +
+      '<div class="duo"><div class="champ"><label for="ds-km">Distance, en km</label><input id="ds-km" name="km" type="text" inputmode="decimal" autocomplete="off" value="' + esc(v.km) + '"></div>' +
+      '<div class="champ"><label for="ds-dp">Dénivelé, en mètres</label><input id="ds-dp" name="dp" type="text" inputmode="numeric" autocomplete="off" value="' + esc(v.dp) + '"></div></div>' +
+      '<div class="champ"><label for="ds-min">Ton temps, en minutes (facultatif)</label><input id="ds-min" name="min" type="text" inputmode="numeric" autocomplete="off" value="' + esc(v.min) + '"></div>' +
       pastilles('fond', 'Couleur du papier', pal, coul(v.fond, '#FFFFFF')) + pastilles('accent', 'Couleur du bandeau', pal, coul(v.accent, '#101418')) +
       '<p class="erreur" id="ds-erreur" role="alert" hidden></p><button class="btn" type="submit">' + (x ? 'Enregistrer' : 'Garder ce dossard') + '</button>';
     if (x) h += boutonSuppr('dossard', x.id);
-    if (f.photo) h += '<p class="aide">Ta photo ne quitte pas ton téléphone, et l’appli ne la garde pas : elle n’en retient que les couleurs.</p>';
+    if (aPhoto) h += '<p class="aide">' + (Photos.dispo()
+      ? 'Ta photo ne quitte pas ce téléphone : l’appli la garde ici, avec ton dossard. Elle n’est pas dans la copie de tes données.'
+      : 'Ta photo ne quitte pas ton téléphone. Ici, l’appli ne peut pas la garder : elle n’en retient que les couleurs.') + '</p>';
     return h + '</form>';
   }
   // Le dossard de la feuille, redessiné à chaque frappe sans toucher aux champs.
@@ -1842,7 +1944,8 @@ window.DOSSARD_AUTONOME = true;
     var el = document.getElementById('ds-apercu'); if (!el) return;
     el.innerHTML = vraiDossard({ num: form.num.value, course: form.course.value, d: form.date.value, km: D.nombre(form.km.value), dp: D.nombre(form.dp.value), fond: form.fond.value, accent: form.accent.value });
   }
-  // Lit une photo choisie sur le téléphone : ses couleurs, et une vignette montrée le temps de la saisie (jamais enregistrée).
+  // Lit une photo choisie sur le téléphone : ses couleurs, et la photo à garder, réduite à 1280 points au plus
+  // (bien assez pour la revoir sur un téléphone, et dix fois plus légère que l'originale).
   function lirePhoto(fichier, suite) {
     var url = URL.createObjectURL(fichier), img = new Image();
     var reduit = function (max) {
@@ -1850,16 +1953,14 @@ window.DOSSARD_AUTONOME = true;
       c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
       var x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, c.width, c.height); return c;
     };
+    var fin = function (r) { URL.revokeObjectURL(url); suite(r); };
     img.onload = function () {
-      var r = null;
       try {
-        var petit = reduit(96);
-        r = D.couleursDossard(petit.getContext('2d').getImageData(0, 0, petit.width, petit.height).data, petit.width, petit.height);
-        r.vignette = reduit(360).toDataURL('image/jpeg', 0.8);
-      } catch (e) { r = null; }
-      URL.revokeObjectURL(url); suite(r);
+        var petit = reduit(96), r = D.couleursDossard(petit.getContext('2d').getImageData(0, 0, petit.width, petit.height).data, petit.width, petit.height);
+        reduit(1280).toBlob(function (b) { if (!b) { fin(null); return; } r.blob = b; r.vue = URL.createObjectURL(b); fin(r); }, 'image/jpeg', 0.82);
+      } catch (e) { fin(null); }
     };
-    img.onerror = function () { URL.revokeObjectURL(url); suite(null); };
+    img.onerror = function () { fin(null); };
     img.src = url;
   }
   function segments(pos) {
@@ -2500,6 +2601,7 @@ window.DOSSARD_AUTONOME = true;
     h += '<div class="carte"><h2 class="sur gris">Tes données</h2><p class="resume">' + (S.mode === 'nuage'
       ? 'Elles sont enregistrées avec cette page, dans un espace privé lié à ton compte : tu les retrouves sur tous tes appareils.'
       : 'Elles sont enregistrées dans ce navigateur uniquement. Fais une copie de temps en temps.') + '</p>' +
+      (Photos.dispo() ? '<p class="aide">Les photos de tes dossards restent sur cet appareil : elles ne sont pas dans la copie. Tu peux les télécharger une à une depuis la page Dossards.</p>' : '') +
       '<div class="actions"><button class="btn sec petit" type="button" data-a="copier">Copier mes données</button></div>' +
       (S.ui.copie ? '<div class="champ"><label for="rg-copie">Copie de tes données</label><textarea id="rg-copie" readonly>' + esc(S.ui.copie) + '</textarea><p class="aide">Si la copie automatique a échoué, sélectionne ce texte et copie-le.</p></div>' : '') +
       '<form class="carte" data-f="importer" novalidate><div class="champ"><label for="rg-import">Restaurer une copie</label><textarea id="rg-import" name="texte" placeholder="Colle ici une copie de tes données"></textarea></div>' +
@@ -2521,12 +2623,17 @@ window.DOSSARD_AUTONOME = true;
     else if (f.type === 'dossard') h = fDossard();
     else h = fReglages();
     feuille.innerHTML = '<div class="panneau" role="dialog" aria-modal="true" aria-labelledby="f-titre">' + h + '</div>';
+    Photos.poser(feuille);
     feuille.hidden = false; document.body.classList.add('fige'); fond.inert = true;
     var cible = focus ? feuille.querySelector('[data-focus]') : (actif ? document.getElementById(actif) : null);
     if (cible) { try { cible.focus({ preventScroll: !focus }); } catch (e) {} }
   }
   function ouvrirFeuille(f) { S.f = f; S.ui.suppr = null; rendreFeuille(true); }
-  function fermerFeuille(sansRendu) { S.f = null; S.ui.copie = null; rendreFeuille(); if (!sansRendu) rendre(); }
+  function fermerFeuille(sansRendu) {
+    if (S.f && S.f.type === 'dossard') lacherVue(S.f); // la photo montrée pendant la saisie n'est plus affichée
+    S.f = null; S.ui.copie = null; rendreFeuille(); if (!sansRendu) rendre();
+  }
+  function lacherVue(f) { if (f.photo) { try { URL.revokeObjectURL(f.photo); } catch (e) {} f.photo = null; } }
   function haut() {
     var e = S.ui.versBonus ? vue.querySelector('.entete-bonus') : null; S.ui.versBonus = false;
     if (e) e.scrollIntoView(); else window.scrollTo(0, 0);
@@ -2547,6 +2654,7 @@ window.DOSSARD_AUTONOME = true;
       var sn = sousOnglets(r); if (sn) h = h.replace('</section>', '</section>' + sn); // juste sous le bandeau
     }
     vue.innerHTML = h; vue.setAttribute('data-vue', !S.pret ? 'chargement' : (nav ? r : 'depart'));
+    Photos.poser(vue);
     if (S.pret) ouverture(true);
     onglets.hidden = !nav;
     Array.prototype.forEach.call(onglets.querySelectorAll('a'), function (a) {
@@ -2630,6 +2738,11 @@ window.DOSSARD_AUTONOME = true;
     'info-medailles': function () { ouvrirFeuille({ type: 'info' }); },
     'dossard-sans-photo': function () { ouvrirFeuille({ type: 'dossard' }); },
     'dossard': function (el) { ouvrirFeuille({ type: 'dossard', id: el.getAttribute('data-id') }); },
+    'photo-retirer': function () {
+      var form = feuille.querySelector('form[data-f="dossard"]'); if (!form || !S.f || S.f.type !== 'dossard') return;
+      S.f.v = champsDossard(form); lacherVue(S.f); S.f.blob = null; S.f.sansPhoto = true; rendreFeuille();
+      var b = feuille.querySelector('label.lien input'); if (b) b.focus();
+    },
     'fermer': function () { fermerFeuille(); },
     'fiche': function (el) { ouvrirFeuille({ type: 'fiche', obj: el.getAttribute('data-obj'), bonus: el.getAttribute('data-bonus') }); },
     'aller-plan': function () { fermerFeuille(true); allerA('plan'); },
@@ -2665,7 +2778,7 @@ window.DOSSARD_AUTONOME = true;
     'suppr-oui': function (el) {
       var genre = el.getAttribute('data-genre'), id = el.getAttribute('data-id');
       S.ui.suppr = null;
-      if (genre === 'dossard') { var jd = Jn(); jd.dossards = Ds().filter(function (x) { return x.id !== id; }); garder('journal'); fermerFeuille(); dire('Dossard retiré.'); return; }
+      if (genre === 'dossard') { var jd = Jn(); jd.dossards = Ds().filter(function (x) { return x.id !== id; }); garder('journal'); Photos.retirer(id); fermerFeuille(); dire('Dossard retiré.'); return; }
       if (genre === 'sortie') {
         var jn = Jn(); jn.sorties = jn.sorties.filter(function (x) { return x.id !== id; }); garder('journal'); dire('Sortie effacée.');
         if (S.f && S.f.mode === 'saisie') { fermerFeuille(); return; } // la sortie qu'on corrigeait n'existe plus
@@ -2718,7 +2831,12 @@ window.DOSSARD_AUTONOME = true;
         km: km ? Math.round(km * 100) / 100 : null, dp: dp ? Math.round(dp) : null, min: min ? Math.round(min) : null,
         fond: coul(f.fond.value, '#FFFFFF'), accent: coul(f.accent.value, '#101418') };
       var jn = Jn(); jn.dossards = Ds().filter(function (y) { return y.id !== x.id; }); jn.dossards.push(x);
+      var blob = S.f.blob, sans = !!(anc && S.f.sansPhoto);
       garder('journal'); fermerFeuille(); dire(anc ? 'Dossard corrigé.' : 'Dossard ' + num + ' épinglé.');
+      // La photo se range à part, un instant après : la page se réécrit quand elle y est.
+      var suite = function () { if (!S.f && route() === 'dossards') rendre(); };
+      if (blob) Photos.garder(x.id, blob).then(function (fait) { if (!fait && Photos.dispo()) dire('Dossard gardé, mais pas sa photo : la place manque sur ce téléphone.'); suite(); });
+      else if (sans) Photos.retirer(x.id).then(suite);
     },
     'demarrer': function (f) {
       var prenom = f.prenom.value.trim(), niv = f.niveau.value, debut = f.debut.value, dep = 0;
@@ -2840,12 +2958,14 @@ window.DOSSARD_AUTONOME = true;
       S.docs.poids = (o.poids && o.poids.mesures && typeof o.poids.mesures === 'object') ? o.poids : { mesures: {} };
       if (S.docs.poids.nuits != null && typeof S.docs.poids.nuits !== 'object') delete S.docs.poids.nuits;
       garder('profil', 'journal', 'routine', 'poids'); fermerFeuille(); dire('Copie restaurée.');
+      Photos.menage(Ds().map(function (x) { return x.id; }));
     },
     'effacer': function (f) {
       if (f.mot.value.trim() !== 'EFFACER') { erreur('rg-erreur', 'Écris EFFACER en majuscules pour confirmer.'); f.mot.focus(); return; }
       S.docs.profil = null; S.docs.journal = { sorties: [] }; S.docs.routine = D.routineDefaut(); S.docs.poids = { mesures: {} };
       S.ui = { plage: 28, ouv: {}, suppr: null, edit: false, sel: null, mois: null };
       garder('profil', 'journal', 'routine', 'poids'); fermerFeuille(); window.scrollTo(0, 0); dire('Tout est effacé.');
+      Photos.menage([]);
     }
   };
   var CHANGES = {
@@ -2854,7 +2974,19 @@ window.DOSSARD_AUTONOME = true;
       lirePhoto(fic, function (r) {
         el.value = '';
         if (!r) { dire('Photo illisible. Réessaie, ou ajoute le dossard sans photo.'); return; }
-        ouvrirFeuille({ type: 'dossard', photo: r.vignette, palette: r.palette, fond: r.fond, accent: r.accent });
+        ouvrirFeuille({ type: 'dossard', photo: r.vue, blob: r.blob, palette: r.palette, fond: r.fond, accent: r.accent });
+      });
+    },
+    // Dans la feuille d'un dossard : ajouter ou changer sa photo. Ce qui est déjà tapé reste, les couleurs suivent la nouvelle photo.
+    'photo-feuille': function (el) {
+      var fic = el.files && el.files[0]; if (!fic) return;
+      lirePhoto(fic, function (r) {
+        var form = feuille.querySelector('form[data-f="dossard"]');
+        if (!r) { el.value = ''; dire('Photo illisible. Réessaie avec une autre photo.'); return; }
+        if (!form || !S.f || S.f.type !== 'dossard') { try { URL.revokeObjectURL(r.vue); } catch (e) {} return; }
+        var v = champsDossard(form); v.fond = r.fond; v.accent = r.accent;
+        lacherVue(S.f); S.f.v = v; S.f.photo = r.vue; S.f.blob = r.blob; S.f.palette = r.palette; S.f.fond = r.fond; S.f.sansPhoto = false;
+        rendreFeuille(); dire('Photo ajoutée : les couleurs du dossard la suivent.');
       });
     },
     'creation': function (el) { majCreation(el); },
@@ -2917,6 +3049,8 @@ window.DOSSARD_AUTONOME = true;
 
   rendre();
   Depot.ouvrir();
+  // Les photos des dossards arrivent à part : si la page Dossards est déjà affichée, on la réécrit avec elles.
+  Photos.charger().then(function (ok) { if (ok && S.pret && P() && !S.f && route() === 'dossards') rendre(); });
 })();
 </script>
 <script>
