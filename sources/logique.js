@@ -789,6 +789,78 @@
     return o;
   }
 
+  // ---------- Course cible ----------
+  // Une course datée devient l'objectif du programme : d'abord les médailles qu'elle demande, puis une préparation à sa mesure.
+  function lundiDe(s) { return plusJours(s, -((dateDe(s).getDay() + 6) % 7)); }
+  function besoinsCourse(c) {
+    return { dist: c.km >= 42.19 ? 'marathon' : (c.km >= 21.09 ? 'semi' : (c.km >= 10 ? '10k' : '5k')),
+             deniv: c.dp >= 2000 ? 'd2000' : (c.dp >= 1000 ? 'd1000' : (c.dp >= 500 ? 'd500' : null)) };
+  }
+  // L'objectif que pose la course, sans jamais laisser de côté une médaille déjà décrochée ou en préparation.
+  function butCourse(c, p) {
+    var b = besoinsCourse(c), deja = Object.keys((p && p.medailles) || {}).concat(p && p.bloc ? [p.bloc.obj] : []);
+    function haut(liste, id) { var k = liste.indexOf(id); deja.forEach(function (d) { k = Math.max(k, liste.indexOf(d)); }); return k < 0 ? null : liste[k]; }
+    return { dist: haut(BUTS.dist, b.dist) || '5k', deniv: haut(BUTS.deniv, b.deniv) };
+  }
+  var ACQUIS = { '5k': 5, '10k': 10, semi: 21.1, marathon: 42.2, d500: 500, d1000: 1000, d2000: 2000 };
+  function demi(v) { return Math.round(v * 2) / 2; }
+  function cinquante(v) { return Math.round(v / 50) * 50; }
+  // La préparation finale : n semaines (1 à 10). La sortie longue monte jusqu'à 85 % environ de la distance et du dénivelé de
+  // la course, avec une semaine plus légère toutes les trois semaines ; puis une semaine allégée, puis la semaine de la course.
+  function semainesCourse(c, n) {
+    var b = besoinsCourse(c), bkm = ACQUIS[b.dist], bdp = b.deniv ? ACQUIS[b.deniv] : 0, vallonne = c.dp >= 300;
+    var pkm = Math.max(4, demi(c.km * 0.85)), pdp = cinquante(c.dp * 0.85);
+    var skm = Math.min(pkm, Math.max(4, demi(Math.min(pkm * 0.7, bkm * 0.75)))), sdp = Math.min(pdp, cinquante(Math.min(pdp * 0.7, Math.max(bdp * 0.8, 150))));
+    var sortie = function (km, dp) { return vallonne && dp >= 50 ? trail(km, dp) : longue(km); };
+    var l = [], m = Math.max(0, n - 2), f1 = c.km < 10 ? 30 : 45, f2 = c.km < 10 ? 25 : 50;
+    for (var i = 0; i < m; i++) {
+      var t = m > 1 ? i / (m - 1) : 1, km = skm + (pkm - skm) * t, dp = sdp + (pdp - sdp) * t, leger = m >= 4 && (i + 1) % 3 === 0 && i < m - 1;
+      l.push(leger ? S3(footing(f1 - 5, vallonne), footing(f2 - 15 < 20 ? 20 : f2 - 15), sortie(demi(km * 0.75), cinquante(dp * 0.7)), 'allegee')
+                   : S3(footing(f1, vallonne), footing(f2), sortie(demi(km), cinquante(dp))));
+    }
+    if (n >= 2) l.push(S3(footing(f1 - 5, vallonne), footing(c.km < 10 ? 20 : 30), sortie(demi(pkm * 0.5), cinquante(pdp * 0.4)), 'allegee'));
+    var resume = fx(c.km) + ' km' + (c.dp ? ' et ' + mil(c.dp) + ' m de dénivelé positif' : '') + '. Pars plus lentement que tu ne le penses, bois et mange dès la première heure.';
+    l.push(S3(footing(c.km < 10 ? 20 : 30), footing(20), seance('test', 'Jour J : ta course', resume, [], { km: c.km, dp: c.dp || null, test: 'course',
+      conseil: 'Rien de nouveau le jour de la course : ni chaussures, ni ravitaillement que tu n’as pas déjà essayés.' }), 'test'));
+    return l;
+  }
+  // Le calendrier vers la course, à partir d'aujourd'hui : la préparation en cours, puis chaque médaille à la suite, puis la
+  // préparation finale. accelere : au rythme rapide dès qu'il est permis ; sinon au rythme actuel, jamais plus vite que régulier.
+  function calendrierCourse(p, auj, c, accelere) {
+    var but = butCourse(c, p), med = (p && p.medailles) || {}, base = lireRythme(p) === 'tranquille' ? 'tranquille' : 'regulier';
+    var permis = rapidePermis(p), l = [], suite = prochainLundi(auj), ry = function () { return accelere && permis ? 'rapide' : base; };
+    var aFaire = etapes(but).filter(function (o) { return !med[o.id]; });
+    if (p && p.bloc && aFaire.some(function (o) { return o.id === p.bloc.obj; })) {
+      var bl = JSON.parse(JSON.stringify(p.bloc)), pos = position(bl, auj);
+      if (pos.etat !== 'apres' && ry() !== lireRythme(p)) changerRythme(bl, pos.etat === 'avant' ? -1 : pos.k, ry());
+      pos = position(bl, auj);
+      l.push({ id: bl.obj, debut: bl.debut, fin: pos.jourJ, n: bl.semaines.length, encours: true, rythme: ry() });
+      if (plusJours(pos.jourJ, 1) > suite) suite = plusJours(pos.jourJ, 1);
+      if (bl.obj === '5k') permis = true;
+      aFaire = aFaire.filter(function (o) { return o.id !== bl.obj; });
+    }
+    aFaire.forEach(function (o) {
+      var dep = 0; if (o.id === '5k') DEPARTS.forEach(function (d) { if (p && d.id === p.niveau) dep = d.depart; });
+      var n = sequence(o.id, ry(), dep).length, fin = plusJours(suite, n * 7 - 1);
+      l.push({ id: o.id, debut: suite, fin: fin, n: n, rythme: ry() }); suite = plusJours(fin, 1);
+      if (o.id === '5k') permis = true;
+    });
+    // Les semaines entre la dernière médaille et la course, semaine de la course comprise
+    var lundi = lundiDe(c.d), W = Math.floor(ecartJours(suite, lundi) / 7) + 1;
+    var o = { but: but, accelere: !!accelere, etapes: l, pretLe: l.length ? l[l.length - 1].fin : null, semaines: Math.max(0, W), jourJ: c.d };
+    if (W >= 1) {
+      var nb = Math.min(W, 10), sem = semainesCourse(c, nb), km = 0, dp = 0;
+      sem.forEach(function (s) { var x = s.s[2]; if (x.type !== 'test') { km = Math.max(km, x.km || 0); dp = Math.max(dp, x.dp || 0); } });
+      o.finale = { n: nb, debut: plusJours(lundi, -(nb - 1) * 7), semaines: sem, km: km, dp: dp };
+      o.marge = W - nb; o.verdict = nb >= 4 ? 'pret' : 'juste';
+    } else {
+      o.verdict = 'court'; o.manque = 1 - W;
+      l.forEach(function (e) { if (!o.ou && c.d <= e.fin) o.ou = { id: e.id, k: c.d < e.debut ? 0 : Math.floor(ecartJours(e.debut, c.d) / 7) + 1, n: e.n }; });
+      o.acquises = l.filter(function (e) { return e.fin < c.d; }).map(function (e) { return e.id; });
+    }
+    return o;
+  }
+
   // ---------- Vrais dossards de course ----------
   // Les couleurs d'un dossard photographié. px : les octets RGBA d'une petite image de l × h points.
   // On ne regarde que le centre de la photo, là où se trouve le dossard. Renvoie le papier (fond), le bandeau
@@ -932,6 +1004,7 @@
     routineDefaut: routineDefaut, cochesDuJour: cochesDuJour, jourComplet: jourComplet, basculer: basculer, serie: serie,
     mesures: mesures, moyenne7: moyenne7, statsPoids: statsPoids, courbe: courbe,
     nuits: nuits, seriesNuits: seriesNuits, statsNuits: statsNuits, pertePoids: pertePoids, SEUIL_NUIT: SEUIL_NUIT,
-    couleursDossard: couleursDossard, encreSur: encreSur, couleurValide: couleurValide, couleursProches: couleursProches
+    couleursDossard: couleursDossard, encreSur: encreSur, couleurValide: couleurValide, couleursProches: couleursProches,
+    besoinsCourse: besoinsCourse, butCourse: butCourse, semainesCourse: semainesCourse, calendrierCourse: calendrierCourse, lundiDe: lundiDe
   };
 })(typeof window !== 'undefined' ? window : globalThis);

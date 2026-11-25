@@ -421,6 +421,28 @@ select{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--encre)
 .pastilles input:checked+span{box-shadow:0 0 0 2px var(--fond),0 0 0 5px var(--encre)}
 .pastilles input:focus-visible+span{outline:3px solid var(--orange);outline-offset:2px}
 
+/* Course cible : les deux plans, le chemin jusqu'au jour J, le rappel sur l'accueil */
+.plan-course{display:flex;flex-direction:column;gap:10px;padding:14px;border:2px solid var(--encre);border-radius:8px;background:var(--carte)}
+.plan-course.choisi{box-shadow:6px 6px 0 var(--bleu)}
+.plan-course h2{font-size:16px}
+.verdict{padding:8px 10px;border-left:4px solid var(--encre);background:var(--fond);font-size:14px;line-height:19px;font-weight:600}
+.verdict.pret{border-left-color:#2E8B57}
+.verdict.juste{border-left-color:var(--orange)}
+.verdict.court{border-left-color:var(--alerte)}
+.vers-course{display:flex;flex-direction:column}
+.vers-course li{display:grid;grid-template-columns:40px minmax(0,1fr);gap:0 12px;align-items:center;padding:7px 0;border-top:1px solid var(--trait);font-size:15px;line-height:19px}
+.vers-course li:first-child{border-top:0}
+.vers-course small{display:block;font-size:13px;line-height:17px;color:var(--gris)}
+.vers-course .pm.vide{border-style:dotted}
+.vers-course li.apres>*{opacity:.5}
+.vers-course .pm.jour{border:2px solid var(--orange);background:var(--orange);color:var(--encre)}
+.rang.vers{width:100%;min-height:24px;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.rang.vers .petit{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rang.vers .sur{flex:none}
+/* Avec la ligne de la course, l'accueil se resserre comme sur un écran plus court de 32 points : le porte-médailles reste visible. */
+[data-vue="objectif"]:has(.rang.vers){--h:clamp(0px,100vh - 672px,220px)}
+@supports (height:100svh){[data-vue="objectif"]:has(.rang.vers){--h:clamp(0px,100svh - 672px,220px)}}
+
 /* Feuille (écran par-dessus) */
 .feuille{position:fixed;inset:0;z-index:30;background:rgba(16,20,24,.5);display:flex;justify-content:center}
 .panneau{width:100%;max-width:480px;height:100%;overflow:auto;background:var(--fond);display:flex;flex-direction:column}

@@ -222,6 +222,66 @@
       '<div class="dossard-bas"><span class="nom">' + esc(prenom) + '</span><span class="jmoins">' + esc(droite) + '</span></div>' +
       '<i class="trou a" aria-hidden="true"></i><i class="trou b" aria-hidden="true"></i><i class="trou c" aria-hidden="true"></i><i class="trou e" aria-hidden="true"></i></div>';
   }
+  // ---------- Course cible ----------
+  function courseValide(c) { return !!c && typeof c.nom === 'string' && D.dateValide(c.d) && c.km > 0 && c.km <= 300 && c.dp >= 0 && c.dp <= 15000; }
+  function Cc() { var p = P(), c = p && p.course; return courseValide(c) ? c : null; }
+  function mesureCourse(c) { return D.fx(c.km) + ' km' + (c.dp ? ' · ' + D.mil(c.dp) + ' m D+' : ''); }
+  function semainesMot(n) { return n + (n > 1 ? ' semaines' : ' semaine'); }
+  // La phrase qui dit, pour un plan, si on sera prêt le jour de la course.
+  function verdictCourse(cal) {
+    if (cal.verdict === 'court') {
+      var ou = cal.ou ? 'tu en seras à la semaine ' + Math.max(1, cal.ou.k) + ' sur ' + cal.ou.n + ' de la préparation ' + D.objectif(cal.ou.id).nom : 'la préparation ne sera pas finie';
+      return 'Trop court de ' + semainesMot(cal.manque) + '. Le jour de la course, ' + ou + '.';
+    }
+    var acquis = cal.pretLe ? 'Médailles acquises le ' + dAn(cal.pretLe) + '. ' : 'Tu as déjà les médailles qu’elle demande. ';
+    if (cal.verdict === 'juste') return 'Tout juste. ' + acquis + 'Il ne restera que ' + semainesMot(cal.semaines) + ' avant la course : pas de préparation finale complète.';
+    return 'Prêt pour le jour J. ' + acquis + 'Il restera ' + semainesMot(cal.semaines) + ' pour préparer la course elle-même.';
+  }
+  function lignesPlan(cal) {
+    // Quand la date arrive trop tôt, le jour J se place là où il tombe : ce qui vient après n'est pas fini ce jour-là.
+    var h = '<ol class="vers-course">', court = cal.verdict === 'court', pose = false;
+    var jour = '<li><span class="pm jour">J</span><span><b>Jour J</b><small>' + dAn(cal.jourJ) + '</small></span></li>';
+    cal.etapes.forEach(function (e) {
+      var o = D.objectif(e.id), apres = court && e.fin >= cal.jourJ;
+      if (apres && !pose) { h += jour; pose = true; }
+      h += '<li' + (apres ? ' class="apres"' : '') + '>' + pastille(o, e.encours ? 'etape' : '') + '<span><b>' + esc(o.nom) + '</b>' + (e.encours ? ' (en cours)' : '') +
+        '<small>' + semainesMot(e.n) + ', jusqu’au ' + dCourt(e.fin) + (apres ? ' : pas finie le jour J' : '') + '</small></span></li>';
+    });
+    if (cal.marge > 0) h += '<li><span class="pm vide"></span><span><b>Marge</b><small>' + semainesMot(cal.marge) + (cal.marge > 4 ? ' d’entretien, sans palier à passer' : ' libres, pour souffler ou refaire une semaine') + '</small></span></li>';
+    if (cal.finale) h += '<li><span class="pm but">' + triangle() + '</span><span><b>Préparation de ta course</b><small>' + semainesMot(cal.finale.n) +
+      (cal.finale.km ? ', sortie longue jusqu’à ' + D.fx(cal.finale.km) + ' km' + (cal.finale.dp ? ' et ' + D.mil(cal.finale.dp) + ' m D+' : '') : ', la semaine de la course') + '</small></span></li>';
+    return h + (pose ? '' : jour) + '</ol>';
+  }
+  function fCourse() {
+    var f = S.f, p = P(), c = f.c || Cc() || { nom: '', d: '', km: '', dp: '' }, a = auj();
+    if (f.etape !== 'plans') {
+      var h = tete('Ta course') + '<form class="bloc" data-f="course" novalidate>' +
+        '<p class="resume">Note la course que tu vises. L’appli en fait ton objectif et te montre comment y arriver.</p>' +
+        '<div class="champ"><label for="co-nom">Nom de la course</label><input id="co-nom" name="nom" type="text" maxlength="40" autocomplete="off" value="' + esc(c.nom) + '" data-focus></div>' +
+        '<div class="champ"><label for="co-date">Date de la course</label><input id="co-date" name="date" type="date" min="' + D.plusJours(a, 1) + '" value="' + esc(c.d) + '"></div>' +
+        '<div class="duo"><div class="champ"><label for="co-km">Distance, en km</label><input id="co-km" name="km" type="text" inputmode="decimal" autocomplete="off" value="' + (c.km ? esc(D.fx(c.km)) : '') + '"></div>' +
+        '<div class="champ"><label for="co-dp">Dénivelé, en mètres</label><input id="co-dp" name="dp" type="text" inputmode="numeric" autocomplete="off" value="' + (c.dp ? Math.round(c.dp) : '') + '"></div></div>' +
+        '<p class="erreur" id="co-erreur" role="alert" hidden></p><button class="btn" type="submit">Voir les plans</button>';
+      if (Cc()) h += '<button class="lien danger" type="button" data-a="course-retirer">Retirer la course</button>';
+      return h + '</form>';
+    }
+    var prudent = D.calendrierCourse(p, a, c, false), rapide = D.calendrierCourse(p, a, c, true);
+    var memes = JSON.stringify(prudent.etapes) === JSON.stringify(rapide.etapes), nbSem = Math.floor(D.ecartJours(a, c.d) / 7), choisi = Cc() && Cc().d === c.d && Cc().km === c.km && Cc().dp === c.dp ? Cc().plan : null;
+    var demande = D.etapes(D.besoinsCourse(c)).map(function (o) { return o.nom; });
+    var carte = function (cal, titre, sous, cle) {
+      return '<section class="plan-course' + (choisi === cle ? ' choisi' : '') + '"><div class="rang"><h2 class="sur">' + titre + '</h2>' + (choisi === cle ? '<span class="sur gris">Ton plan</span>' : '') + '</div>' +
+        '<p class="aide">' + sous + '</p><p class="verdict ' + cal.verdict + '">' + esc(verdictCourse(cal)) + '</p>' + lignesPlan(cal) +
+        '<button class="btn' + (cle === 'accelere' ? ' sec' : '') + '" type="button" data-a="course-choisir" data-plan="' + cle + '">' + (choisi === cle ? 'Garder ce plan' : 'Choisir ce plan') + '</button></section>';
+    };
+    return tete('Ta course') + '<div class="bloc">' +
+      '<div class="carte"><h2 class="titre-seance">' + esc(c.nom) + '</h2><p class="resume">' + esc(mesureCourse(c)) + ' · ' + dAn(c.d) + ' · dans ' + semainesMot(nbSem) + '.</p>' +
+      '<p class="aide">Ce qu’elle demande d’abord : ' + esc(demande.join(', ')) + '. Elle devient ton objectif ; les médailles déjà décrochées restent.</p></div>' +
+      (memes ? carte(prudent, 'Ton plan', 'Les préparations telles qu’elles sont écrites. Il n’y a rien à accélérer pour l’instant.', 'prudent')
+             : carte(prudent, 'Plan prudent', 'Les préparations telles qu’elles sont écrites, palier par palier.', 'prudent') +
+               carte(rapide, 'Plan accéléré', 'Des préparations plus courtes, dès que le rythme rapide est permis. Plus exigeant : moins de semaines pour s’habituer.', 'accelere')) +
+      '<button class="lien" type="button" data-a="course-modifier">Modifier la course</button></div>';
+  }
+
   // ---------- Photos des dossards ----------
   // Gardées sur l'appareil, à part des données de l'appli : elles sont trop lourdes pour la copie de sauvegarde.
   // Si l'appareil refuse (navigation privée, page encadrée, place manquante), l'appli continue sans elles.
@@ -589,7 +649,8 @@
     var droite = pos.etat === 'avant' ? 'Avant le départ' : (pos.etat === 'apres' ? 'Bloc terminé' : 'Semaine ' + (pos.k + 1) + ' sur ' + pos.n);
     h += '<section class="bandeau"><div class="rang"><span class="sur">Objectif ' + Math.min(tot, nb + 1) + ' sur ' + tot + ' · ' + droite + '</span>' + boutonReglages() + '</div>' +
       dossard(o, p.prenom, D.jMoins(pos.reste)) +
-      '<div class="prepa"><div class="rang"><span class="petit">Préparation : ' + esc(o.nom) + '</span><span class="sur">Jour J · ' + dCourt(pos.jourJ) + '</span></div>' + segments(pos) + '</div></section>';
+      '<div class="prepa"><div class="rang"><span class="petit">Préparation : ' + esc(o.nom) + '</span><span class="sur">Jour J · ' + dCourt(pos.jourJ) + '</span></div>' + segments(pos) +
+      (Cc() ? '<button class="rang vers" type="button" data-a="course"><span class="petit">Ta course : ' + esc(Cc().nom) + '</span><span class="sur">' + dCourt(Cc().d) + ' · ' + (Cc().d < a ? 'passée' : D.jMoins(D.ecartJours(a, Cc().d))) + '</span></button>' : '') + '</div></section>';
     return h + '<div class="bloc">' + carteDuJour(bloc, pos, a) + ratelier() + credit() + '</div>';
   }
 
@@ -694,6 +755,13 @@
       '<button class="lien" type="button" data-a="suppr-non">Garder</button></span>';
     return '<button class="lien" type="button" id="sup-' + esc(cle) + '" data-a="suppr" data-cle="' + esc(cle) + '">Effacer</button>';
   }
+  function carteVersCourse() {
+    var c = Cc(); if (!c || c.d < auj()) return '';
+    var cal = D.calendrierCourse(P(), auj(), c, c.plan === 'accelere');
+    return '<div class="bloc"><section class="plan-course"><div class="rang"><h2 class="sur">Vers ta course</h2><span class="sur gris">' + D.jMoins(D.ecartJours(auj(), c.d)) + '</span></div>' +
+      '<p class="resume"><b>' + esc(c.nom) + '</b> · ' + esc(mesureCourse(c)) + '</p><p class="verdict ' + cal.verdict + '">' + esc(verdictCourse(cal)) + '</p>' + lignesPlan(cal) +
+      '<button class="lien" type="button" data-a="course">Voir les deux plans</button></section></div>';
+  }
   function vuePlan() {
     var p = P(), bloc = p.bloc, a = auj(), h = '';
     if (!bloc) {
@@ -703,7 +771,7 @@
     }
     var o = D.objectif(bloc.obj), pos = D.position(bloc, a), jn = Jn();
     h += '<section class="bandeau"><div class="rang"><span class="sur">Plan · ' + pos.n + ' semaines</span><span class="sur">' + D.jMoins(pos.reste) + '</span></div>' +
-      '<h1 class="geant">' + esc(o.nom) + '</h1><p>Trois séances par semaine, les jours qui t’arrangent, avec au moins un jour de repos entre deux. Jour J : ' + dLong(pos.jourJ) + '.</p></section><div class="bloc serre">';
+      '<h1 class="geant">' + esc(o.nom) + '</h1><p>Trois séances par semaine, les jours qui t’arrangent, avec au moins un jour de repos entre deux. Jour J : ' + dLong(pos.jourJ) + '.</p></section>' + carteVersCourse() + '<div class="bloc serre">';
     for (var k = 0; k < pos.n; k++) h += blocSemaine(bloc, k, pos, jn);
     return h + '</div>';
   }
@@ -1043,6 +1111,9 @@
         '<p class="aide">Changer cette date déplace toutes les semaines et le jour J.</p></div></form>';
     }
     var but = butCourant(), ry = D.lireRythme(p), nbP = parcours().length, rapide = D.rapidePermis(p);
+    h += '<div class="carte"><h2 class="sur gris">Ta course</h2><p class="resume">' + (Cc() ? '<b>' + esc(Cc().nom) + '</b> · ' + esc(mesureCourse(Cc())) + ' · ' + dAn(Cc().d) + '.'
+      : 'Tu vises une course précise ? Note sa date, sa distance et son dénivelé : elle devient ton objectif.') + '</p>' +
+      '<div class="actions"><button class="btn sec petit" type="button" data-a="course">' + (Cc() ? 'Voir ou modifier' : 'Ajouter une course') + '</button></div></div>';
     h += '<form class="carte" data-f="objectif" novalidate><h2 class="sur gris">Ton objectif</h2><div class="duo"><div class="champ"><label for="rg-dist">Distance</label><select id="rg-dist" name="dist">';
     D.BUTS.dist.forEach(function (id) { h += '<option value="' + id + '"' + (id === but.dist ? ' selected' : '') + '>' + esc(D.objectif(id).nom) + '</option>'; });
     h += '</select></div><div class="champ"><label for="rg-deniv">Dénivelé</label><select id="rg-deniv" name="deniv"><option value="">Sans</option>';
@@ -1081,6 +1152,7 @@
     else if (f.type === 'fiche') h = fFiche();
     else if (f.type === 'info') h = fInfoMedailles();
     else if (f.type === 'dossard') h = fDossard();
+    else if (f.type === 'course') h = fCourse();
     else h = fReglages();
     feuille.innerHTML = '<div class="panneau" role="dialog" aria-modal="true" aria-labelledby="f-titre">' + h + '</div>';
     Photos.poser(feuille);
@@ -1222,6 +1294,22 @@
   var ACTIONS = {
     'reglages': function () { ouvrirFeuille({ type: 'reglages' }); },
     'info-medailles': function () { ouvrirFeuille({ type: 'info' }); },
+    'course': function () { var c = Cc(), avenir = !!c && c.d > auj(); ouvrirFeuille({ type: 'course', etape: avenir ? 'plans' : 'saisie', c: c ? { nom: c.nom, d: avenir ? c.d : '', km: c.km, dp: c.dp } : null }); },
+    'course-modifier': function () { S.f.etape = 'saisie'; rendreFeuille(true); },
+    'course-retirer': function () { var p = P(); delete p.course; garder('profil'); fermerFeuille(); dire('Course retirée. Ton objectif et ton rythme restent tels quels.'); },
+    'course-choisir': function (el) {
+      var p = P(), c = S.f.c, acc = el.getAttribute('data-plan') === 'accelere', cal = D.calendrierCourse(p, auj(), c, acc), med = p.medailles || {};
+      p.course = { nom: c.nom, d: c.d, km: c.km, dp: c.dp, plan: acc ? 'accelere' : 'prudent' };
+      // La course remplace l'objectif : les médailles qu'elle demande, plus celles déjà décrochées ou en préparation.
+      p.but = cal.but; p.medailles = med;
+      var rat = D.rattraper(Jn().sorties, D.etapes(cal.but).map(function (o) { return o.id; }), med); Object.keys(rat).forEach(function (id) { med[id] = rat[id]; });
+      var r = acc ? (D.rapidePermis(p) ? 'rapide' : D.lireRythme(p)) : (D.lireRythme(p) === 'tranquille' ? 'tranquille' : 'regulier');
+      if (r !== D.lireRythme(p)) {
+        p.rythme = r;
+        if (p.bloc) { var pos = D.position(p.bloc, auj()); if (pos.etat !== 'apres') D.changerRythme(p.bloc, pos.etat === 'avant' ? -1 : pos.k, r); S.ui.ouv = {}; }
+      }
+      garder('profil'); fermerFeuille(); dire('Course enregistrée : ' + c.nom + ', le ' + dAn(c.d) + '.');
+    },
     'dossard-sans-photo': function () { ouvrirFeuille({ type: 'dossard' }); },
     'dossard': function (el) { ouvrirFeuille({ type: 'dossard', id: el.getAttribute('data-id') }); },
     // Sur le site, le lien télécharge tout seul. Dans la page ouverte depuis Claude, c'est l'hôte qui enregistre le fichier, après accord.
@@ -1313,6 +1401,15 @@
     return v;
   }
   var FORMS = {
+    'course': function (f) {
+      var nom = f.nom.value.trim().replace(/\s+/g, ' ').slice(0, 40), km = D.nombre(f.km.value), tDp = f.dp.value.trim(), dp = tDp ? D.nombre(tDp) : 0;
+      if (!nom) { erreur('co-erreur', 'Note le nom de la course.'); f.nom.focus(); return; }
+      if (!D.dateValide(f.date.value) || f.date.value <= auj()) { erreur('co-erreur', 'Choisis la date de la course, dans le futur.'); f.date.focus(); return; }
+      if (km == null || km <= 0 || km > 300) { erreur('co-erreur', 'La distance se note en kilomètres. Exemple : 23.'); f.km.focus(); return; }
+      if (dp == null || dp > 15000) { erreur('co-erreur', 'Le dénivelé se note en mètres, sans décimale. Exemple : 1650.'); f.dp.focus(); return; }
+      S.f.c = { nom: nom, d: f.date.value, km: Math.round(km * 100) / 100, dp: Math.round(dp) }; S.f.etape = 'plans'; rendreFeuille(true);
+      feuille.querySelector('.panneau').scrollTop = 0;
+    },
     'dossard': function (f) {
       var anc = S.f.id ? dossardParId(S.f.id) : null;
       var num = f.num.value.trim().toUpperCase().replace(/\s+/g, ''), course = f.course.value.trim().replace(/\s+/g, ' ').slice(0, 40);
@@ -1411,6 +1508,8 @@
       if (!D.dateValide(debut)) { erreur('ch-erreur', 'Choisis la date de ta première semaine.'); f.debut.focus(); return; }
       if (id === '5k' && f.niveau) D.DEPARTS.forEach(function (d) { if (d.id === f.niveau.value) dep = d.depart; });
       if (p.bloc) { p.passes = p.passes || []; p.passes.push({ obj: p.bloc.obj, debut: p.bloc.debut, fin: auj(), arret: true }); }
+      // Avec une course et le plan accéléré : le rythme rapide se prend de lui-même dès qu'il est permis.
+      if (Cc() && Cc().plan === 'accelere' && Cc().d > auj() && D.rapidePermis(p)) p.rythme = 'rapide';
       p.bloc = D.nouveauBloc(id, debut, dep, cleBloc(p), D.lireRythme(p)); S.ui.ouv = {};
       garder('profil'); fermerFeuille(true); allerA('objectif');
       dire('Nouvel objectif : ' + D.objectif(id).nom + '.');
